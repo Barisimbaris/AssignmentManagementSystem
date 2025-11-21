@@ -1,62 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <Compile Include="obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs" />
-    <Compile Include="obj\Debug\net9.0\AMS.Application.AssemblyInfo.cs" />
-    <Compile Include="obj\Debug\net9.0\AMS.Application.GlobalUsings.g.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="bin\Debug\net9.0\AMS.Application.deps.json" />
-    <Content Include="obj\AMS.Application.csproj.nuget.dgspec.json" />
-    <Content Include="obj\Debug\net9.0\AMS.Application.csproj.FileListAbsolute.txt" />
-    <Content Include="obj\project.assets.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="bin\Debug\net9.0\AMS.Application.dll" />
-    <None Include="bin\Debug\net9.0\AMS.Application.pdb" />
-    <None Include="bin\Debug\net9.0\AMS.Domain.dll" />
-    <None Include="bin\Debug\net9.0\AMS.Domain.pdb" />
-    <None Include="obj\AMS.Application.csproj.nuget.g.props" />
-    <None Include="obj\AMS.Application.csproj.nuget.g.targets" />
-    <None Include="obj\Debug\net9.0\AMS.Appl.31512A3E.Up2Date" />
-    <None Include="obj\Debug\net9.0\AMS.Application.AssemblyInfoInputs.cache" />
-    <None Include="obj\Debug\net9.0\AMS.Application.assets.cache" />
-    <None Include="obj\Debug\net9.0\AMS.Application.csproj.AssemblyReference.cache" />
-    <None Include="obj\Debug\net9.0\AMS.Application.csproj.CoreCompileInputs.cache" />
-    <None Include="obj\Debug\net9.0\AMS.Application.dll" />
-    <None Include="obj\Debug\net9.0\AMS.Application.GeneratedMSBuildEditorConfig.editorconfig" />
-    <None Include="obj\Debug\net9.0\AMS.Application.pdb" />
-    <None Include="obj\Debug\net9.0\refint\AMS.Application.dll" />
-    <None Include="obj\Debug\net9.0\ref\AMS.Application.dll" />
-    <None Include="obj\project.nuget.cache" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\AMS.Domain\AMS.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Common\Exceptions\" />
-    <Folder Include="Common\Results\" />
-    <Folder Include="DTOs\Auth\" />
-    <Folder Include="DTOs\Assignment\" />
-    <Folder Include="DTOs\Class\" />
-    <Folder Include="DTOs\Course\" />
-    <Folder Include="DTOs\Grade\" />
-    <Folder Include="DTOs\User\" />
-    <Folder Include="DTOs\Submission\" />
-    <Folder Include="Mappings\" />
-    <Folder Include="Validators\" />
-    <Folder Include="Services\Interfaces\" />
-    <Folder Include="Services\Implementations\" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AMS.Domain\AMS.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+  </ItemGroup>
 </Project>
