@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AMS.Domain\AMS.Domain.csproj" />
+    <ProjectReference Include="..\AMS.Application\AMS.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Context\" />
+    <Folder Include="Data\Configurations\" />
+    <Folder Include="Data\Repositories\" />
+    <Folder Include="Caching\" />
+    <Folder Include="Identity\" />
+    <Folder Include="Services\FileStorage\" />
+    <Folder Include="Services\Email\" />
+    <Folder Include="Services\Notification\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
