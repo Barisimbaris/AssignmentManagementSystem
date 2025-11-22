@@ -16,4 +16,11 @@
     <ProjectReference Include="..\AMS.Domain\AMS.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Mappings\" />
+    <Folder Include="Services\Implementations\" />
+    <Folder Include="Services\Interfaces\" />
+    <Folder Include="Validators\" />
+  </ItemGroup>
+
 </Project>
