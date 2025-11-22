@@ -1,5 +1,5 @@
 ﻿using AMS.Domain.Common;
-using AMS.Domain.Common;
+
 using System.Security.Claims;
 
 namespace AMS.Domain.Entities;

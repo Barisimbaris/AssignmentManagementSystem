@@ -6,14 +6,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Context\" />
-    <Folder Include="Data\Configurations\" />
     <Folder Include="Data\Repositories\" />
     <Folder Include="Caching\" />
     <Folder Include="Identity\" />
     <Folder Include="Services\FileStorage\" />
     <Folder Include="Services\Email\" />
     <Folder Include="Services\Notification\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <PropertyGroup>

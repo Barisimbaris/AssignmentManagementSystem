@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AMS.Domain.Enums
 {
-    public enum AssigmentType { 
+    public enum AssignmentType { 
     Individual = 1,
     Group = 2
     }
