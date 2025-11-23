@@ -18,7 +18,7 @@ namespace AMS.Application.Common.Results
                 Data = data
             };
         }
-        public new static Result<T> Failrue(string error) {
+        public new static Result<T> Failure(string error) {
 
             return new Result<T>
             {

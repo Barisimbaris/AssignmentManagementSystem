@@ -16,7 +16,7 @@ namespace AMS.Application.Common.Results
             return new Result { IsSuccess = true, Message = message };
         }
 
-        public static Result Failrue(string eroor) {
+        public static Result Failure(string eroor) {
             return new Result
             {
                 IsSuccess = false,

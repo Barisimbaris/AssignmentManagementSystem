@@ -10,6 +10,7 @@ namespace AMS.Domain.Enums
     {
         PDF = 1,
         JPG = 2,
-        PNG = 3
+        PNG = 3,
+        Image= 4,
     }
 }

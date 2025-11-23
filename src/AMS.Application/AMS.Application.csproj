@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Folder Include="Mappings\" />
-    <Folder Include="Services\Implementations\" />
   </ItemGroup>
 
 </Project>

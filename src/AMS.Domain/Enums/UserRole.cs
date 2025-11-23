@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace AMS.Domain.Enums
 {
     public enum UserRole { 
-    Studnet=1,
+    Student=1,
     Instructor=2,
     Admin=3
     }
