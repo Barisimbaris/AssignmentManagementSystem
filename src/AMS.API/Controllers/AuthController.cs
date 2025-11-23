@@ -1,6 +1,7 @@
 ﻿using AMS.Application.DTOs.Auth;
 using AMS.Application.DTOs.User;
 using AMS.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace AMS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly IAuthService _authService;
 
@@ -50,13 +51,13 @@ namespace AMS.API.Controllers
         }
 
         /// <summary>
-        /// Change password
+        /// Change password (requires authentication)
         /// </summary>
+        [Authorize]  // ← JWT Token gerekli!
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
         {
-            // TODO: Get userId from JWT token
-            int userId = 1; // Temporary - will be replaced with actual user from token
+            var userId = GetCurrentUserId();  // ← Token'dan userId alındı!
 
             var result = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
 
