@@ -16,10 +16,11 @@ namespace AMS.Application.Services.Implementations
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
-
-        public AuthService(IUserRepository userRepository)
+        private readonly JwtTokenService _jwtTokenService;
+        public AuthService(IUserRepository userRepository, JwtTokenService jwtTokenService)
         {
             _userRepository = userRepository;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<Result<LoginResponseDto>> LoginAsync(LoginRequestDto request)
@@ -35,7 +36,7 @@ namespace AMS.Application.Services.Implementations
             {
                 return Result<LoginResponseDto>.Failure("Invalid email or password");
             }
-
+            var token = _jwtTokenService.GenerateToken(user);
             var response = new LoginResponseDto
             {
                 UserId = user.Id,
@@ -43,7 +44,7 @@ namespace AMS.Application.Services.Implementations
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Role = user.Role.ToString(),
-                Token = "temporary-token-will-add-jwt-later",
+                Token =  token, 
                 ExpiresAt = DateTime.UtcNow.AddHours(24)
             };
 

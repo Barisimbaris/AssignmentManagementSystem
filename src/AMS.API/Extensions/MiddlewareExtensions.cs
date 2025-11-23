@@ -1,4 +1,6 @@
-﻿namespace AMS.API.Middlewares
+﻿using AMS.API.Middlewares;
+
+namespace AMS.API.Extensions
 {
     public static class MiddlewareExtensions
     {
