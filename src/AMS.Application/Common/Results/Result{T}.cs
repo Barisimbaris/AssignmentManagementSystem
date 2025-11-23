@@ -29,7 +29,7 @@ namespace AMS.Application.Common.Results
 
         }
 
-        public new static Result<T> Failrue(List<string> errors){
+        public new static Result<T> Failure(List<string> errors){
             return new Result<T>
             {
                 IsSuccess = false,
