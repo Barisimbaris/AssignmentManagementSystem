@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AMS.Application.Services.Interfaces
 {
-    public  interface Interface1
+    public interface IGradeService
     {
         Task<Result<GradeResponseDto>> GetByIdAsync(int id);
         Task<Result<GradeResponseDto>> GetBySubmissionIdAsync(int submissionId);
