@@ -1,3 +1,4 @@
+using AMS.API.Middlewares;
 using AMS.Application.Services.Implementations;
 using AMS.Application.Services.Interfaces;
 using AMS.Domain.Interfaces;
@@ -47,6 +48,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseGlobalExceptionHandler();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
