@@ -1,3 +1,4 @@
+using Microsoft.OpenApi.Models;
 using AMS.API.Extensions;
 using AMS.API.Settings;
 using AMS.Application.Services.Implementations;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,7 +75,45 @@ builder.Services.AddValidatorsFromAssemblyContaining<AMS.Application.Validators.
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Assignment Management System API",
+        Version = "v1",
+        Description = "API for managing assignments, submissions, and grades",
+        Contact = new OpenApiContact
+        {
+            Name = "AMS Team",
+            Email = "support@ams.com"
+        }
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token."
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 var app = builder.Build();
 
