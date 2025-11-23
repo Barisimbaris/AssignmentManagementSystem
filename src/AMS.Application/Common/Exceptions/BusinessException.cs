@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace AMS.Application.Common.Exceptions
 {
-    internal class BusinessException
+    public class BusinessException : Exception
     {
+        public BusinessException(string message) : base(message)
+        {
+        }
     }
 }

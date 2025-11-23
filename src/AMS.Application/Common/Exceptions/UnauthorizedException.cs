@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace AMS.Application.Common.Exceptions
 {
-    internal class UnauthorizedException
+    public class UnauthorizedException : Exception
     {
+        public UnauthorizedException(string message = "Unauthorized access.")
+            : base(message)
+        {
+        }
     }
 }
