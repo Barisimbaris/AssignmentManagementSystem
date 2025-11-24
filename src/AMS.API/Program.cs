@@ -1,16 +1,18 @@
-using Microsoft.OpenApi.Models;
 using AMS.API.Extensions;
+using AMS.API.Filters;
 using AMS.API.Settings;
 using AMS.Application.Services.Implementations;
 using AMS.Application.Services.Interfaces;
 using AMS.Domain.Interfaces;
 using AMS.Infrastructure.Data.Context;
 using AMS.Infrastructure.Data.Repositories;
+using AMS.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 
@@ -37,6 +39,7 @@ builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 
 // Register Services
 builder.Services.AddScoped<JwtTokenService>();
+builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
@@ -113,6 +116,7 @@ builder.Services.AddSwaggerGen(options =>
             new string[] {}
         }
     });
+    options.OperationFilter<FileUploadOperationFilter>();
 });
 
 var app = builder.Build();

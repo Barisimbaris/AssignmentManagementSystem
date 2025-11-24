@@ -132,14 +132,16 @@ namespace AMS.Application.Services.Implementations
                 return Result<SubmissionResponseDto>.Failure("Late submission is not allowed for this assignment");
             }
 
-            var fileInfo = new FileInfo(filePath);
+            // ✅ FIX: Dosya yolunu düzelt
+            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", filePath);
+            var fileInfo = new FileInfo(fullPath);
 
             var submission = new Submission
             {
                 AssignmentId = request.AssignmentId,
                 StudentId = studentId,
                 GroupId = request.GroupId,
-                FilePath = filePath,
+                FilePath = filePath,  // Relative path kaydet
                 FileType = GetFileType(fileInfo.Extension),
                 FileSizeInBytes = fileInfo.Length,
                 SubmittedAt = DateTime.UtcNow,
