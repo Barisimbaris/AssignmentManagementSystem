@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğretmen Kontrol Paneli</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="teacherDashboard">
+    <h1>Öğretmen Kontrol Paneli</h1>
+
+    <div class="section">
+      <div id="teacherInfoCard" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+        <h2 id="teacherWelcomeName" style="margin-bottom: 1rem;">👋 Hoş geldiniz!</h2>
+        <div id="teacherInfoDetails" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+          <p id="teacherWelcomeText">Bilgileriniz yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>📚 Derslerim</h3>
+        <button id="openCreateCourseModal" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">+ Yeni Ders Oluştur</button>
+      </div>
+      <div id="teacherCourses" class="assignment-list">Yükleniyor...</div>
+    </div>
+
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>🏫 Sınıflarım</h3>
+        <button id="openCreateClassModal" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">+ Yeni Sınıf Oluştur</button>
+      </div>
+      <div id="teacherClasses" class="assignment-list">Yükleniyor...</div>
+    </div>
+    
+    <!-- Modal: Yeni Ders Oluştur -->
+    <div id="createCourseModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+      <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="margin: 0;">📚 Yeni Ders Oluştur</h2>
+          <button id="closeCourseModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <form id="createCourseForm">
+          <div class="form-row">
+            <input type="text" id="courseCode" placeholder="Ders Kodu (örn. MAT101)" required>
+            <input type="text" id="courseName" placeholder="Ders Adı" required>
+          </div>
+          <textarea id="courseDescription" placeholder="Ders Açıklaması (opsiyonel)" rows="2"></textarea>
+          <div class="form-row">
+            <input type="text" id="courseDepartment" placeholder="Bölüm" required>
+            <input type="number" id="creditHours" placeholder="AKTS" min="1" max="10" required>
+          </div>
+          <input type="text" id="academicYear" placeholder="Akademik Yıl (örn. 2024-2025)" required>
+          <button type="submit" id="createCourseButton" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Ders Oluştur</button>
+        </form>
+        <div id="createCourseResult"></div>
+      </div>
+    </div>
+    
+    <!-- Modal: Yeni Sınıf Oluştur -->
+    <div id="createClassModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+      <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="margin: 0;">🏫 Yeni Sınıf Oluştur</h2>
+          <button id="closeClassModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <form id="createClassForm">
+          <div class="form-row">
+            <select id="courseSelect">
+              <option value="">Ders seçiniz</option>
+            </select>
+            <input type="text" id="className" placeholder="Sınıf adı" required>
+          </div>
+          <div class="form-row">
+            <input type="text" id="classCode" placeholder="Sınıf kodu (opsiyonel)">
+            <input type="number" id="maxCapacity" placeholder="Kontenjan (örn. 50)" min="1" max="500">
+          </div>
+          <input type="text" id="semester" placeholder="Dönem (örn. 2024-2025 Güz)" required>
+          <button type="submit" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Sınıf Oluştur</button>
+        </form>
+        <div id="createClassResult"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="teacher.js"></script>
+</body>
+</html>

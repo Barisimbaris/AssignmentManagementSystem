@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş Yap - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+  </header>
+
+  <section class="login-container" style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 2rem;">
+    <div class="login-card" style="max-width: 450px; width: 100%; background: white; border-radius: 20px; padding: 3rem; box-shadow: 0 15px 50px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; color: #667eea; margin-bottom: 0.5rem;">🎓 Giriş Yap</h1>
+        <p class="subtitle" id="roleSubtitle" style="color: #666;">Hesabınıza giriş yapın</p>
+      </div>
+
+      <div class="manual-login">
+        <form id="loginForm" style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <div style="position: relative;">
+            <input type="email" id="email" placeholder="E-posta adresiniz" required 
+                   style="width: 100%; padding: 1rem 1rem 1rem 3rem; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 1rem; transition: all 0.3s;">
+            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">📧</span>
+          </div>
+          <div style="position: relative;">
+            <input type="password" id="password" placeholder="Şifreniz" required
+                   style="width: 100%; padding: 1rem 1rem 1rem 3rem; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 1rem; transition: all 0.3s;">
+            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">🔒</span>
+          </div>
+          <button type="submit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-top: 0.5rem;">
+            Giriş Yap
+          </button>
+        </form>
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem; color: #666;">
+          Hesabınız yok mu? <a href="student_teacher_register.html" style="color: #667eea; font-weight: 600; text-decoration: none;">Kayıt Ol</a>
+        </p>
+        <p style="text-align: center; margin-top: 1rem;">
+          <a href="index.html" style="color: #667eea; font-size: 0.9rem; text-decoration: none;">← Ana Sayfaya Dön</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi - Backend API Versiyonu</p>
+    <p style="margin-top: 0.5rem;">
+      <a href="backend-test.html" style="color: #2196F3; font-size: 0.9rem;">🔍 Backend Bağlantı Testi</a>
+    </p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="login.js"></script>
+  <script>
+    // Sayfa yüklendiğinde backend'i kontrol et
+    document.addEventListener("DOMContentLoaded", async () => {
+      const backendUrl = "http://localhost:8080/swagger";
+      
+      try {
+        const response = await fetch(backendUrl, { method: "HEAD", mode: "no-cors" });
+        // Bağlantı başarılı (no-cors mode'da her zaman success döner)
+      } catch (error) {
+        // Backend çalışmıyor olabilir - kullanıcıyı bilgilendir
+        const warning = document.createElement("div");
+        warning.style.cssText = "background: #fff3cd; border: 1px solid #ffc107; padding: 1rem; margin: 1rem auto; max-width: 600px; border-radius: 8px;";
+        warning.innerHTML = `
+          <strong>⚠️ Backend Bağlantı Uyarısı</strong><br>
+          <p style="margin: 0.5rem 0;">Backend çalışmıyor görünüyor. Lütfen backend'i başlatın:</p>
+          <ol style="text-align: left; margin: 0.5rem 0; padding-left: 1.5rem;">
+            <li>Terminal'de: <code>cd AssignmentManagementSystem-main</code></li>
+            <li>Çalıştırın: <code>dotnet run --project src/AMS.API --launch-profile http</code></li>
+            <li><a href="${backendUrl}" target="_blank">Swagger</a> sayfasının açıldığını kontrol edin</li>
+            <li>Sayfayı yenileyin (F5)</li>
+          </ol>
+          <p style="margin-top: 0.5rem;">
+            <a href="backend-test.html" style="color: #007bff;">→ Backend Test Sayfasına Git</a>
+          </p>
+        `;
+        document.querySelector(".login-container").insertBefore(warning, document.querySelector(".login-card"));
+      }
+    });
+  </script>
+</body>
+</html>

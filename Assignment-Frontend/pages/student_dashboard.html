@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğrenci Kontrol Paneli</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="studentDashboard">
+    <h1>Öğrenci Kontrol Paneli</h1>
+
+    <div class="section">
+      <div id="studentInfoCard" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+        <h2 id="studentWelcomeName" style="margin-bottom: 1rem;">👋 Hoş geldiniz!</h2>
+        <div id="studentInfoDetails" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+          <p id="welcomeText">Bilgileriniz yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>📚 Kayıtlı Olduğum Dersler</h3>
+      <div id="enrolledClassesList" class="assignment-list">Yükleniyor...</div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

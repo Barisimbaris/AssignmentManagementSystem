@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not Verme - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="gradingPage" style="max-width: 1200px; margin: 0 auto; padding: 2rem; min-height: calc(100vh - 250px);">
+    <div style="width: 100%; max-width: 1200px; margin: 0 auto;">
+      <h1 style="text-align: center; margin-bottom: 2rem;">📝 Not Verme</h1>
+
+      <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 2rem; margin-bottom: 2rem;">
+        <h2 style="color: white; margin-bottom: 1rem;">Ödev Seç</h2>
+        <div class="form-row" style="display: flex; gap: 1rem; align-items: center;">
+          <select id="gradingAssignmentSelect" style="flex: 1; padding: 0.75rem; border-radius: 8px; border: none; font-size: 1rem;">
+            <option value="">Ödev seçiniz</option>
+          </select>
+          <button id="loadSubmissions" style="padding: 0.75rem 2rem; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">Teslimleri Yükle</button>
+        </div>
+      </div>
+
+      <div class="section" id="submissionsSection" style="display: none; margin-bottom: 2rem;">
+        <h2>Ödev Teslimleri</h2>
+        <div id="assignmentInfo" class="assignment-info-box"></div>
+        <div id="submissionsList" class="submissions-list">
+          <p>Ödev seçin ve teslimleri yükleyin.</p>
+        </div>
+      </div>
+
+      <div class="section" id="gradingFormSection" style="display: none; margin-bottom: 2rem;">
+        <h2>Not Ver</h2>
+        <form id="gradingForm">
+          <input type="hidden" id="submissionId">
+          <input type="hidden" id="gradeId">
+          <div class="grading-info" id="gradingStudentInfo"></div>
+          <div class="form-row">
+            <input type="number" id="scoreInput" placeholder="Puan" min="0" step="0.1" required>
+            <input type="number" id="maxScoreDisplay" placeholder="Max Puan" readonly>
+          </div>
+          <textarea id="feedbackInput" placeholder="Geri bildirim (opsiyonel)" rows="4"></textarea>
+          <button type="submit">Notu Kaydet ve Yayınla</button>
+        </form>
+        <div id="gradingResult"></div>
+      </div>
+      
+      <div style="height: 2rem;"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="grading.js"></script>
+</body>
+</html>
+
+

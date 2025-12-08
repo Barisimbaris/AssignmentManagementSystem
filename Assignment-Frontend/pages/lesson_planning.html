@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Planlama - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul id="mainNav">
+        <!-- Navigation.js tarafından doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="lessonPlanningPage">
+    <div class="page-header">
+      <h1>📅 Ders Planlama</h1>
+      <p class="page-subtitle">Haftalık ders programınızı oluşturun ve yönetin</p>
+    </div>
+
+    <div class="lesson-planning-grid">
+      <!-- Sol Taraf: Form -->
+      <div class="planning-form-section">
+        <div class="section create-plan-card">
+          <div class="section-header">
+            <h2>➕ Yeni Ders Planı Ekle</h2>
+            <p class="section-description">Ders planlarınızı oluşturun ve haftalık programınızı düzenleyin</p>
+          </div>
+          <form id="lessonPlanForm" class="lesson-plan-form">
+            <div class="form-group">
+              <label for="planClassSelect">
+                <span class="label-icon">🏫</span>
+                Sınıf Seçiniz
+              </label>
+              <select id="planClassSelect" required>
+                <option value="">Sınıf seçiniz...</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="weekNumber">
+                  <span class="label-icon">📆</span>
+                  Hafta Numarası
+                </label>
+                <input type="number" id="weekNumber" placeholder="1-16" min="1" max="16" required>
+              </div>
+              <div class="form-group">
+                <label for="lessonTopic">
+                  <span class="label-icon">📝</span>
+                  Konu Başlığı
+                </label>
+                <input type="text" id="lessonTopic" placeholder="Örn: Türev ve Uygulamaları" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="lessonDescription">
+                <span class="label-icon">📋</span>
+                Ders Açıklaması
+              </label>
+              <textarea id="lessonDescription" placeholder="Bu hafta işlenecek konular ve detaylar..." rows="4" required></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="startDate">
+                  <span class="label-icon">🕐</span>
+                  Başlangıç Tarihi
+                </label>
+                <input type="datetime-local" id="startDate" required>
+              </div>
+              <div class="form-group">
+                <label for="endDate">
+                  <span class="label-icon">🕐</span>
+                  Bitiş Tarihi
+                </label>
+                <input type="datetime-local" id="endDate" required>
+              </div>
+            </div>
+
+            <button type="submit" class="submit-btn-primary">
+              <span class="btn-icon">✅</span>
+              Ders Planı Ekle
+            </button>
+          </form>
+          <div id="planResult" class="form-result"></div>
+        </div>
+      </div>
+
+      <!-- Sağ Taraf: Haftalık Program ve Listeler -->
+      <div class="planning-content-section">
+        <!-- Haftalık Program -->
+        <div class="section weekly-schedule-section">
+          <div class="section-header">
+            <h2>📊 Haftalık Ders Programı</h2>
+            <p class="section-description">Bu hafta planlanan derslerinizi görüntüleyin</p>
+          </div>
+          <div id="weeklySchedule" class="weekly-schedule">
+            <div class="loading-placeholder">
+              <div class="loading-spinner"></div>
+              <p>Yükleniyor...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ders Planları Listesi -->
+        <div class="section lesson-plans-section">
+          <div class="section-header">
+            <h2>📚 Tüm Ders Planlarım</h2>
+            <p class="section-description">Oluşturduğunuz tüm ders planlarını görüntüleyin</p>
+          </div>
+          <div id="lessonPlansList" class="lesson-plans-list">
+            <div class="loading-placeholder">
+              <div class="loading-spinner"></div>
+              <p>Yükleniyor...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi - Tüm hakları saklıdır</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="lessonPlanning.js"></script>
+  <script>
+    // Navigation'ı yükle
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof updateNavigationByRole === 'function') {
+        updateNavigationByRole();
+      }
+    });
+  </script>
+</body>
+</html>

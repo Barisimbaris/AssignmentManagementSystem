@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend Bağlantı Testi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .status {
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Backend Bağlantı Testi</h1>
+  
+  <div id="status" class="status info">
+    Test başlatılıyor...
+  </div>
+
+  <button onclick="testBackend()">🔄 Tekrar Test Et</button>
+  <button onclick="window.location.href='login.html'">← Giriş Sayfasına Dön</button>
+
+  <div id="details" style="margin-top: 20px;"></div>
+
+  <script>
+    const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:8080/api";
+    const BACKEND_URL = API_BASE_URL.replace("/api", "");
+
+    async function testBackend() {
+      const statusDiv = document.getElementById("status");
+      const detailsDiv = document.getElementById("details");
+
+      statusDiv.className = "status info";
+      statusDiv.innerHTML = "🔍 Backend test ediliyor...";
+      detailsDiv.innerHTML = "";
+
+      const tests = [];
+
+      // Test 1: Swagger açılıyor mu?
+      tests.push({
+        name: "Swagger UI Erişimi",
+        test: async () => {
+          try {
+            const response = await fetch(BACKEND_URL + "/swagger/index.html", {
+              method: "HEAD",
+              mode: "no-cors" // CORS olmadan sadece bağlantı testi
+            });
+            return { success: true, message: "Swagger UI erişilebilir" };
+          } catch (e) {
+            return { success: false, message: "Swagger UI erişilemiyor: " + e.message };
+          }
+        }
+      });
+
+      // Test 2: API endpoint'i çalışıyor mu?
+      tests.push({
+        name: "API Endpoint Erişimi",
+        test: async () => {
+          try {
+            const response = await fetch(API_BASE_URL + "/Course", {
+              method: "GET",
+              headers: {
+                "Accept": "application/json"
+              }
+            });
+            if (response.ok) {
+              return { success: true, message: `API çalışıyor (Status: ${response.status})` };
+            } else {
+              return { success: false, message: `API yanıt veriyor ama hata var (Status: ${response.status})` };
+            }
+          } catch (e) {
+            return { success: false, message: "API erişilemiyor: " + e.message };
+          }
+        }
+      });
+
+      // Test 3: CORS çalışıyor mu?
+      tests.push({
+        name: "CORS Kontrolü",
+        test: async () => {
+          try {
+            const response = await fetch(API_BASE_URL + "/Course", {
+              method: "OPTIONS"
+            });
+            if (response.ok) {
+              return { success: true, message: "CORS ayarları doğru" };
+            } else {
+              return { success: false, message: "CORS sorunu olabilir" };
+            }
+          } catch (e) {
+            return { success: false, message: "CORS testi başarısız: " + e.message };
+          }
+        }
+      });
+
+      // Testleri çalıştır
+      let allPassed = true;
+      const results = [];
+
+      for (const test of tests) {
+        try {
+          const result = await test.test();
+          results.push({ ...test, ...result });
+          if (!result.success) allPassed = false;
+        } catch (e) {
+          results.push({ ...test, success: false, message: "Test hatası: " + e.message });
+          allPassed = false;
+        }
+      }
+
+      // Sonuçları göster
+      if (allPassed) {
+        statusDiv.className = "status success";
+        statusDiv.innerHTML = "✅ Backend çalışıyor! Tüm testler başarılı.";
+      } else {
+        statusDiv.className = "status error";
+        statusDiv.innerHTML = "❌ Backend bağlantı sorunu var! Aşağıdaki detaylara bakın.";
+      }
+
+      // Detayları göster
+      detailsDiv.innerHTML = `
+        <h2>Test Sonuçları:</h2>
+        ${results.map(r => `
+          <div class="status ${r.success ? 'success' : 'error'}" style="margin: 10px 0;">
+            <strong>${r.name}:</strong> ${r.success ? '✅' : '❌'} ${r.message}
+          </div>
+        `).join('')}
+        
+        <h2>🔧 Backend'i Başlatmak İçin:</h2>
+        <pre>cd AssignmentManagementSystem-main
+dotnet run --project src/AMS.API --launch-profile http</pre>
+        
+        <p><strong>Veya backend'in çalıştığını kontrol edin:</strong></p>
+        <p><a href="${BACKEND_URL}/swagger" target="_blank">${BACKEND_URL}/swagger</a> açılmalı</p>
+        
+        <h2>📋 Kontrol Listesi:</h2>
+        <ul>
+          <li>✅ Backend klasörüne gittiniz mi? (<code>AssignmentManagementSystem-main</code>)</li>
+          <li>✅ Backend komutunu çalıştırdınız mı? (<code>dotnet run --project src/AMS.API --launch-profile http</code>)</li>
+          <li>✅ Terminal'de "Now listening on: http://localhost:8080" mesajını görüyor musunuz?</li>
+          <li>✅ Tarayıcıda <a href="${BACKEND_URL}/swagger" target="_blank">Swagger</a> açılıyor mu?</li>
+        </ul>
+      `;
+    }
+
+    // Sayfa yüklendiğinde otomatik test
+    window.addEventListener("DOMContentLoaded", () => {
+      testBackend();
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
