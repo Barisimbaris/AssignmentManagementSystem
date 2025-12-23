@@ -1,9 +1,9 @@
-import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, ActivityIndicator, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { ROLES } from '../utils/constants';
 import AuthNavigator from './AuthNavigator';
+import InstructorNavigator from './InstructorNavigator';
 import StudentNavigator from './StudentNavigator';
 
 const AppNavigator = () => {
@@ -27,8 +27,10 @@ const AppNavigator = () => {
       ) : user?.role === ROLES.STUDENT ? (
         <StudentNavigator />
       ) : user?.role === ROLES.INSTRUCTOR ? (
-        <View style={styles.instructorContainer}>
-          <Text style={styles.title}>👨‍🏫 Instructor Dashboard</Text>
+        <InstructorNavigator />
+      ) : user?.role === ROLES.ADMIN ? (
+        <View style={styles.adminContainer}>
+          <Text style={styles.title}>👔 Admin Dashboard</Text>
           <Text style={styles.subtitle}>Yakında...</Text>
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
@@ -59,7 +61,7 @@ const styles = StyleSheet.create({
     color: '#757575',
     fontSize: 16,
   },
-  instructorContainer: {
+  adminContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

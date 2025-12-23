@@ -1,7 +1,9 @@
 // API Base URL - Backend API'nizin adresi
 export const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.137.1:5281/api'  // iPhone için local IP
-  : 'https://your-production-api.com/api';
+ //  // iPhone için local IP
+ //? 'http://192.168.1.152:5281/api'
+ ?'https://kristin-squishier-beseechingly.ngrok-free.dev/api' 
+ : 'https://your-production-api.com/api';
 
 // Token storage key
 export const TOKEN_KEY = '@ams_token';

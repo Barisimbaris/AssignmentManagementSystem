@@ -2,71 +2,71 @@ import axios from 'axios';
 import { API_BASE_URL } from '../utils/constants';
 import { getToken } from '../utils/storage';
 
-// Axios instance oluştur
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30 saniye
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - Her istekte token ekle
+// Request interceptor
 apiClient.interceptors.request.use(
   async (config) => {
+    console.log('📤 API İstek:', config.method.toUpperCase(), config.url);
+    
     const token = await getToken();
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔑 Token eklendi:', token.substring(0, 30) + '...');
+    } else {
+      console.warn('⚠️ TOKEN BULUNAMADI! Request gönderiliyor ama token yok!');
     }
+    
     return config;
   },
   (error) => {
+    console.error('❌ Request interceptor hatası:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor - Hata yönetimi
+// Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
-    // Başarılı response
+    console.log('✅ API Yanıt:', response.config.url, response.status);
     return response;
   },
   (error) => {
-    // Hata durumları
     if (error.response) {
-      // Backend'den gelen hatalar
       const { status, data } = error.response;
+      
+      console.log('❌ API Hatası:', error.config?.url, status, data?.message);
       
       switch (status) {
         case 401:
-          // Unauthorized - Token geçersiz veya yok
-          console.log('Unauthorized - Please login again');
-          // TODO: Logout ve login sayfasına yönlendir
+          console.log('🔒 Unauthorized - Token geçersiz veya yok!');
           break;
         case 403:
-          // Forbidden - Yetkisiz erişim
-          console.log('Forbidden - You do not have permission');
+          console.log('🚫 Forbidden - Yetkisiz erişim');
           break;
         case 404:
-          // Not Found
-          console.log('Resource not found');
+          console.log('🔍 Not Found');
           break;
         case 500:
-          // Server Error
-          console.log('Server error - Please try again later');
+          console.log('💥 Server error');
           break;
         default:
-          console.log('Error:', data?.message || 'Something went wrong');
+          console.log('⚠️ Error:', data?.message || 'Something went wrong');
       }
       
       return Promise.reject(error.response.data);
     } else if (error.request) {
-      // İstek gönderildi ama cevap alınamadı (network hatası)
-      console.log('Network error - Please check your connection');
+      console.log('🌐 Network error - Bağlantı yok');
       return Promise.reject({ message: 'Network error - Please check your connection' });
     } else {
-      // İstek oluşturulurken hata
-      console.log('Error:', error.message);
+      console.log('⚠️ Request error:', error.message);
       return Promise.reject({ message: error.message });
     }
   }

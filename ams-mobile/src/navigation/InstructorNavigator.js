@@ -1,15 +1,31 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 
 // Screens
-import InstructorDashboard from '../screens/instructor/InstructorDashboard';
-import MyClassesScreen from '../screens/instructor/MyClassesScreen';
-import CreateAssignmentScreen from '../screens/instructor/CreateAssignmentScreen';
 import ProfileScreen from '../screens/common/ProfileScreen';
+import AssignmentListScreen from '../screens/instructor/AssignmentListScreen';
+import CreateAssignmentScreen from '../screens/instructor/CreateAssignmentScreen';
+import GradeSubmissionScreen from '../screens/instructor/GradeSubmissionScreen';
+import InstructorDashboard from '../screens/instructor/InstructorDashboard';
+import StudentsScreen from '../screens/instructor/StudentsScreen';
+import SubmissionsListScreen from '../screens/instructor/SubmissionsListScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+// Assignments Stack
+const AssignmentsStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="AssignmentList" component={AssignmentListScreen} />
+      <Stack.Screen name="CreateAssignment" component={CreateAssignmentScreen} />
+      <Stack.Screen name="SubmissionsList" component={SubmissionsListScreen} />
+      <Stack.Screen name="GradeSubmission" component={GradeSubmissionScreen} />
+    </Stack.Navigator>
+  );
+};
 
 const InstructorNavigator = () => {
   return (
@@ -20,20 +36,20 @@ const InstructorNavigator = () => {
 
           if (route.name === 'Dashboard') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'MyClasses') {
-            iconName = focused ? 'school' : 'school-outline';
-          } else if (route.name === 'CreateAssignment') {
-            iconName = focused ? 'add-circle' : 'add-circle-outline';
+          } else if (route.name === 'Assignments') {
+            iconName = focused ? 'book' : 'book-outline';
+          } else if (route.name === 'Students') {
+            iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: colors.secondary,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.white,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           height: 60,
@@ -53,14 +69,14 @@ const InstructorNavigator = () => {
         options={{ tabBarLabel: 'Ana Sayfa' }}
       />
       <Tab.Screen 
-        name="MyClasses" 
-        component={MyClassesScreen}
-        options={{ tabBarLabel: 'Sınıflarım' }}
+        name="Assignments" 
+        component={AssignmentsStack}
+        options={{ tabBarLabel: 'Ödevler' }}
       />
       <Tab.Screen 
-        name="CreateAssignment" 
-        component={CreateAssignmentScreen}
-        options={{ tabBarLabel: 'Ödev Oluştur' }}
+        name="Students" 
+        component={StudentsScreen}
+        options={{ tabBarLabel: 'Öğrenciler' }}
       />
       <Tab.Screen 
         name="Profile" 
