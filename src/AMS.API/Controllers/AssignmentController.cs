@@ -33,8 +33,24 @@ namespace AMS.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _assignmentService.GetAllAsync();
-            return Ok(result);
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            if (userRole == "Admin")
+            {
+                var allResult = await _assignmentService.GetAllAsync();
+                return Ok(allResult);
+            }
+
+            // Instructor sadece kendi ödevlerini görebilir
+            if (userRole == "Instructor")
+            {
+                var instructorResult = await _assignmentService.GetByInstructorIdAsync(userId);
+                return Ok(instructorResult);
+            }
+
+            // Student sadece kayıtlı olduğu sınıfların ödevlerini görebilir
+            var studentResult = await _assignmentService.GetByStudentIdAsync(userId);
+            return Ok(studentResult);
         }
 
         /// <summary>

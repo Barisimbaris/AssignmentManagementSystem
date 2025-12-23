@@ -16,5 +16,6 @@ namespace AMS.Domain.Interfaces
         Task UpdateAsync(Assignment assignment);
         Task DeleteAsync(Assignment assignment);
         Task SaveChangesAsync();
+        Task<List<Assignment>> GetByClassIdsAsync(List<int> classIds);
     }
 }

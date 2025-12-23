@@ -71,4 +71,10 @@ public class UserRepository : IUserRepository
     {
         await _context.SaveChangesAsync();
     }
+    public async Task<List<User>> GetByIdsAsync(List<int> ids)
+    {
+        return await _context.Users
+            .Where(u => ids.Contains(u.Id))
+            .ToListAsync();
+    }
 }

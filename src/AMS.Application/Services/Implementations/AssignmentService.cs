@@ -17,15 +17,20 @@ namespace AMS.Application.Services.Implementations
         private readonly IAssignmentRepository _assignmentRepository;
         private readonly IClassRepository _classRepository;
         private readonly ISubmissionRepository _submissionRepository;
-
+        private readonly IUserRepository _userRepository;
+        private readonly IEnrollmentRepository _enrollmentRepository;
         public AssignmentService(
             IAssignmentRepository assignmentRepository,
             IClassRepository classRepository,
-            ISubmissionRepository submissionRepository)
+            ISubmissionRepository submissionRepository,
+            IUserRepository userRepository,
+             IEnrollmentRepository enrollmentRepository)
         {
             _assignmentRepository = assignmentRepository;
             _classRepository = classRepository;
             _submissionRepository = submissionRepository;
+            _userRepository = userRepository;
+            _enrollmentRepository = enrollmentRepository;
         }
 
         public async Task<Result<AssignmentResponseDto>> GetByIdAsync(int id)
@@ -47,12 +52,14 @@ namespace AMS.Application.Services.Implementations
                 ClassId = assignment.ClassId,
                 ClassName = assignment.Class.ClassName,
                 AssignmentType = assignment.Type.ToString(),
+                Type = assignment.Type.ToString(),              // ✅ EKLE
                 DueDate = assignment.DueDate,
                 MaxScore = assignment.MaxScore,
                 AllowLateSubmission = assignment.AllowLateSubmission,
                 AllowResubmission = assignment.AllowResubmission,
                 AttachmentPath = assignment.AttachmentPath,
                 TotalSubmissions = submissions.Count,
+                InstructorId = assignment.Class.InstructorId,  // ✅ EKLE (ÇOK ÖNEMLİ!)
                 CreatedAt = assignment.CreatedAt
             };
 
@@ -123,38 +130,39 @@ namespace AMS.Application.Services.Implementations
 
         public async Task<Result<List<AssignmentResponseDto>>> GetByStudentIdAsync(int studentId)
         {
-            var submissions = await _submissionRepository.GetByStudentIdAsync(studentId);
-            var assignmentIds = submissions.Select(s => s.AssignmentId).Distinct().ToList();
+            var enrollments = await _enrollmentRepository.GetByStudentIdAsync(studentId);
+            var classIds = enrollments.Select(e => e.ClassId).ToList();
 
-            var response = new List<AssignmentResponseDto>();
-
-            foreach (var assignmentId in assignmentIds)
+            if (!classIds.Any())
             {
-                var assignment = await _assignmentRepository.GetByIdAsync(assignmentId);
-                if (assignment == null) continue;
-
-                var allSubmissions = await _submissionRepository.GetByAssignmentIdAsync(assignmentId);
-
-                response.Add(new AssignmentResponseDto
-                {
-                    Id = assignment.Id,
-                    Title = assignment.Title,
-                    Description = assignment.Description,
-                    ClassId = assignment.ClassId,
-                    ClassName = assignment.Class.ClassName,
-                    AssignmentType = assignment.Type.ToString(),
-                    DueDate = assignment.DueDate,
-                    MaxScore = assignment.MaxScore,
-                    AllowLateSubmission = assignment.AllowLateSubmission,
-                    AllowResubmission = assignment.AllowResubmission,
-                    AttachmentPath = assignment.AttachmentPath,
-                    TotalSubmissions = allSubmissions.Count,
-                    CreatedAt = assignment.CreatedAt
-                });
+                return Result<List<AssignmentResponseDto>>.Success(new List<AssignmentResponseDto>());
             }
+
+            // Bu class'lara ait tüm assignments'ları getir
+            var assignments = await _assignmentRepository.GetByClassIdsAsync(classIds);
+
+            var response = assignments.Select(a => new AssignmentResponseDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+                ClassName = a.Class.ClassName,
+                ClassId = a.ClassId,
+                AssignmentType = a.Type.ToString(),
+                Type = a.Type.ToString(),
+                DueDate = a.DueDate,
+                MaxScore = a.MaxScore,
+                AllowLateSubmission = a.AllowLateSubmission,
+                AllowResubmission = a.AllowResubmission,
+                AttachmentPath = a.AttachmentPath,
+                TotalSubmissions = a.Submissions.Count,
+                InstructorId = a.Class.InstructorId,
+                CreatedAt = a.CreatedAt
+            }).ToList();
 
             return Result<List<AssignmentResponseDto>>.Success(response);
         }
+        
 
         public async Task<Result<AssignmentResponseDto>> CreateAsync(CreateAssignmentRequestDto request, int instructorId)
         {
@@ -284,5 +292,39 @@ namespace AMS.Application.Services.Implementations
 
             return Result.Success("Assignment deleted successfully");
         }
-    }
-}
+        public async Task<Result<List<AssignmentResponseDto>>> GetByInstructorIdAsync(int instructorId)
+        {
+            var classes = await _classRepository.GetByInstructorIdAsync(instructorId);
+            var classIds = classes.Select(c => c.Id).ToList();
+
+            if (!classIds.Any())
+            {
+                return Result<List<AssignmentResponseDto>>.Success(new List<AssignmentResponseDto>());
+            }
+
+            // Bu class'lara ait tüm assignments'ları getir
+            var assignments = await _assignmentRepository.GetByClassIdsAsync(classIds);
+
+            var response = assignments.Select(a => new AssignmentResponseDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+                ClassName = a.Class.ClassName,
+                ClassId = a.ClassId,
+                AssignmentType = a.Type.ToString(),
+                Type = a.Type.ToString(),
+                DueDate = a.DueDate,
+                MaxScore = a.MaxScore,
+                AllowLateSubmission = a.AllowLateSubmission,
+                AllowResubmission = a.AllowResubmission,
+                AttachmentPath = a.AttachmentPath,
+                TotalSubmissions = a.Submissions.Count,
+                InstructorId = a.Class.InstructorId,
+                CreatedAt = a.CreatedAt
+            }).ToList();
+
+            return Result<List<AssignmentResponseDto>>.Success(response);
+
+        }
+    } }

@@ -17,5 +17,7 @@ namespace AMS.Application.Services.Interfaces
         Task<Result<List<UserResponseDto>>> GetInstructorsAsync();
         Task<Result<UserResponseDto>> UpdateAsync(int id, UpdateUserRequestDto request);
         Task<Result> DeleteAsync(int id);
+        Task<Result<List<UserResponseDto>>> GetStudentsByInstructorIdAsync(int instructorId);
+
     }
 }

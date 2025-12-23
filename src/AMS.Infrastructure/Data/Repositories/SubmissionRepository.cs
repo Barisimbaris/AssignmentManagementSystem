@@ -23,6 +23,7 @@ namespace AMS.Infrastructure.Data.Repositories
         {
             return await _context.Submissions
                 .Include(s => s.Assignment)
+                .ThenInclude(a => a.Class)
                 .Include(s => s.Student)
                 .Include(s => s.Grade)
                 .FirstOrDefaultAsync(s => s.Id == id);
@@ -32,6 +33,8 @@ namespace AMS.Infrastructure.Data.Repositories
         {
             return await _context.Submissions
                 .Include(s => s.Student)
+                 .Include(s => s.Assignment)
+                 .ThenInclude(a => a.Class)
                 .Include(s => s.Grade)
                 .Where(s => s.AssignmentId == assignmentId)
                 .OrderByDescending(s => s.SubmittedAt)
@@ -43,6 +46,7 @@ namespace AMS.Infrastructure.Data.Repositories
             return await _context.Submissions
                 .Include(s => s.Assignment)
                 .ThenInclude(a => a.Class)
+                .Include(s => s.Student)
                 .Include(s => s.Grade)
                 .Where(s => s.StudentId == studentId)
                 .OrderByDescending(s => s.SubmittedAt)
@@ -52,6 +56,9 @@ namespace AMS.Infrastructure.Data.Repositories
         public async Task<Submission?> GetByAssignmentAndStudentAsync(int assignmentId, int studentId)
         {
             return await _context.Submissions
+               .Include(s => s.Assignment)       // ✅ EKLE!
+                    .ThenInclude(a => a.Class)    // ✅ EKLE!
+                .Include(s => s.Student)          // ✅ EKLE!
                 .Include(s => s.Grade)
                 .FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == studentId);
         }

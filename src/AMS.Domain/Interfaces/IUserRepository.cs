@@ -20,5 +20,6 @@ namespace AMS.Domain.Interfaces
         Task<bool> ExistsAsync(int id);
         Task<bool> EmailExistsAsync(string email);
         Task SaveChangesAsync();
+        Task<List<User>> GetByIdsAsync(List<int> ids);
     }
 }

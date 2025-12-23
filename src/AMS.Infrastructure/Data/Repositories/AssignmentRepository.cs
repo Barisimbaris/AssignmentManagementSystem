@@ -37,9 +37,11 @@ namespace AMS.Infrastructure.Data.Repositories
         public async Task<List<Assignment>> GetByClassIdAsync(int classId)
         {
             return await _context.Assignments
-                .Where(a => a.ClassId == classId)
-                .OrderByDescending(a => a.CreatedAt)
-                .ToListAsync();
+               .Include(a => a.Class)
+        .Include(a => a.Submissions)
+        .Where(a => a.ClassId == classId)
+        .OrderByDescending(a => a.CreatedAt)
+        .ToListAsync();
         }
 
         public async Task<Assignment> AddAsync(Assignment assignment)
@@ -64,6 +66,15 @@ namespace AMS.Infrastructure.Data.Repositories
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+        public async Task<List<Assignment>> GetByClassIdsAsync(List<int> classIds)
+        {
+            return await _context.Assignments
+                .Include(a => a.Class)
+                .Include(a => a.Submissions)
+                .Where(a => classIds.Contains(a.ClassId))
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
         }
     }
 }

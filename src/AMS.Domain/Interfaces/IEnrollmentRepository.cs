@@ -19,5 +19,6 @@ namespace AMS.Domain.Interfaces
         Task DeleteAsync(Enrollment enrollment);
         Task<bool> IsStudentEnrolledAsync(int studentId, int classId);
         Task SaveChangesAsync();
+        Task<List<Enrollment>> GetByClassIdsAsync(List<int> classIds);
     }
 }

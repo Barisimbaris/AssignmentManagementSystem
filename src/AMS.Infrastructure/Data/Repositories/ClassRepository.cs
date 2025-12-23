@@ -47,9 +47,11 @@ namespace AMS.Infrastructure.Data.Repositories
         public async Task<List<Class>> GetByInstructorIdAsync(int instructorId)
         {
             return await _context.Classes
-                .Include(c => c.Course)
-                .Where(c => c.InstructorId == instructorId)
-                .ToListAsync();
+        .Include(c => c.Course)
+        .Include(c => c.Instructor)
+        .Include(c => c.Enrollments)
+        .Where(c => c.InstructorId == instructorId)
+        .ToListAsync();
         }
 
         public async Task<Class> AddAsync(Class classEntity)

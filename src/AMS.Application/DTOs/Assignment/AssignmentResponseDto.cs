@@ -21,5 +21,7 @@ namespace AMS.Application.DTOs.Assignment
         public string? AttachmentPath { get; set; }
         public int TotalSubmissions { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public int InstructorId { get; set; }
     }
 }

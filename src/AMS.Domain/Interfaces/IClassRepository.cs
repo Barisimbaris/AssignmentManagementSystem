@@ -17,5 +17,6 @@ namespace AMS.Domain.Interfaces
         Task UpdateAsync(Class classEntity);
         Task DeleteAsync(Class classEntity);
         Task SaveChangesAsync();
+        
     }
 }

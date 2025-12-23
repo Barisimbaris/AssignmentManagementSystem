@@ -36,10 +36,21 @@ namespace AMS.API.Controllers
             return Ok(result);
 
         }
-
+        [Authorize(Roles = "Instructor,Admin")]
         [HttpGet("students")]
-        public async Task<IActionResult> GetStudents() { 
-        var result = await _userService.GetStudentsAsync();
+        public async Task<IActionResult> GetStudents() {
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+
+            // Admin tüm öğrencileri görebilir
+            if (userRole == "Admin")
+            {
+                var allResult = await _userService.GetStudentsAsync();
+                return Ok(allResult);
+            }
+
+            // Instructor sadece kendi derslerindeki öğrencileri görebilir
+            var result = await _userService.GetStudentsByInstructorIdAsync(userId);
             return Ok(result);
         }
 

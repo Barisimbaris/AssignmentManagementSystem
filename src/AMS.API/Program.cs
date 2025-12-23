@@ -130,8 +130,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.Urls.Add("http://0.0.0.0:5281");
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();  // ? JWT Authentication
 app.UseAuthorization();

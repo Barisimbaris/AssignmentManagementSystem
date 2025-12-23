@@ -15,10 +15,17 @@ namespace AMS.Application.Services.Implementations
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IClassRepository _classRepository;            // ✅ EKLE
+        private readonly IEnrollmentRepository _enrollmentRepository;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(
+            IUserRepository userRepository,
+            IClassRepository classRepository,            // ✅ EKLE
+            IEnrollmentRepository enrollmentRepository)  // ✅ EKLE
         {
             _userRepository = userRepository;
+            _classRepository = classRepository;            // ✅ EKLE
+            _enrollmentRepository = enrollmentRepository;  // ✅ EKLE
         }
 
         public async Task<Result<UserResponseDto>> GetByIdAsync(int id)
@@ -186,6 +193,31 @@ namespace AMS.Application.Services.Implementations
             await _userRepository.SaveChangesAsync();
 
             return Result.Success("User deleted successfully");
+        }
+        public async Task<Result<List<UserResponseDto>>> GetStudentsByInstructorIdAsync(int instructorId)
+        {
+            // Instructor'ın class'larını bul
+            var classes = await _classRepository.GetByInstructorIdAsync(instructorId);
+            var classIds = classes.Select(c => c.Id).ToList();
+
+            // Bu class'lara kayıtlı öğrencileri bul
+            var enrollments = await _enrollmentRepository.GetByClassIdsAsync(classIds);
+            var studentIds = enrollments.Select(e => e.StudentId).Distinct().ToList();
+
+            var students = await _userRepository.GetByIdsAsync(studentIds);
+
+            var response = students.Select(u => new UserResponseDto
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                Role = u.Role.ToString(),
+                Department = u.Department,
+                StudentNumber = u.StudentNumber
+            }).ToList();
+
+            return Result<List<UserResponseDto>>.Success(response);
         }
     }
 

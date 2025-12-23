@@ -86,5 +86,13 @@ namespace AMS.Infrastructure.Data.Repositories
         {
             await _context.SaveChangesAsync();
         }
+        public async Task<List<Enrollment>> GetByClassIdsAsync(List<int> classIds)
+        {
+            return await _context.Enrollments
+                .Include(e => e.Student)
+                .Include(e => e.Class)
+                .Where(e => classIds.Contains(e.ClassId) && e.IsActive)
+                .ToListAsync();
+        }
     }
 }

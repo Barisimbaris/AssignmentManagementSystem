@@ -17,5 +17,7 @@ namespace AMS.Application.Services.Interfaces
         Task<Result<AssignmentResponseDto>> CreateAsync(CreateAssignmentRequestDto request, int instructorId);
         Task<Result<AssignmentResponseDto>> UpdateAsync(int id, UpdateAssignmentRequestDto request, int instructorId);
         Task<Result> DeleteAsync(int id, int instructorId);
+        Task<Result<List<AssignmentResponseDto>>> GetByInstructorIdAsync(int instructorId); // ✅ EKLE
+        
     }
 }

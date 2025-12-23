@@ -1,4 +1,5 @@
 ﻿using AMS.Application.DTOs.Submission;
+using AMS.Application.Services.Implementations;
 using AMS.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,16 +11,19 @@ public class SubmissionController : BaseController
 {
     private readonly ISubmissionService _submissionService;
     private readonly IFileService _fileService;
+    private readonly IAssignmentService _assignmentService;
 
     private static readonly string[] AllowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
     private const long MaxFileSizeInBytes = 10 * 1024 * 1024; // 10 MB
 
     public SubmissionController(
         ISubmissionService submissionService,
-        IFileService fileService)
+        IFileService fileService,
+        IAssignmentService assignmentService)
     {
         _submissionService = submissionService;
         _fileService = fileService;
+        _assignmentService = assignmentService;
     }
 
     /// <summary>
@@ -39,7 +43,60 @@ public class SubmissionController : BaseController
     [HttpGet("assignment/{assignmentId}")]
     public async Task<IActionResult> GetByAssignmentId(int assignmentId)
     {
+        Console.WriteLine($"\n🔍 === SUBMISSION DEBUG START ===");
+        Console.WriteLine($"📝 AssignmentId: {assignmentId}");
+
+        var userId = GetCurrentUserId();
+        Console.WriteLine($"👤 Current UserId: {userId}");
+
+        var userRole = GetCurrentUserRole();
+        Console.WriteLine($"🎭 Current UserRole: '{userRole}'");
+
+        // Admin her şeyi görebilir
+        if (userRole != "Admin")
+        {
+            Console.WriteLine($"⚠️  Not Admin, checking ownership...");
+
+            // Instructor kontrolü: Bu assignment instructor'a ait mi?
+            var assignment = await _assignmentService.GetByIdAsync(assignmentId);
+
+            Console.WriteLine($"📦 Assignment IsSuccess: {assignment.IsSuccess}");
+            Console.WriteLine($"📦 Assignment Data is null: {assignment.Data == null}");
+
+            if (assignment.Data != null)
+            {
+                Console.WriteLine($"🏫 Assignment.InstructorId: {assignment.Data.InstructorId}");
+                Console.WriteLine($"🔍 Comparing: {assignment.Data.InstructorId} == {userId} ?");
+                Console.WriteLine($"✔️  Match: {assignment.Data.InstructorId == userId}");
+            }
+
+            if (!assignment.IsSuccess || assignment.Data == null)
+            {
+                Console.WriteLine($"❌ Returning 404 Not Found");
+                return NotFound(new { message = "Assignment not found" });
+            }
+
+            if (assignment.Data.InstructorId != userId)
+            {
+                Console.WriteLine($"❌ RETURNING 403 FORBIDDEN!");
+                Console.WriteLine($"   Expected InstructorId: {userId}");
+                Console.WriteLine($"   Actual InstructorId: {assignment.Data.InstructorId}");
+                Console.WriteLine($"🔍 === DEBUG END ===\n");
+                return Forbid(); // 403 Forbidden
+            }
+
+            Console.WriteLine($"✅ Ownership verified!");
+        }
+        else
+        {
+            Console.WriteLine($"✅ Admin bypass - no ownership check");
+        }
+
+        Console.WriteLine($"📥 Fetching submissions for assignment {assignmentId}...");
         var result = await _submissionService.GetByAssignmentIdAsync(assignmentId);
+        Console.WriteLine($"📊 Submissions count: {result.Data?.Count ?? 0}");
+        Console.WriteLine($"🔍 === DEBUG END ===\n");
+
         return Ok(result);
     }
 
@@ -155,7 +212,7 @@ public class SubmissionController : BaseController
 
         return Ok(result);
     }
-
+    
     /// <summary>
     /// Download submission file
     /// </summary>
