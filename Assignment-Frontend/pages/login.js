@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Backend bağlantı hatası için özel mesaj
       if (errorMessage.includes("Failed to fetch") || errorMessage.includes("Backend bağlantısı")) {
-        errorMessage = "Backend bağlantısı kurulamadı! Backend'in çalıştığını kontrol edin (http://localhost:8080/swagger)";
+        errorMessage = "Backend bağlantısı kurulamadı! Backend'in çalıştığını kontrol edin (http://localhost:5281/swagger)";
       }
       
       showToast(errorMessage, true);
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <strong>⚠️ Backend Bağlantı Hatası</strong><br>
           <p>Backend çalışmıyor görünüyor. Lütfen:</p>
           <ol style="text-align: left; margin: 0.5rem 0;">
-            <li>Backend'in çalıştığını kontrol edin: <a href="http://localhost:8080/swagger" target="_blank">http://localhost:8080/swagger</a></li>
+            <li>Backend'in çalıştığını kontrol edin: <a href="http://localhost:5281/swagger" target="_blank">http://localhost:5281/swagger</a></li>
             <li>Eğer açılmıyorsa, backend'i başlatın</li>
             <li>Sayfayı yenileyin (F5)</li>
           </ol>
