@@ -28,7 +28,8 @@ const updateNavigationByRole = () => {
     { href: "assignments.html", label: "Ödevler", icon: "📝" },
     { href: "grading.html", label: "Not Ver", icon: "✏️" },
     { href: "class_management.html", label: "Sınıf Yönetimi", icon: "👥" },
-    { href: "lesson_planning.html", label: "Ders Planlama", icon: "📅" },
+    { href: "class-schedule-management.html", label: "Ders Programı", icon: "📅" },
+    { href: "lesson_planning.html", label: "Ders Planlama", icon: "📋" },
     { href: "reports.html", label: "Analizler", icon: "📊" },
     { href: "profile.html", label: "Profil", icon: "👤" }
   ];

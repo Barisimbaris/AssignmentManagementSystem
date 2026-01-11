@@ -44,10 +44,20 @@ const AssignmentListScreen = ({ navigation }) => {
   const renderAssignmentCard = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
-      onPress={() => navigation.navigate('SubmissionsList', { 
-        assignmentId: item.id,
-        assignmentTitle: item.title 
-      })}
+      onPress={() => {
+        // Grup ödevi ise grupları göster, değilse submission'ları göster
+        if (item.assignmentType === 'Group' || item.type === 'Group') {
+          navigation.navigate('GroupsList', {
+            assignmentId: item.id,
+            assignmentTitle: item.title,
+          });
+        } else {
+          navigation.navigate('SubmissionsList', {
+            assignmentId: item.id,
+            assignmentTitle: item.title,
+          });
+        }
+      }}
     >
       <View style={styles.cardHeader}>
         <Text style={styles.title}>{item.title}</Text>

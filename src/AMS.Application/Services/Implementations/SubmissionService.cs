@@ -18,15 +18,18 @@ namespace AMS.Application.Services.Implementations
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IAssignmentRepository _assignmentRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IGroupService _groupService;
 
         public SubmissionService(
             ISubmissionRepository submissionRepository,
             IAssignmentRepository assignmentRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IGroupService groupService)
         {
             _submissionRepository = submissionRepository;
             _assignmentRepository = assignmentRepository;
             _userRepository = userRepository;
+            _groupService = groupService;
         }
 
         public async Task<Result<SubmissionResponseDto>> GetByIdAsync(int id)
@@ -67,9 +70,9 @@ namespace AMS.Application.Services.Implementations
             {
                 Id = s.Id,
                 AssignmentId = s.AssignmentId,
-                AssignmentTitle = s.Assignment.Title,
+                AssignmentTitle = s.Assignment?.Title ?? string.Empty,
                 StudentId = s.StudentId,
-                StudentName = $"{s.Student.FirstName} {s.Student.LastName}",
+                StudentName = $"{s.Student?.FirstName ?? ""} {s.Student?.LastName ?? ""}".Trim(),
                 FilePath = s.FilePath,
                 FileType = s.FileType.ToString(),
                 FileSizeInBytes = s.FileSizeInBytes,
@@ -92,9 +95,9 @@ namespace AMS.Application.Services.Implementations
             {
                 Id = s.Id,
                 AssignmentId = s.AssignmentId,
-                AssignmentTitle = s.Assignment.Title,
+                AssignmentTitle = s.Assignment?.Title ?? string.Empty,
                 StudentId = s.StudentId,
-                StudentName = $"{s.Student.FirstName} {s.Student.LastName}",
+                StudentName = $"{s.Student?.FirstName ?? ""} {s.Student?.LastName ?? ""}".Trim(),
                 FilePath = s.FilePath,
                 FileType = s.FileType.ToString(),
                 FileSizeInBytes = s.FileSizeInBytes,
@@ -130,6 +133,21 @@ namespace AMS.Application.Services.Implementations
             if (isLate && !assignment.AllowLateSubmission)
             {
                 return Result<SubmissionResponseDto>.Failure("Late submission is not allowed for this assignment");
+            }
+
+            // Grup ödevi ise grup lideri kontrolü
+            if (assignment.Type == AssignmentType.Group)
+            {
+                if (!request.GroupId.HasValue)
+                {
+                    return Result<SubmissionResponseDto>.Failure("Group ID is required for group assignments");
+                }
+
+                var isLeader = await _groupService.IsUserGroupLeaderAsync(request.GroupId.Value, studentId);
+                if (!isLeader)
+                {
+                    return Result<SubmissionResponseDto>.Failure("Only the group leader can submit assignments for group projects");
+                }
             }
 
             // ✅ FIX: Dosya yolunu düzelt
@@ -194,6 +212,16 @@ namespace AMS.Application.Services.Implementations
             if (!assignment!.AllowResubmission)
             {
                 return Result<SubmissionResponseDto>.Failure("Resubmission is not allowed for this assignment");
+            }
+
+            // Grup ödevi ise grup lideri kontrolü
+            if (assignment.Type == AssignmentType.Group && submission.GroupId.HasValue)
+            {
+                var isLeader = await _groupService.IsUserGroupLeaderAsync(submission.GroupId.Value, studentId);
+                if (!isLeader)
+                {
+                    return Result<SubmissionResponseDto>.Failure("Only the group leader can resubmit assignments for group projects");
+                }
             }
 
             var fileInfo = new FileInfo(filePath);

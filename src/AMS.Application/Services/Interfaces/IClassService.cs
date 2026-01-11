@@ -14,10 +14,11 @@ namespace AMS.Application.Services.Interfaces
         Task<Result<List<ClassResponseDto>>> GetAllAsync();
         Task<Result<List<ClassResponseDto>>> GetByCourseIdAsync(int courseId);
         Task<Result<List<ClassResponseDto>>> GetByInstructorIdAsync(int instructorId);
-        Task<Result<ClassResponseDto>> CreateAsync(CreateClassRequestDto request);
+        Task<Result<ClassResponseDto>> CreateAsync(CreateClassRequestDto request, int instructorId);
         Task<Result<ClassResponseDto>> UpdateAsync(int id, UpdateClassRequestDto request);
         Task<Result> DeleteAsync(int id);
         Task<Result> EnrollStudentAsync(int classId, int studentId);
         Task<Result> UnenrollStudentAsync(int classId, int studentId);
+        Task<Result<List<AMS.Application.DTOs.User.UserResponseDto>>> GetClassStudentsAsync(int classId);
     }
 }

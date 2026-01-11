@@ -247,7 +247,7 @@ namespace AMS.Infrastructure.Migrations
 
                     b.Property<string>("AcademicYear")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
@@ -269,9 +269,10 @@ namespace AMS.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
-
                     b.HasIndex("InstructorId");
+
+                    b.HasIndex("CourseId", "InstructorId", "AcademicYear")
+                        .IsUnique();
 
                     b.ToTable("CourseInstructors");
                 });
@@ -644,13 +645,13 @@ namespace AMS.Infrastructure.Migrations
                     b.HasOne("AMS.Domain.Entities.Course", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("AMS.Domain.Entities.User", "Instructor")
                         .WithMany()
                         .HasForeignKey("InstructorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Course");

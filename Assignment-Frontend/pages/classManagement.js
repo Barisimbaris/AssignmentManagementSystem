@@ -240,9 +240,10 @@ const loadTeacherClasses = async () => {
 
 const loadAllStudents = async () => {
   try {
-    // Tüm öğrencileri yükle (arama için)
-    const students = await apiFetch("/User/students");
+    // Instructor'ın kendi sınıflarına kayıtlı öğrencileri yükle (arama için)
+    const students = await apiFetch("/User/my-students");
     classManagementState.allStudents = Array.isArray(students) ? students : [];
+    console.log("[loadAllStudents] Instructor'ın öğrencileri yüklendi:", classManagementState.allStudents.length);
   } catch (error) {
     console.error("Öğrenciler yüklenemedi:", error);
     classManagementState.allStudents = [];
@@ -274,9 +275,9 @@ const loadClassStudentsById = async (classId) => {
   }
 
   try {
-    // Enrollment'ları al
-    const enrollments = await apiFetch(`/Class/${classId}/enrollments`);
-    classManagementState.students = Array.isArray(enrollments) ? enrollments : [];
+    // Sınıf öğrencilerini al (yeni endpoint)
+    const students = await apiFetch(`/Class/${classId}/students`);
+    classManagementState.students = Array.isArray(students) ? students : [];
     renderStudentsList(classManagementState.students);
     showToast("Öğrenci listesi yüklendi");
     

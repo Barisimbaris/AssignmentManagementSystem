@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   const { user, logout, changePassword } = useAuth();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -147,6 +147,19 @@ const ProfileScreen = () => {
           )}
         </View>
       </View>
+
+      {/* Analytics Section - Instructor only */}
+      {user?.role === 2 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📊 Analizler</Text>
+          <TouchableOpacity
+            style={styles.analyticsButton}
+            onPress={() => navigation.navigate('Analytics')}
+          >
+            <Text style={styles.analyticsButtonText}>📈 Detaylı Analizleri Gör</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Password Change Section */}
       <View style={styles.section}>
@@ -442,6 +455,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  analyticsButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  analyticsButtonText: {
     color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',

@@ -25,14 +25,26 @@ const StudentsScreen = ({ navigation }) => {
       setIsLoading(true);
       console.log('📥 Öğrenciler getiriliyor...');
       
-      // Backend'den öğrenci listesini çek
-      // Şimdilik tüm kullanıcıları çekip role=1 olanları filtreliyoruz
-      const response = await apiClient.get('/User/students');
+      // Backend'den instructor'ın class'larındaki öğrencileri çek
+      const response = await apiClient.get('/User/my-students');
       
       if (response.data.isSuccess) {
-        const allUsers = response.data.data || [];
-        const studentsList = allUsers.filter(u => u.role === 1 || u.role === 'Student');
-        setStudents(studentsList);
+        // Response: [{ classId, className, students: [...] }, ...]
+        const classStudents = response.data.data || [];
+        
+        // Tüm class'lardaki öğrencileri birleştir
+        const allStudents = [];
+        classStudents.forEach(classData => {
+          classData.students.forEach(student => {
+            allStudents.push({
+              ...student,
+              className: classData.className,
+              classId: classData.classId
+            });
+          });
+        });
+        
+        setStudents(allStudents);
       }
     } catch (error) {
       console.error('❌ Öğrenciler yüklenemedi:', error);

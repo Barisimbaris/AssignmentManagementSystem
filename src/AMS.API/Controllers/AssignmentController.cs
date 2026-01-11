@@ -82,8 +82,8 @@ namespace AMS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateAssignmentRequestDto request)
         {
-            var instructorId = GetCurrentUserId();
-            var result = await _assignmentService.CreateAsync(request, instructorId);
+            var userId = GetCurrentUserId();
+            var result = await _assignmentService.CreateAsync(request, userId);
 
             if (!result.IsSuccess)
             {
@@ -100,8 +100,8 @@ namespace AMS.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateAssignmentRequestDto request)
         {
-            var instructorId = GetCurrentUserId();
-            var result = await _assignmentService.UpdateAsync(id, request, instructorId);
+            var userId = GetCurrentUserId();
+            var result = await _assignmentService.UpdateAsync(id, request, userId);
 
             if (!result.IsSuccess)
             {
@@ -118,8 +118,8 @@ namespace AMS.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var instructorId = GetCurrentUserId();
-            var result = await _assignmentService.DeleteAsync(id, instructorId);
+            var userId = GetCurrentUserId();
+            var result = await _assignmentService.DeleteAsync(id, userId);
 
             if (!result.IsSuccess)
             {

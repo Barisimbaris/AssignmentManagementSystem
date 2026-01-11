@@ -59,5 +59,8 @@ public class ClassConfiguration : IEntityTypeConfiguration<Class>
             .WithOne(a => a.Class)
             .HasForeignKey(a => a.ClassId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // CurrentEnrollment is a computed property, not a database column
+        builder.Ignore(c => c.CurrentEnrollment);
     }
 }

@@ -3,7 +3,7 @@ import apiClient from '../client';
 // Get current user
 export const getCurrentUser = async () => {
   try {
-    const response = await apiClient.get('/User/me');
+    const response = await apiClient.get('/User/profile');
     return response.data;
   } catch (error) {
     throw error;
@@ -24,6 +24,16 @@ export const getUserById = async (userId) => {
 export const getAllStudents = async () => {
   try {
     const response = await apiClient.get('/User/students');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get my students (Instructor only) - Students enrolled in instructor's classes
+export const getMyStudents = async () => {
+  try {
+    const response = await apiClient.get('/User/my-students');
     return response.data;
   } catch (error) {
     throw error;

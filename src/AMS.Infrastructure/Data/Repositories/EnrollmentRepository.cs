@@ -91,6 +91,7 @@ namespace AMS.Infrastructure.Data.Repositories
             return await _context.Enrollments
                 .Include(e => e.Student)
                 .Include(e => e.Class)
+                    .ThenInclude(c => c.Course)
                 .Where(e => classIds.Contains(e.ClassId) && e.IsActive)
                 .ToListAsync();
         }

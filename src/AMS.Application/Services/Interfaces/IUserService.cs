@@ -15,9 +15,12 @@ namespace AMS.Application.Services.Interfaces
         Task<Result<List<UserResponseDto>>> GetAllAsync();
         Task<Result<List<UserResponseDto>>> GetStudentsAsync();
         Task<Result<List<UserResponseDto>>> GetInstructorsAsync();
+        Task<Result<List<InstructorStudentsResponseDto>>> GetInstructorStudentsAsync(int instructorId);
         Task<Result<UserResponseDto>> UpdateAsync(int id, UpdateUserRequestDto request);
+        Task<Result> ChangePasswordAsync(int userId, ChangePasswordRequestDto request);
         Task<Result> DeleteAsync(int id);
-        Task<Result<List<UserResponseDto>>> GetStudentsByInstructorIdAsync(int instructorId);
 
+        // ✅ BULK IMPORT METHODS
+        Task<Result<BulkImportResultDto>> BulkImportAsync(BulkImportRequestDto request);
     }
 }

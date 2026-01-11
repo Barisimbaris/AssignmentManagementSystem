@@ -17,15 +17,18 @@ namespace AMS.Application.Services.Implementations
         private readonly IGradeRepository _gradeRepository;
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IUserRepository _userRepository;
+        private readonly INotificationService _notificationService; // ✅ YENİ
 
         public GradeService(
             IGradeRepository gradeRepository,
             ISubmissionRepository submissionRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            INotificationService notificationService) // ✅ YENİ
         {
             _gradeRepository = gradeRepository;
             _submissionRepository = submissionRepository;
             _userRepository = userRepository;
+            _notificationService = notificationService; // ✅ YENİ
         }
 
         public async Task<Result<GradeResponseDto>> GetByIdAsync(int id)
@@ -41,15 +44,15 @@ namespace AMS.Application.Services.Implementations
             {
                 Id = grade.Id,
                 SubmissionId = grade.SubmissionId,
-                AssignmentId = grade.Submission.AssignmentId,
-                AssignmentTitle = grade.Submission.Assignment.Title,
-                StudentId = grade.Submission.StudentId,
-                StudentName = $"{grade.Submission.Student.FirstName} {grade.Submission.Student.LastName}",
+                AssignmentId = grade.Submission?.AssignmentId ?? 0,
+                AssignmentTitle = grade.Submission?.Assignment?.Title ?? string.Empty,
+                StudentId = grade.Submission?.StudentId ?? 0,
+                StudentName = $"{grade.Submission?.Student?.FirstName ?? ""} {grade.Submission?.Student?.LastName ?? ""}".Trim(),
                 Score = grade.Score,
-                MaxScore = grade.Submission.Assignment.MaxScore,
+                MaxScore = grade.Submission?.Assignment?.MaxScore ?? 0,
                 Feedback = grade.Feedback,
                 GradedAt = grade.GradedAt,
-                InstructorName = $"{grade.Instructor.FirstName} {grade.Instructor.LastName}",
+                InstructorName = $"{grade.Instructor?.FirstName ?? ""} {grade.Instructor?.LastName ?? ""}".Trim(),
                 IsPublished = grade.IsPublished
             };
 
@@ -69,15 +72,15 @@ namespace AMS.Application.Services.Implementations
             {
                 Id = grade.Id,
                 SubmissionId = grade.SubmissionId,
-                AssignmentId = grade.Submission.AssignmentId,
-                AssignmentTitle = grade.Submission.Assignment.Title,
-                StudentId = grade.Submission.StudentId,
-                StudentName = $"{grade.Submission.Student.FirstName} {grade.Submission.Student.LastName}",
+                AssignmentId = grade.Submission?.AssignmentId ?? 0,
+                AssignmentTitle = grade.Submission?.Assignment?.Title ?? string.Empty,
+                StudentId = grade.Submission?.StudentId ?? 0,
+                StudentName = $"{grade.Submission?.Student?.FirstName ?? ""} {grade.Submission?.Student?.LastName ?? ""}".Trim(),
                 Score = grade.Score,
-                MaxScore = grade.Submission.Assignment.MaxScore,
+                MaxScore = grade.Submission?.Assignment?.MaxScore ?? 0,
                 Feedback = grade.Feedback,
                 GradedAt = grade.GradedAt,
-                InstructorName = $"{grade.Instructor.FirstName} {grade.Instructor.LastName}",
+                InstructorName = $"{grade.Instructor?.FirstName ?? ""} {grade.Instructor?.LastName ?? ""}".Trim(),
                 IsPublished = grade.IsPublished
             };
 
@@ -145,14 +148,14 @@ namespace AMS.Application.Services.Implementations
                 return Result<GradeResponseDto>.Failure("This submission is already graded");
             }
 
-            if (submission.Assignment.Class.InstructorId != instructorId)
+            if (submission.Assignment?.Class?.InstructorId != instructorId)
             {
                 throw new UnauthorizedException("Only the class instructor can grade submissions");
             }
 
-            if (request.Score > submission.Assignment.MaxScore)
+            if (request.Score > (submission.Assignment?.MaxScore ?? 0))
             {
-                return Result<GradeResponseDto>.Failure($"Score cannot exceed maximum score of {submission.Assignment.MaxScore}");
+                return Result<GradeResponseDto>.Failure($"Score cannot exceed maximum score of {submission.Assignment?.MaxScore ?? 0}");
             }
 
             var grade = new Grade
@@ -169,6 +172,14 @@ namespace AMS.Application.Services.Implementations
             await _gradeRepository.AddAsync(grade);
             await _gradeRepository.SaveChangesAsync();
 
+            // ✅ YENİ: Email notification gönder
+            await _notificationService.CreateAndSendGradeNotificationAsync(
+                request.SubmissionId, 
+                submission.StudentId, 
+                (int)request.Score, 
+                submission.Assignment.MaxScore
+            );
+
             var instructor = await _userRepository.GetByIdAsync(instructorId);
 
             var response = new GradeResponseDto
@@ -176,14 +187,14 @@ namespace AMS.Application.Services.Implementations
                 Id = grade.Id,
                 SubmissionId = grade.SubmissionId,
                 AssignmentId = submission.AssignmentId,
-                AssignmentTitle = submission.Assignment.Title,
+                AssignmentTitle = submission.Assignment?.Title ?? string.Empty,
                 StudentId = submission.StudentId,
-                StudentName = $"{submission.Student.FirstName} {submission.Student.LastName}",
+                StudentName = $"{submission.Student?.FirstName ?? ""} {submission.Student?.LastName ?? ""}".Trim(),
                 Score = grade.Score,
-                MaxScore = submission.Assignment.MaxScore,
+                MaxScore = submission.Assignment?.MaxScore ?? 0,
                 Feedback = grade.Feedback,
                 GradedAt = grade.GradedAt,
-                InstructorName = $"{instructor!.FirstName} {instructor.LastName}",
+                InstructorName = $"{instructor?.FirstName ?? ""} {instructor?.LastName ?? ""}".Trim(),
                 IsPublished = grade.IsPublished
             };
 
@@ -206,9 +217,10 @@ namespace AMS.Application.Services.Implementations
 
             if (request.Score.HasValue)
             {
-                if (request.Score.Value > grade.Submission.Assignment.MaxScore)
+                var maxScore = grade.Submission?.Assignment?.MaxScore ?? 0;
+                if (request.Score.Value > maxScore)
                 {
-                    return Result<GradeResponseDto>.Failure($"Score cannot exceed maximum score of {grade.Submission.Assignment.MaxScore}");
+                    return Result<GradeResponseDto>.Failure($"Score cannot exceed maximum score of {maxScore}");
                 }
                 grade.Score = request.Score.Value;
             }
@@ -264,6 +276,14 @@ namespace AMS.Application.Services.Implementations
                 grade.IsPublished = true;
                 grade.UpdatedAt = DateTime.UtcNow;
                 await _gradeRepository.UpdateAsync(grade);
+
+                // ✅ YENİ: Grade publish edildiğinde email notification gönder
+                await _notificationService.CreateAndSendGradeNotificationAsync(
+                    grade.SubmissionId,
+                    grade.Submission.StudentId,
+                    (int)grade.Score,
+                    grade.Submission.Assignment.MaxScore
+                );
             }
 
             await _gradeRepository.SaveChangesAsync();

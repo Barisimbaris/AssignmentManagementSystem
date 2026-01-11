@@ -1,6 +1,6 @@
 (() => {
   const API_BASE_URL =
-    window.__API_BASE_URL__ || "http://localhost:8080/api";
+    window.__API_BASE_URL__ || "http://localhost:5281/api";
 
   const STORAGE_KEYS = {
     token: "ams.auth.token",

@@ -13,9 +13,11 @@ namespace AMS.Domain.Interfaces
         Task<List<Submission>> GetByAssignmentIdAsync(int assignmentId);
         Task<List<Submission>> GetByStudentIdAsync(int studentId);
         Task<Submission?> GetByAssignmentAndStudentAsync(int assignmentId, int studentId);
+        Task<Submission?> GetByAssignmentAndGroupAsync(int assignmentId, int groupId);
         Task<Submission> AddAsync(Submission submission);
         Task UpdateAsync(Submission submission);
         Task DeleteAsync(Submission submission);
         Task SaveChangesAsync();
+        Task<List<Submission>> GetByGroupIdAsync(int groupId);
     }
 }

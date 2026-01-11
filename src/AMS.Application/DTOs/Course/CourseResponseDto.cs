@@ -16,5 +16,7 @@ namespace AMS.Application.DTOs.Course
         public int CreditHours { get; set; }
         public string AcademicYear { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public int TotalClasses { get; set; }      // ✅ EKLE
+        public int TotalStudents { get; set; }
     }
 }

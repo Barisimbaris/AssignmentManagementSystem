@@ -182,6 +182,22 @@ const InstructorDashboard = ({ navigation }) => {
         </View>
       </View>
 
+      {/* My Classes */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>📚 Derslerim</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('MyClasses')}>
+            <Text style={styles.seeAllText}>Tümünü Gör →</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          style={styles.classesButton}
+          onPress={() => navigation.navigate('MyClasses')}
+        >
+          <Text style={styles.classesButtonText}>📚 Derslerimi ve Classlarımı Gör</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* My Assignments */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>

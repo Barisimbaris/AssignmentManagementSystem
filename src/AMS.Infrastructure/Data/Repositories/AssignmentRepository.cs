@@ -71,6 +71,7 @@ namespace AMS.Infrastructure.Data.Repositories
         {
             return await _context.Assignments
                 .Include(a => a.Class)
+                    .ThenInclude(c => c.Course)
                 .Include(a => a.Submissions)
                 .Where(a => classIds.Contains(a.ClassId))
                 .OrderByDescending(a => a.CreatedAt)

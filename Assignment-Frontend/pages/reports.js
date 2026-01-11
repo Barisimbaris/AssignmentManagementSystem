@@ -284,11 +284,13 @@ const loadTeacherClassesForReports = async () => {
 
 const loadAnalytics = async () => {
   try {
-    const analytics = await apiFetch("/Analytics");
-    reportsState.analytics = analytics;
-
-    // Gerçek veriler artık classAnalytics array olarak geliyor
-    const classAnalytics = Array.isArray(analytics.classAnalytics) ? analytics.classAnalytics : [];
+    // Yeni endpoint: Instructor'ın sınıf istatistikleri
+    const classStatistics = await apiFetch("/Dashboard/statistics/my-classes");
+    
+    // Response direkt array olarak geliyor
+    const classAnalytics = Array.isArray(classStatistics) ? classStatistics : [];
+    
+    reportsState.analytics = { classAnalytics };
     
     if (classAnalytics.length > 0) {
       renderAllClassesSummary(classAnalytics);
@@ -335,9 +337,10 @@ const loadAllStudentsFromClasses = async () => {
     // Her sınıf için öğrencileri yükle
     for (const classItem of reportsState.classes) {
       try {
-        const enrollments = await apiFetch(`/Class/${classItem.id}/enrollments`);
-        if (Array.isArray(enrollments)) {
-          enrollments.forEach(student => {
+        // Yeni endpoint: Sınıf öğrencileri
+        const students = await apiFetch(`/Class/${classItem.id}/students`);
+        if (Array.isArray(students)) {
+          students.forEach(student => {
             // Öğrenciyi map'e ekle (ID ile unique)
             if (student.id && !allStudentsMap.has(student.id)) {
               allStudentsMap.set(student.id, {

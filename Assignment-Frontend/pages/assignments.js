@@ -208,11 +208,21 @@ const renderStudentAssignments = (assignments = []) => {
             <p><small>🕐 Geç teslim izni: ${allowLate ? "✅ Evet" : "❌ Hayır"}</small></p>
             <p><small>🔄 Yeniden teslim izni: ${allowResubmission ? "✅ Evet" : "❌ Hayır"}</small></p>
           </div>
+          ${assignmentType === "Group" || assignmentType === "2" ? `
+          <div class="group-info-section" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+            <p style="font-weight: 600; margin-bottom: 0.5rem;">👥 Grup Bilgisi</p>
+            <div id="groupInfo_${assignmentId}">Yükleniyor...</div>
+          </div>
+          ` : ''}
           ${isPastDue && !allowLate && !hasSubmission ? 
             '<button class="submit-btn" disabled style="opacity: 0.6; cursor: not-allowed;">❌ Süresi Doldu - Teslim Edilemez</button>' : 
             isPastDue && allowLate && !hasSubmission ?
             `<button class="submit-btn" onclick="openSubmissionModal(${assignmentId}, '${escapedTitle}', '${assignmentType}')" style="background: #ff9800;">
               ⏰ Geç Teslim Et
+            </button>` :
+            assignmentType === "Group" || assignmentType === "2" ?
+            `<button class="submit-btn" id="submitBtn_${assignmentId}" style="display: none;">
+              📤 Ödevi Teslim Et
             </button>` :
             `<button class="submit-btn" onclick="openSubmissionModal(${assignmentId}, '${escapedTitle}', '${assignmentType}')">
               📤 Ödevi Teslim Et
@@ -262,6 +272,13 @@ const renderTeacherAssignments = (assignments = []) => {
             <p><small>🔄 Yeniden teslim: ${(assignment.allowResubmission || assignment.AllowResubmission) ? "Evet" : "Hayır"}</small></p>
             <p><small>📊 Toplam teslim: ${(assignment.totalSubmissions || assignment.TotalSubmissions) || 0}</small></p>
           </div>
+          ${(assignment.assignmentType || assignment.AssignmentType) === "Group" || (assignment.assignmentType || assignment.AssignmentType) === "2" ? `
+          <div style="margin-top: 1rem;">
+            <button class="submit-btn" onclick="window.location.href='groups.html?assignmentId=${assignmentId}&assignmentTitle=${encodeURIComponent(assignment.title || assignment.Title)}'" style="background: #667eea;">
+              👥 Grupları Gör
+            </button>
+          </div>
+          ` : ''}
         </div>
       `;
       }
@@ -290,6 +307,14 @@ const loadStudentAssignments = async () => {
     
     assignmentsState.assignments = assignments;
     renderStudentAssignments(assignmentsState.assignments);
+    
+    // Grup ödevleri için grup bilgilerini yükle
+    for (const assignment of assignments) {
+      const assignmentType = assignment.assignmentType || assignment.AssignmentType;
+      if (assignmentType === "Group" || assignmentType === "2") {
+        loadGroupInfoForAssignment(assignment.id || assignment.Id);
+      }
+    }
   } catch (error) {
     console.error("[loadStudentAssignments] ❌ Hata:", error);
     if (handleAssignmentsUnauthorized(error)) return;
@@ -1070,7 +1095,7 @@ window.handleAssignmentFileDownload = async (event, assignmentId) => {
 
   try {
     // API URL'ini oluştur - apiFetch'in buildUrl fonksiyonunu kullan
-    const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:8080/api";
+    const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:5281/api";
     const url = `${API_BASE_URL}/Assignment/${assignmentId}/download`;
     console.log("[handleAssignmentFileDownload] Dosya indiriliyor:", url);
 
@@ -1151,6 +1176,64 @@ window.handleAssignmentFileDownload = async (event, assignmentId) => {
     console.error("[handleAssignmentFileDownload] ❌ Hata:", error);
     const errorMessage = error.message || "Dosya indirilemedi. Lütfen tekrar deneyin.";
     showToast(`❌ ${errorMessage}`, true);
+  }
+};
+
+// Grup bilgilerini yükle (öğrenci için)
+const loadGroupInfoForAssignment = async (assignmentId) => {
+  const groupInfoDiv = document.getElementById(`groupInfo_${assignmentId}`);
+  if (!groupInfoDiv) return;
+
+  try {
+    const response = await apiFetch(`/Group/my-group/${assignmentId}`);
+    const group = response?.data || response;
+    
+    if (group && group.id) {
+      const userId = getUserId();
+      const isLeader = group.leaderStudentId === userId;
+      
+      groupInfoDiv.innerHTML = `
+        <p style="margin-bottom: 0.5rem;"><strong>${group.groupName || "Grup"}</strong></p>
+        <p style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">
+          👑 Lider: ${group.leaderName || "Bilinmiyor"}
+        </p>
+        <p style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">
+          👥 Üyeler: ${group.members?.length || 0} kişi
+        </p>
+        ${!isLeader ? '<p style="font-size: 0.85rem; color: #ff9800; font-style: italic;">⚠️ Sadece grup lideri ödev yükleyebilir</p>' : ''}
+      `;
+      
+      // Submit butonunu sadece lider için göster
+      const submitBtn = document.getElementById(`submitBtn_${assignmentId}`);
+      if (submitBtn) {
+        if (isLeader) {
+          submitBtn.style.display = "block";
+          submitBtn.onclick = () => {
+            const assignment = assignmentsState.assignments.find(a => (a.id || a.Id) == assignmentId);
+            const title = assignment?.title || assignment?.Title || "Ödev";
+            const type = assignment?.assignmentType || assignment?.AssignmentType;
+            openSubmissionModal(assignmentId, title, type);
+          };
+        } else {
+          submitBtn.style.display = "none";
+        }
+      }
+    } else {
+      groupInfoDiv.innerHTML = `
+        <p style="margin-bottom: 0.5rem; color: #666;">Henüz bir gruba dahil değilsiniz</p>
+        <button class="submit-btn" onclick="window.location.href='create-group.html?assignmentId=${assignmentId}'" style="background: #667eea; padding: 0.5rem 1rem; font-size: 0.9rem;">
+          + Grup Oluştur
+        </button>
+      `;
+    }
+  } catch (error) {
+    console.error(`[loadGroupInfoForAssignment] Hata (assignmentId: ${assignmentId}):`, error);
+    groupInfoDiv.innerHTML = `
+      <p style="margin-bottom: 0.5rem; color: #666;">Henüz bir gruba dahil değilsiniz</p>
+      <button class="submit-btn" onclick="window.location.href='create-group.html?assignmentId=${assignmentId}'" style="background: #667eea; padding: 0.5rem 1rem; font-size: 0.9rem;">
+        + Grup Oluştur
+      </button>
+    `;
   }
 };
 

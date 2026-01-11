@@ -16,10 +16,27 @@ const SubmissionsListScreen = ({ route, navigation }) => {
   const [submissions, setSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isGroupAssignment, setIsGroupAssignment] = useState(false);
 
   useEffect(() => {
     fetchSubmissions();
+    checkAssignmentType();
   }, []);
+
+  const checkAssignmentType = async () => {
+    try {
+      const response = await apiClient.get(`/Assignment/${assignmentId}`);
+      if (response.data.isSuccess && response.data.data) {
+        const assignment = response.data.data;
+        setIsGroupAssignment(
+          assignment.type === 'Group' || 
+          assignment.assignmentType === 'Group'
+        );
+      }
+    } catch (error) {
+      console.warn('⚠️ Assignment type kontrolü başarısız:', error);
+    }
+  };
 
   const fetchSubmissions = async () => {
     try {
@@ -116,6 +133,17 @@ const SubmissionsListScreen = ({ route, navigation }) => {
         <Text style={styles.statsText}>
           📊 {submissions.length} teslim
         </Text>
+        {isGroupAssignment && (
+          <TouchableOpacity
+            style={styles.groupsButton}
+            onPress={() => navigation.navigate('GroupsList', {
+              assignmentId,
+              assignmentTitle,
+            })}
+          >
+            <Text style={styles.groupsButtonText}>👥 Grupları Gör</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* List */}
@@ -174,12 +202,25 @@ const styles = StyleSheet.create({
   statsBar: {
     backgroundColor: colors.backgroundSecondary,
     padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   statsText: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
+  },
+  groupsButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  groupsButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
   listContent: {
     padding: 16,

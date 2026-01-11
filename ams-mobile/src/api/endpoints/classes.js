@@ -43,7 +43,7 @@ export const createClass = async (classData) => {
 // Enroll in class (Student)
 export const enrollInClass = async (classId) => {
   try {
-    const response = await apiClient.post(`/Class/${classId}/enroll`);
+    const response = await apiClient.post(`/Class/${classId}/enroll-me`);
     return response.data;
   } catch (error) {
     throw error;
@@ -53,7 +53,7 @@ export const enrollInClass = async (classId) => {
 // Unenroll from class (Student)
 export const unenrollFromClass = async (classId) => {
   try {
-    const response = await apiClient.post(`/Class/${classId}/unenroll`);
+    const response = await apiClient.post(`/Class/${classId}/unenroll-me`);
     return response.data;
   } catch (error) {
     throw error;

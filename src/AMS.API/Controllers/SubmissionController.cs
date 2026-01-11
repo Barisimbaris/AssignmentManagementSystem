@@ -12,6 +12,7 @@ public class SubmissionController : BaseController
     private readonly ISubmissionService _submissionService;
     private readonly IFileService _fileService;
     private readonly IAssignmentService _assignmentService;
+    private readonly IGroupService _groupService; // ✅ MOBİL İÇİN EKLENDİ
 
     private static readonly string[] AllowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
     private const long MaxFileSizeInBytes = 10 * 1024 * 1024; // 10 MB
@@ -19,11 +20,13 @@ public class SubmissionController : BaseController
     public SubmissionController(
         ISubmissionService submissionService,
         IFileService fileService,
-        IAssignmentService assignmentService)
+        IAssignmentService assignmentService,
+        IGroupService groupService) // ✅ MOBİL İÇİN EKLENDİ
     {
         _submissionService = submissionService;
         _fileService = fileService;
         _assignmentService = assignmentService;
+        _groupService = groupService; // ✅ MOBİL İÇİN EKLENDİ
     }
 
     /// <summary>
@@ -123,6 +126,8 @@ public class SubmissionController : BaseController
         [FromForm] string? comments,
         [FromForm] IFormFile file)
     {
+        Console.WriteLine($"📤 Submission attempt - AssignmentId: {assignmentId}, GroupId: {groupId}");
+
         // Validate file
         if (file == null || file.Length == 0)
         {
@@ -141,8 +146,26 @@ public class SubmissionController : BaseController
 
         var studentId = GetCurrentUserId();
 
+        // ✅ MOBİL İÇİN: Grup ödevi için grup liderliği kontrolü
+        if (groupId.HasValue)
+        {
+            Console.WriteLine($"👑 Checking group leadership for GroupId: {groupId}, StudentId: {studentId}");
+            
+            var isLeader = await _groupService.IsUserGroupLeaderAsync(groupId.Value, studentId);
+            if (!isLeader)
+            {
+                Console.WriteLine($"❌ User {studentId} is not leader of group {groupId}");
+                return BadRequest(new { message = "Only group leader can submit for the group" });
+            }
+            
+            Console.WriteLine($"✅ Leadership confirmed for user {studentId} in group {groupId}");
+        }
+
         // Upload file
-        var folderPath = $"submissions/assignment_{assignmentId}/student_{studentId}";
+        var folderPath = groupId.HasValue ? 
+            $"submissions/assignment_{assignmentId}/group_{groupId}" : 
+            $"submissions/assignment_{assignmentId}/student_{studentId}";
+            
         var filePath = await _fileService.UploadFileAsync(file, folderPath);
 
         // Create submission
@@ -162,6 +185,7 @@ public class SubmissionController : BaseController
             return BadRequest(result);
         }
 
+        Console.WriteLine($"✅ Submission successful - ID: {result.Data!.Id}");
         return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
     }
 

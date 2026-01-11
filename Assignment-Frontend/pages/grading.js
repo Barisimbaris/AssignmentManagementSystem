@@ -196,7 +196,7 @@ const renderSubmissionsList = (submissions = [], assignment) => {
             const hasFile = filePath && filePath.trim() !== "";
             
             // Her zaman download URL'i oluştur (backend kontrolü yapacak)
-            const downloadUrl = `http://localhost:8080/api/Submission/${submissionId}/download`;
+            const downloadUrl = `http://localhost:5281/api/Submission/${submissionId}/download`;
             
             // Öğrenci adını güvenli şekilde al
             const studentName = submission.studentName || submission.StudentName || `Öğrenci #${submission.studentId || submission.StudentId || "?"}`;
@@ -469,7 +469,7 @@ window.handleDownloadClick = async (event, submissionId) => {
   }
 
   try {
-    const url = `http://localhost:8080/api/Submission/${submissionId}/download`;
+    const url = `http://localhost:5281/api/Submission/${submissionId}/download`;
     console.log("[handleDownloadClick] Dosya indiriliyor:", url);
 
     const response = await fetch(url, {

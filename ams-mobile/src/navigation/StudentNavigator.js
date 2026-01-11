@@ -15,12 +15,16 @@ import ProfileScreen from '../screens/common/ProfileScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+// Screens
+import CreateGroupScreen from '../screens/student/CreateGroupScreen';
+
 // Assignments Stack Navigator
 const AssignmentsStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="AssignmentList" component={AssignmentListScreen} />
       <Stack.Screen name="AssignmentDetail" component={AssignmentDetailScreen} />
+      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
     </Stack.Navigator>
   );
 };

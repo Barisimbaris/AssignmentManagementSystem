@@ -14,6 +14,8 @@ namespace AMS.Domain.Interfaces
         Task<List<Grade>> GetByStudentIdAsync(int studentId);
         Task<List<Grade>> GetByClassIdAsync(int classId);
         Task<List<Grade>> GetByIdsAsync(List<int> ids);
+        Task<List<Grade>> GetAllAsync();
+        Task<List<Grade>> GetByCourseIdAsync(int courseId);
         Task<Grade> AddAsync(Grade grade);
         Task UpdateAsync(Grade grade);
         Task DeleteAsync(Grade grade);

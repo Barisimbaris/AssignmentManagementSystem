@@ -8,13 +8,16 @@ namespace AMS.API.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger;
+        private readonly IWebHostEnvironment _environment;
 
         public GlobalExceptionHandlerMiddleware(
             RequestDelegate next,
-            ILogger<GlobalExceptionHandlerMiddleware> logger)
+            ILogger<GlobalExceptionHandlerMiddleware> logger,
+            IWebHostEnvironment environment)
         {
             _next = next;
             _logger = logger;
+            _environment = environment;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -30,7 +33,7 @@ namespace AMS.API.Middlewares
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             var statusCode = HttpStatusCode.InternalServerError;
             var message = "An error occurred while processing your request";
@@ -61,7 +64,16 @@ namespace AMS.API.Middlewares
 
                 default:
                     // Log the full exception for internal server errors
-                    message = "An unexpected error occurred";
+                    message = exception.Message;
+                    if (exception.InnerException != null)
+                    {
+                        errors.Add(exception.InnerException.Message);
+                    }
+                    // Only include stack trace in development
+                    if (_environment.IsDevelopment())
+                    {
+                        errors.Add(exception.StackTrace ?? "No stack trace available");
+                    }
                     break;
             }
 

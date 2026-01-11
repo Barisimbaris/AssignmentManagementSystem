@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .login-section {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .admin-panel {
+            display: none;
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+        }
+        
+        .section-content {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: #ecf0f1;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        .result-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>?? AMS Admin Panel</h1>
+            <p>Assignment Management System - Yönetici Paneli</p>
+        </div>
+        
+        <!-- Login Section -->
+        <div class="login-section" id="loginSection">
+            <h2>?? Admin Login</h2>
+            <div class="form-group">
+                <label>API Base URL:</label>
+                <input type="text" id="apiUrl" value="http://localhost:5281" placeholder="http://localhost:5281">
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email" value="admin@ams.com" placeholder="admin@ams.com">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" value="Admin123!" placeholder="Password">
+            </div>
+            <button onclick="login()">?? Login</button>
+            <div id="loginResult" class="result-area" style="margin-top: 10px; min-height: 50px;"></div>
+        </div>
+        
+        <!-- Admin Panel -->
+        <div class="admin-panel" id="adminPanel">
+            
+            <!-- User Management -->
+            <div class="section">
+                <div class="section-header">?? User Management</div>
+                <div class="section-content">
+                    <div class="grid">
+                        
+                        <!-- Get All Users -->
+                        <div class="card">
+                            <div class="card-header">?? List All Users</div>
+                            <div class="card-body">
+                                <button onclick="getAllUsers()">Get All Users</button>
+                                <button onclick="getStudents()">Get Students</button>
+                                <button onclick="getInstructors()">Get Instructors</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Create User -->
+                        <div class="card">
+                            <div class="card-header">? Create User</div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>First Name:</label>
+                                    <input type="text" id="userFirstName" placeholder="John">
+                                </div>
+                                <div class="form-group">
+                                    <label>Last Name:</label>
+                                    <input type="text" id="userLastName" placeholder="Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email:</label>
+                                    <input type="email" id="userEmail" placeholder="john.doe@test.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Password:</label>
+                                    <input type="password" id="userPassword" placeholder="Test123!">
+                                </div>
+                                <div class="form-group">
+                                    <label>Role:</label>
+                                    <select id="userRole">
+                                        <option value="1">Student</option>
+                                        <option value="2">Instructor</option>
+                                        <option value="3">Admin</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Department:</label>
+                                    <input type="text" id="userDepartment" placeholder="Computer Engineering">
+                                </div>
+                                <div class="form-group">
+                                    <label>Student Number (if student):</label>
+                                    <input type="text" id="userStudentNumber" placeholder="20240001">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone:</label>
+                                    <input type="text" id="userPhone" placeholder="+905551234567">
+                                </div>
+                                <button onclick="createUser()">Create User</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Bulk Import -->
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">?? Bulk User Import</div>
+                        <div class="card-body">
+                            <button onclick="downloadTemplate()">Download CSV Template</button>
+                            <button onclick="generateSampleData()">Generate Sample Data (10 Instructors + 150 Students)</button>
+                            <button onclick="bulkImport()" class="btn-success">?? Run Bulk Import</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Management -->
+            <div class="section">
+                <div class="section-header">?? Course & Class Management</div>
+                <div class="section-content">
+                    <div class="grid">
+                        
+                        <div class="card">
+                            <div class="card-header">?? List Courses</div>
+                            <div class="card-body">
+                                <button onclick="getAllCourses()">Get All Courses</button>
+                                <button onclick="getAllClasses()">Get All Classes</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">? Create Course</div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Course Code:</label>
+                                    <input type="text" id="courseCode" placeholder="CS101">
+                                </div>
+                                <div class="form-group">
+                                    <label>Course Name:</label>
+                                    <input type="text" id="courseName" placeholder="Introduction to Programming">
+                                </div>
+                                <div class="form-group">
+                                    <label>Description:</label>
+                                    <textarea id="courseDescription" placeholder="Course description..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Department:</label>
+                                    <input type="text" id="courseDepartment" placeholder="Computer Engineering">
+                                </div>
+                                <div class="form-group">
+                                    <label>Credit Hours:</label>
+                                    <input type="number" id="creditHours" value="3">
+                                </div>
+                                <div class="form-group">
+                                    <label>Academic Year:</label>
+                                    <input type="text" id="academicYear" value="2024-2025">
+                                </div>
+                                <button onclick="createCourse()">Create Course</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">?? Create Class</div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Course ID:</label>
+                                    <input type="number" id="classCourseid" placeholder="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Class Name:</label>
+                                    <input type="text" id="className" placeholder="Programming - Section A">
+                                </div>
+                                <div class="form-group">
+                                    <label>Class Code:</label>
+                                    <input type="text" id="classCode" placeholder="CS101-A">
+                                </div>
+                                <div class="form-group">
+                                    <label>Instructor ID:</label>
+                                    <input type="number" id="classInstructorId" placeholder="2">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max Capacity:</label>
+                                    <input type="number" id="maxCapacity" value="50">
+                                </div>
+                                <div class="form-group">
+                                    <label>Semester:</label>
+                                    <input type="text" id="semester" value="Fall 2024">
+                                </div>
+                                <button onclick="createClass()">Create Class</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Assignment Management -->
+            <div class="section">
+                <div class="section-header">?? Assignment Management</div>
+                <div class="section-content">
+                    <div class="grid">
+                        
+                        <div class="card">
+                            <div class="card-header">?? List Assignments</div>
+                            <div class="card-body">
+                                <button onclick="getAllAssignments()">Get All Assignments</button>
+                                <div class="form-group" style="margin-top: 10px;">
+                                    <label>Class ID:</label>
+                                    <input type="number" id="assignmentClassId" placeholder="1">
+                                    <button onclick="getAssignmentsByClass()">Get by Class</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">? Create Assignment</div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Title:</label>
+                                    <input type="text" id="assignmentTitle" placeholder="Programming Assignment 1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Description:</label>
+                                    <textarea id="assignmentDescription" placeholder="Assignment description..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Class ID:</label>
+                                    <input type="number" id="assignmentClassId2" placeholder="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Assignment Type:</label>
+                                    <select id="assignmentType">
+                                        <option value="1">Individual</option>
+                                        <option value="2">Group</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Due Date:</label>
+                                    <input type="datetime-local" id="dueDate">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max Score:</label>
+                                    <input type="number" id="maxScore" value="100">
+                                </div>
+                                <button onclick="createAssignment()">Create Assignment</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Group Management -->
+            <div class="section">
+                <div class="section-header">?? Group Management</div>
+                <div class="section-content">
+                    <div class="grid">
+                        
+                        <div class="card">
+                            <div class="card-header">?? View Groups</div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Assignment ID:</label>
+                                    <input type="number" id="groupAssignmentId" placeholder="1">
+                                    <button onclick="getGroupsByAssignment()">Get Groups</button>
+                                </div>
+                                <div class="form-group">
+                                    <label>Group ID:</label>
+                                    <input type="number" id="groupId" placeholder="1">
+                                    <button onclick="getGroupDetails()">Get Group Details</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Student Enrollment Management -->
+            <div class="section">
+                <div class="section-header">?? Student Enrollment Management</div>
+                <div class="section-content">
+                    <div class="grid">
+                        
+                        <div class="card">
+                            <div class="card-header">?? Individual Enrollment</div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Class ID:</label>
+                                    <input type="number" id="enrollClassId" placeholder="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Student ID:</label>
+                                    <input type="number" id="enrollStudentId" placeholder="1">
+                                </div>
+                                <button onclick="enrollStudent()">Enroll Student</button>
+                                <button onclick="unenrollStudent()" class="btn-danger">Unenroll Student</button>
+                                
+                                <div class="form-group" style="margin-top: 15px;">
+                                    <label>Check Class Enrollments:</label>
+                                    <input type="number" id="checkClassId" placeholder="Class ID">
+                                    <button onclick="getClassEnrollments()">View Enrollments</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">?? Bulk Enrollment</div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Class ID:</label>
+                                    <input type="number" id="bulkEnrollClassId" placeholder="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Student IDs (comma separated):</label>
+                                    <textarea id="bulkStudentIds" placeholder="11,12,13,14,15" rows="3"></textarea>
+                                </div>
+                                <button onclick="bulkEnrollStudents()" class="btn-success">Bulk Enroll Students</button>
+                                
+                                <div style="margin-top: 15px;">
+                                    <button onclick="enrollAllStudents()" class="btn-success">?? Enroll ALL Students to Selected Class</button>
+                                    <p style="font-size: 12px; color: #666;">Tüm ö?rencileri seçilen s?n?fa otomatik kay?t eder</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">?? Smart Enrollment</div>
+                            <div class="card-body">
+                                <button onclick="autoEnrollNewStudents()" class="btn-success">Auto Enroll New Students</button>
+                                <p style="font-size: 12px; color: #666;">Yeni eklenen ö?rencileri mevcut s?n?flara otomatik da??t?r</p>
+                                
+                                <div class="form-group" style="margin-top: 15px;">
+                                    <label>Department Based Enrollment:</label>
+                                    <select id="departmentSelect">
+                                        <option value="Computer Engineering">Computer Engineering</option>
+                                        <option value="Software Engineering">Software Engineering</option>
+                                        <option value="Electronics Engineering">Electronics Engineering</option>
+                                    </select>
+                                    <button onclick="enrollByDepartment()">Enroll by Department</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Statistics -->
+            <div class="section">
+                <div class="section-header">?? System Statistics</div>
+                <div class="section-content">
+                    <div class="grid">
+                        
+                        <div class="card">
+                            <div class="card-header">?? Dashboards</div>
+                            <div class="card-body">
+                                <button onclick="getAdminDashboard()">Admin Dashboard</button>
+                                <button onclick="getSystemStats()">System Statistics</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Results Area -->
+        <div id="resultsArea" class="result-area" style="margin: 20px; min-height: 200px;">
+            API responses will appear here...
+        </div>
+        
+    </div>
+
+    <script>
+        let adminToken = '';
+        let apiBaseUrl = 'http://localhost:5281';
+        
+        // Login Function
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            apiBaseUrl = document.getElementById('apiUrl').value;
+            
+            // API URL validation
+            if (!apiBaseUrl || !apiBaseUrl.startsWith('http')) {
+                showResult('loginResult', '? Invalid API URL! Must start with http:// or https://', 'error');
+                return;
+            }
+            
+            showResult('loginResult', '?? Logging in...', 'info');
+            
+            try {
+                console.log('Attempting login to:', `${apiBaseUrl}/api/Auth/login`);
+                
+                const response = await fetch(`${apiBaseUrl}/api/Auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.isSuccess) {
+                    adminToken = data.data.token;
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('adminPanel').style.display = 'block';
+                    showResult('loginResult', `? Login successful! Token: ${adminToken.substring(0, 20)}...`, 'success');
+                } else {
+                    showResult('loginResult', `? Login failed: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                if (error.message.includes('fetch')) {
+                    showResult('loginResult', 
+                        `? Connection Error!\n` +
+                        `• Check if API is running: ${apiBaseUrl}\n` +
+                        `• Try opening: ${apiBaseUrl}/swagger in browser\n` +
+                        `• Error: ${error.message}`, 'error');
+                } else {
+                    showResult('loginResult', `? Error: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        // API Call Helper
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json'
+                };
+                
+                const config = { method, headers };
+                if (body) config.body = JSON.stringify(body);
+                
+                const response = await fetch(`${apiBaseUrl}${endpoint}`, config);
+                const data = await response.json();
+                
+                showResult('resultsArea', JSON.stringify(data, null, 2), response.ok ? 'success' : 'error');
+                return data;
+            } catch (error) {
+                showResult('resultsArea', `? Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Result Display Helper
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result-area status-${type}`;
+        }
+        
+        // User Management Functions
+        async function getAllUsers() {
+            await apiCall('/api/User');
+        }
+        
+        async function getStudents() {
+            await apiCall('/api/User/students');
+        }
+        
+        async function getInstructors() {
+            await apiCall('/api/User/instructors');
+        }
+        
+        async function createUser() {
+            const userData = {
+                firstName: document.getElementById('userFirstName').value,
+                lastName: document.getElementById('userLastName').value,
+                email: document.getElementById('userEmail').value,
+                password: document.getElementById('userPassword').value,
+                confirmPassword: document.getElementById('userPassword').value,
+                role: parseInt(document.getElementById('userRole').value),
+                department: document.getElementById('userDepartment').value,
+                studentNumber: document.getElementById('userStudentNumber').value || null,
+                phoneNumber: document.getElementById('userPhone').value || null
+            };
+            
+            await apiCall('/api/Auth/register', 'POST', userData);
+        }
+        
+        // Bulk Import Functions
+        function downloadTemplate() {
+            window.open(`${apiBaseUrl}/api/User/bulk-import-template`, '_blank');
+        }
+        
+        function generateSampleData() {
+            const bulkUsers = [];
+            
+            // 10 Instructors
+            for (let i = 1; i <= 10; i++) {
+                bulkUsers.push({
+                    firstName: `Instructor${i}`,
+                    lastName: "Lecturer",
+                    email: `instructor${i}@university.edu`,
+                    password: "Inst123!",
+                    role: 2,
+                    department: "Computer Engineering",
+                    phoneNumber: `+9055123400${i.toString().padStart(2, '0')}`
+                });
+            }
+            
+            // 150 Students
+            for (let i = 1; i <= 150; i++) {
+                bulkUsers.push({
+                    firstName: `Student${i}`,
+                    lastName: "Learner",
+                    email: `student${i}@student.university.edu`,
+                    password: "Stud123!",
+                    role: 1,
+                    studentNumber: `202400${i.toString().padStart(3, '0')}`,
+                    department: "Computer Engineering",
+                    phoneNumber: `+9055124000${i.toString().padStart(3, '0')}`
+                });
+            }
+            
+            showResult('resultsArea', `Generated ${bulkUsers.length} sample users (10 instructors + 150 students). Ready for bulk import.`, 'success');
+            window.sampleBulkData = bulkUsers;
+        }
+        
+        async function bulkImport() {
+            if (!window.sampleBulkData) {
+                showResult('resultsArea', 'Please generate sample data first!', 'error');
+                return;
+            }
+            
+            const bulkRequest = {
+                users: window.sampleBulkData,
+                skipDuplicateEmails: true,
+                sendWelcomeEmails: false
+            };
+            
+            await apiCall('/api/User/bulk-import', 'POST', bulkRequest);
+        }
+        
+        // Course Management Functions
+        async function getAllCourses() {
+            await apiCall('/api/Course');
+        }
+        
+        async function getAllClasses() {
+            await apiCall('/api/Class');
+        }
+        
+        async function createCourse() {
+            const courseData = {
+                courseCode: document.getElementById('courseCode').value,
+                courseName: document.getElementById('courseName').value,
+                description: document.getElementById('courseDescription').value,
+                department: document.getElementById('courseDepartment').value,
+                creditHours: parseInt(document.getElementById('creditHours').value),
+                academicYear: document.getElementById('academicYear').value
+            };
+            
+            await apiCall('/api/Course', 'POST', courseData);
+        }
+        
+        async function createClass() {
+            const classData = {
+                courseId: parseInt(document.getElementById('classCourseid').value),
+                className: document.getElementById('className').value,
+                classCode: document.getElementById('classCode').value,
+                instructorId: parseInt(document.getElementById('classInstructorId').value),
+                maxCapacity: parseInt(document.getElementById('maxCapacity').value),
+                semester: document.getElementById('semester').value
+            };
+            
+            await apiCall('/api/Class', 'POST', classData);
+        }
+        
+        // Assignment Management Functions
+        async function getAllAssignments() {
+            await apiCall('/api/Assignment');
+        }
+        
+        async function getAssignmentsByClass() {
+            const classId = document.getElementById('assignmentClassId').value;
+            await apiCall(`/api/Assignment/class/${classId}`);
+        }
+        
+        async function createAssignment() {
+            const assignmentData = {
+                title: document.getElementById('assignmentTitle').value,
+                description: document.getElementById('assignmentDescription').value,
+                classId: parseInt(document.getElementById('assignmentClassId2').value),
+                type: parseInt(document.getElementById('assignmentType').value),
+                dueDate: document.getElementById('dueDate').value,
+                maxScore: parseInt(document.getElementById('maxScore').value),
+                allowLateSubmission: false,
+                allowResubmission: true
+            };
+            
+            await apiCall('/api/Assignment', 'POST', assignmentData);
+        }
+        
+        // Group Management Functions
+        async function getGroupsByAssignment() {
+            const assignmentId = document.getElementById('groupAssignmentId').value;
+            await apiCall(`/api/Group/assignment/${assignmentId}`);
+        }
+        
+        async function getGroupDetails() {
+            const groupId = document.getElementById('groupId').value;
+            await apiCall(`/api/Group/${groupId}`);
+        }
+        
+        // Student Enrollment Functions
+        async function enrollStudent() {
+            const classId = document.getElementById('enrollClassId').value;
+            const studentId = document.getElementById('enrollStudentId').value;
+            
+            await apiCall(`/api/Enrollment/enroll`, 'POST', { classId, studentId });
+        }
+        
+        async function unenrollStudent() {
+            const classId = document.getElementById('enrollClassId').value;
+            const studentId = document.getElementById('enrollStudentId').value;
+            
+            await apiCall(`/api/Enrollment/unenroll`, 'POST', { classId, studentId });
+        }
+        
+        async function getClassEnrollments() {
+            const classId = document.getElementById('checkClassId').value;
+            
+            await apiCall(`/api/Enrollment/class/${classId}`);
+        }
+        
+        async function bulkEnrollStudents() {
+            const classId = document.getElementById('bulkEnrollClassId').value;
+            const studentIds = document.getElementById('bulkStudentIds').value.split(',').map(id => id.trim()).filter(id => id);
+            
+            await apiCall(`/api/Enrollment/bulk-enroll`, 'POST', { classId, studentIds });
+        }
+        
+        async function enrollAllStudents() {
+            const classId = document.getElementById('bulkEnrollClassId').value;
+            
+            await apiCall(`/api/Enrollment/enroll-all`, 'POST', { classId });
+        }
+        
+        async function autoEnrollNewStudents() {
+            await apiCall(`/api/Enrollment/auto-enroll-new`);
+        }
+        
+        async function enrollByDepartment() {
+            const department = document.getElementById('departmentSelect').value;
+            
+            await apiCall(`/api/Enrollment/enroll-by-department`, 'POST', { department });
+        }
+        
+        // Statistics Functions
+        async function getAdminDashboard() {
+            await apiCall('/api/Dashboard/admin');
+        }
+        
+        async function getSystemStats() {
+            const users = await apiCall('/api/User');
+            const courses = await apiCall('/api/Course');
+            const assignments = await apiCall('/api/Assignment');
+            
+            showResult('resultsArea', 
+                `?? SYSTEM STATISTICS:\n` +
+                `?? Total Users: ${users?.data?.length || 0}\n` +
+                `?? Total Courses: ${courses?.data?.length || 0}\n` +
+                `?? Total Assignments: ${assignments?.data?.length || 0}\n` +
+                `\nDetailed data in individual API calls above.`, 'success');
+        }
+        
+        // ? STUDENT ENROLLMENT FUNCTIONS
+        async function enrollStudent() {
+            const classId = document.getElementById('enrollClassId').value;
+            const studentId = document.getElementById('enrollStudentId').value;
+            
+            if (!classId || !studentId) {
+                showResult('resultsArea', '? Please provide both Class ID and Student ID', 'error');
+                return;
+            }
+            
+            await apiCall(`/api/Class/${classId}/enroll/${studentId}`, 'POST');
+        }
+        
+        async function unenrollStudent() {
+            const classId = document.getElementById('enrollClassId').value;
+            const studentId = document.getElementById('enrollStudentId').value;
+            
+            if (!classId || !studentId) {
+                showResult('resultsArea', '? Please provide both Class ID and Student ID', 'error');
+                return;
+            }
+            
+            await apiCall(`/api/Class/${classId}/unenroll/${studentId}`, 'POST');
+        }
+        
+        async function getClassEnrollments() {
+            const classId = document.getElementById('checkClassId').value;
+            
+            if (!classId) {
+                showResult('resultsArea', '? Please provide Class ID', 'error');
+                return;
+            }
+            
+            try {
+                const classDetails = await apiCall(`/api/Class/${classId}`);
+                showResult('resultsArea', 
+                    `?? CLASS ENROLLMENT DETAILS:\n` +
+                    `Class: ${classDetails?.data?.className || 'N/A'}\n` +
+                    `Instructor: ${classDetails?.data?.instructorName || 'N/A'}\n` +
+                    `Current Enrollment: ${classDetails?.data?.currentEnrollment || 0}\n` +
+                    `Max Capacity: ${classDetails?.data?.maxCapacity || 0}\n` +
+                    `\nFor detailed student list, check API response above.`, 'success');
+            } catch (error) {
+                await apiCall(`/api/Class/${classId}`);
+            }
+        }
+        
+        async function bulkEnrollStudents() {
+            const classId = document.getElementById('bulkEnrollClassId').value;
+            const studentIdsText = document.getElementById('bulkStudentIds').value;
+            
+            if (!classId || !studentIdsText) {
+                showResult('resultsArea', '? Please provide Class ID and Student IDs', 'error');
+                return;
+            }
+            
+            const studentIds = studentIdsText.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+            
+            if (studentIds.length === 0) {
+                showResult('resultsArea', '? No valid Student IDs provided', 'error');
+                return;
+            }
+            
+            showResult('resultsArea', `?? Enrolling ${studentIds.length} students to class ${classId}...`, 'info');
+            
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+            
+            for (const studentId of studentIds) {
+                try {
+                    await apiCall(`/api/Class/${classId}/enroll/${studentId}`, 'POST');
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    errors.push(`Student ${studentId}: ${error.message}`);
+                }
+            }
+            
+            showResult('resultsArea', 
+                `?? BULK ENROLLMENT COMPLETED:\n` +
+                `? Successful: ${successCount}\n` +
+                `? Failed: ${errorCount}\n` +
+                `${errors.length > 0 ? '\nErrors:\n' + errors.join('\n') : ''}`, 
+                errorCount > 0 ? 'error' : 'success');
+        }
+        
+        async function enrollAllStudents() {
+            const classId = document.getElementById('bulkEnrollClassId').value;
+            
+            if (!classId) {
+                showResult('resultsArea', '? Please provide Class ID', 'error');
+                return;
+            }
+            
+            try {
+                // Get all students
+                const studentsResponse = await apiCall('/api/User/students');
+                const students = studentsResponse?.data || [];
+                
+                if (students.length === 0) {
+                    showResult('resultsArea', '? No students found in system', 'error');
+                    return;
+                }
+                
+                showResult('resultsArea', `?? Enrolling ALL ${students.length} students to class ${classId}...`, 'info');
+                
+                let successCount = 0;
+                let errorCount = 0;
+                const errors = [];
+                
+                for (const student of students) {
+                    try {
+                        await apiCall(`/api/Class/${classId}/enroll/${student.id}`, 'POST');
+                        successCount++;
+                    } catch (error) {
+                        errorCount++;
+                        errors.push(`${student.firstName} ${student.lastName} (${student.id}): Already enrolled or error`);
+                    }
+                }
+                
+                showResult('resultsArea', 
+                    `?? AUTO ENROLLMENT COMPLETED:\n` +
+                    `?? Total Students: ${students.length}\n` +
+                    `? Successfully Enrolled: ${successCount}\n` +
+                    `?? Skipped/Errors: ${errorCount}\n` +
+                    `?? Class ID: ${classId}`, 'success');
+                    
+            } catch (error) {
+                showResult('resultsArea', `? Error getting students: ${error.message}`, 'error');
+            }
+        }
+        
+        async function autoEnrollNewStudents() {
+            try {
+                // Get all students and classes
+                const studentsResponse = await apiCall('/api/User/students');
+                const classesResponse = await apiCall('/api/Class');
+                
+                const students = studentsResponse?.data || [];
+                const classes = classesResponse?.data || [];
+                
+                if (students.length === 0) {
+                    showResult('resultsArea', '? No students found', 'error');
+                    return;
+                }
+                
+                if (classes.length === 0) {
+                    showResult('resultsArea', '? No classes found', 'error');
+                    return;
+                }
+                
+                showResult('resultsArea', 
+                    `?? AUTO ENROLLMENT STARTING:\n` +
+                    `?? Students: ${students.length}\n` +
+                    `?? Classes: ${classes.length}\n` +
+                    `?? Distributing students across classes...`, 'info');
+                
+                let totalEnrollments = 0;
+                
+                // Distribute students across all classes
+                for (let i = 0; i < students.length; i++) {
+                    const student = students[i];
+                    const classIndex = i % classes.length; // Round-robin distribution
+                    const selectedClass = classes[classIndex];
+                    
+                    try {
+                        await apiCall(`/api/Class/${selectedClass.id}/enroll/${student.id}`, 'POST');
+                        totalEnrollments++;
+                    } catch (error) {
+                        // Ignore errors (student might already be enrolled)
+                    }
+                }
+                
+                showResult('resultsArea', 
+                    `? AUTO ENROLLMENT COMPLETED:\n` +
+                    `?? Total Enrollments: ${totalEnrollments}\n` +
+                    `?? Students distributed across ${classes.length} classes`, 'success');
+                    
+            } catch (error) {
+                showResult('resultsArea', `? Auto enrollment error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function enrollByDepartment() {
+            const department = document.getElementById('departmentSelect').value;
+            const classId = document.getElementById('bulkEnrollClassId').value;
+            
+            if (!classId) {
+                showResult('resultsArea', '? Please provide Class ID', 'error');
+                return;
+            }
+            
+            try {
+                // Get all students
+                const studentsResponse = await apiCall('/api/User/students');
+                const allStudents = studentsResponse?.data || [];
+                
+                // Filter by department
+                const departmentStudents = allStudents.filter(student => 
+                    student.department && student.department.toLowerCase().includes(department.toLowerCase())
+                );
+                
+                if (departmentStudents.length === 0) {
+                    showResult('resultsArea', `? No students found in ${department} department`, 'error');
+                    return;
+                }
+                
+                showResult('resultsArea', 
+                    `?? Enrolling ${departmentStudents.length} ${department} students to class ${classId}...`, 'info');
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const student of departmentStudents) {
+                    try {
+                        await apiCall(`/api/Class/${classId}/enroll/${student.id}`, 'POST');
+                        successCount++;
+                    } catch (error) {
+                        errorCount++;
+                    }
+                }
+                
+                showResult('resultsArea', 
+                    `?? DEPARTMENT ENROLLMENT COMPLETED:\n` +
+                    `?? Department: ${department}\n` +
+                    `? Enrolled: ${successCount}\n` +
+                    `?? Skipped: ${errorCount}`, 'success');
+                
+            } catch (error) {
+                showResult('resultsArea', `? Department enrollment error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Set default due date to tomorrow
+        document.addEventListener('DOMContentLoaded', function() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 7);
+            document.getElementById('dueDate').value = tomorrow.toISOString().slice(0, 16);
+        });
+        
+    </script>
+</body>
+</html>

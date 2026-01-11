@@ -234,7 +234,7 @@ const loadAllClasses = async (enrolledClassIds = []) => {
 const handleEnroll = async (classId) => {
   try {
     // Backend artık body gerektirmiyor, sadece POST isteği yeterli
-    await apiFetch(`/Class/${classId}/enroll`, {
+    await apiFetch(`/Class/${classId}/enroll-me`, {
       method: "POST"
     });
     showToast("Sınıfa başarıyla kayıt oldunuz!");
@@ -255,7 +255,7 @@ const handleUnenroll = async (classId) => {
 
   try {
     // Backend artık body gerektirmiyor, sadece POST isteği yeterli
-    await apiFetch(`/Class/${classId}/unenroll`, {
+    await apiFetch(`/Class/${classId}/unenroll-me`, {
       method: "POST"
     });
     showToast("Sınıftan başarıyla kayıttan çıktınız!");

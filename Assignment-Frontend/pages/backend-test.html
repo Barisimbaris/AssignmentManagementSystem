@@ -80,7 +80,7 @@
   <div id="details" style="margin-top: 20px;"></div>
 
   <script>
-    const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:8080/api";
+    const API_BASE_URL = window.__API_BASE_URL__ || "http://localhost:5281/api";
     const BACKEND_URL = API_BASE_URL.replace("/api", "");
 
     async function testBackend() {
@@ -194,7 +194,7 @@ dotnet run --project src/AMS.API --launch-profile http</pre>
         <ul>
           <li>✅ Backend klasörüne gittiniz mi? (<code>AssignmentManagementSystem-main</code>)</li>
           <li>✅ Backend komutunu çalıştırdınız mı? (<code>dotnet run --project src/AMS.API --launch-profile http</code>)</li>
-          <li>✅ Terminal'de "Now listening on: http://localhost:8080" mesajını görüyor musunuz?</li>
+          <li>✅ Terminal'de "Now listening on: http://localhost:5281" mesajını görüyor musunuz?</li>
           <li>✅ Tarayıcıda <a href="${BACKEND_URL}/swagger" target="_blank">Swagger</a> açılıyor mu?</li>
         </ul>
       `;

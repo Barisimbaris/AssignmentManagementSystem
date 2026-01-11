@@ -3,6 +3,7 @@ using AMS.API.Filters;
 using AMS.API.Settings;
 using AMS.Application.Services.Implementations;
 using AMS.Application.Services.Interfaces;
+using AMS.Application.Settings; // ? YEN?: EmailSettings i�in
 using AMS.Domain.Interfaces;
 using AMS.Infrastructure.Data.Context;
 using AMS.Infrastructure.Data.Repositories;
@@ -21,6 +22,9 @@ var builder = WebApplication.CreateBuilder(args);
 // JWT Settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
+// ? YEN?: Email Settings
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
 // Database Connection
 builder.Services.AddDbContext<AMSDbContext>(options =>
     options.UseSqlServer(
@@ -36,10 +40,22 @@ builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<IGradeRepository, GradeRepository>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+builder.Services.AddScoped<ICourseInstructorRepository, CourseInstructorRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>(); // ? YEN?
+
+// ? YEN?: Group Management Repositories
+builder.Services.AddScoped<IAssignmentGroupRepository, AssignmentGroupRepository>();
+builder.Services.AddScoped<IGroupMemberRepository, GroupMemberRepository>();
+
+// ? Schedule Repository Eklendi
+builder.Services.AddScoped<IClassScheduleRepository, ClassScheduleRepository>();
 
 // Register Services
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IEmailService, EmailService>(); // ? YEN?: EmailService
+builder.Services.AddScoped<INotificationService, NotificationService>(); // ? YEN?: NotificationService
+builder.Services.AddScoped<IStatisticsService, StatisticsService>(); // ? YEN?: StatisticsService
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
@@ -47,6 +63,24 @@ builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<IGradeService, GradeService>();
+
+// ? YEN?: Group Management Service
+builder.Services.AddScoped<IGroupService, GroupService>();
+
+// ? YEN?: ClassSchedule Service
+builder.Services.AddScoped<IClassScheduleService, ClassScheduleService>();
+
+// ? CORS Policy Ekleme
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -123,6 +157,9 @@ var app = builder.Build();
 
 // Global Exception Handler
 app.UseGlobalExceptionHandler();
+
+// ? CORS Middleware Ekleme (Authentication'dan �nce!)
+app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

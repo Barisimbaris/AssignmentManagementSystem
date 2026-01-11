@@ -56,10 +56,34 @@ public class GradeRepository : IGradeRepository
     public async Task<List<Grade>> GetByIdsAsync(List<int> ids)
     {
         return await _context.Grades
-            .Include(g => g.Submission.Assignment)
-            .Include(g => g.Submission.Student)
-            .Include(g => g.Instructor)
-            .Where(g => ids.Contains(g.Id))
+            .Where(g => ids.Contains(g.Id) && !g.IsDeleted)
+            .Include(g => g.Submission)
+            .ThenInclude(s => s.Assignment)
+            .ThenInclude(a => a.Class)
+            .ToListAsync();
+    }
+
+    public async Task<List<Grade>> GetAllAsync()
+    {
+        return await _context.Grades
+            .Where(g => !g.IsDeleted)
+            .Include(g => g.Submission)
+            .ThenInclude(s => s.Assignment)
+            .ThenInclude(a => a.Class)
+            .Include(g => g.Submission)
+            .ThenInclude(s => s.Student)
+            .ToListAsync();
+    }
+
+    public async Task<List<Grade>> GetByCourseIdAsync(int courseId)
+    {
+        return await _context.Grades
+            .Where(g => !g.IsDeleted && g.Submission.Assignment.Class.CourseId == courseId)
+            .Include(g => g.Submission)
+            .ThenInclude(s => s.Assignment)
+            .ThenInclude(a => a.Class)
+            .Include(g => g.Submission)
+            .ThenInclude(s => s.Student)
             .ToListAsync();
     }
 

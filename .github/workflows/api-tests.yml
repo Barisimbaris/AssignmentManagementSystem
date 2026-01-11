@@ -1,0 +1,138 @@
+name: AMS API Automated Testing
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Manual trigger
+
+env:
+  DOTNET_VERSION: '9.0'
+  API_PORT: 5281
+  API_URL: http://localhost:5281
+
+jobs:
+  api-integration-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      sql-server:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          SA_PASSWORD: YourStrong@Password123
+          ACCEPT_EULA: Y
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Password123 -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+    
+    steps:
+    - name: ?? Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: ?? Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: ?? Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: ??? Install Newman
+      run: |
+        npm install -g newman
+        npm install -g newman-reporter-htmlextra
+        
+    - name: ?? Restore Dependencies
+      run: dotnet restore
+      
+    - name: ??? Build Solution
+      run: dotnet build --configuration Release --no-restore
+      
+    - name: ??? Setup Database
+      run: |
+        dotnet ef database update --project src/AMS.Infrastructure --startup-project src/AMS.API
+        
+    - name: ?? Start API Server
+      run: |
+        cd src/AMS.API
+        nohup dotnet run --urls=${{ env.API_URL }} &
+        sleep 30
+        
+    - name: ?? Health Check
+      run: |
+        max_attempts=10
+        attempt=1
+        while [ $attempt -le $max_attempts ]; do
+          echo "Health check attempt $attempt..."
+          if curl -f ${{ env.API_URL }}/swagger/v1/swagger.json; then
+            echo "? API is healthy"
+            break
+          fi
+          if [ $attempt -eq $max_attempts ]; then
+            echo "? API health check failed after $max_attempts attempts"
+            exit 1
+          fi
+          sleep 10
+          ((attempt++))
+        done
+        
+    - name: ?? Run Newman API Tests
+      run: |
+        newman run newman/ams-collection.json \
+          --environment newman/ams-environment.json \
+          --reporters cli,htmlextra,junit \
+          --reporter-htmlextra-export newman/reports/api-test-report.html \
+          --reporter-junit-export newman/reports/api-test-results.xml \
+          --timeout 15000 \
+          --bail false \
+          --color on
+          
+    - name: ?? Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: newman-test-reports
+        path: newman/reports/
+        
+    - name: ?? Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Newman API Tests
+        path: newman/reports/api-test-results.xml
+        reporter: java-junit
+        
+    - name: ?? Notify Teams (Success)
+      if: success()
+      run: |
+        curl -X POST ${{ secrets.TEAMS_WEBHOOK_URL }} \
+        -H "Content-Type: application/json" \
+        -d '{
+          "text": "? AMS API Tests Passed",
+          "sections": [{
+            "activityTitle": "All integration tests completed successfully",
+            "activitySubtitle": "Branch: ${{ github.ref_name }} | Commit: ${{ github.sha }}"
+          }]
+        }'
+        
+    - name: ?? Notify Teams (Failure)
+      if: failure()
+      run: |
+        curl -X POST ${{ secrets.TEAMS_WEBHOOK_URL }} \
+        -H "Content-Type: application/json" \
+        -d '{
+          "text": "? AMS API Tests Failed",
+          "sections": [{
+            "activityTitle": "Integration tests failed - immediate attention required",
+            "activitySubtitle": "Branch: ${{ github.ref_name }} | Commit: ${{ github.sha }}"
+          }]
+        }'

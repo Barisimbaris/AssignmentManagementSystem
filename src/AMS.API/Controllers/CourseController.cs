@@ -1,8 +1,10 @@
 ﻿using AMS.Application.DTOs.Course;
+using AMS.Application.DTOs.CourseInstructor;
 using AMS.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 
 namespace AMS.API.Controllers
 {
@@ -54,7 +56,7 @@ namespace AMS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateCourseRequestDto request)
         {
-            var result = await _courseService.CreateAsync(request);
+                var result = await _courseService.CreateAsync(request);
 
             if (!result.IsSuccess)
             {
@@ -95,6 +97,64 @@ namespace AMS.API.Controllers
                 return BadRequest(result);
             }
 
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Assign instructor to course (Admin only)
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{courseId}/assign-instructor")]
+        public async Task<IActionResult> AssignInstructor(
+            int courseId,
+            [FromBody] AssignInstructorDto request)
+        {
+            var result = await _courseService.AssignInstructorAsync(
+                courseId,
+                request.InstructorId,
+                request.AcademicYear);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Remove instructor from course (Admin only)
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{courseId}/instructor/{instructorId}")]
+        public async Task<IActionResult> RemoveInstructor(int courseId, int instructorId)
+        {
+            var result = await _courseService.RemoveInstructorAsync(courseId, instructorId);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get all instructors assigned to a course (Admin only)
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("{courseId}/instructors")]
+        public async Task<IActionResult> GetCourseInstructors(int courseId)
+        {
+            var result = await _courseService.GetCourseInstructorsAsync(courseId);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get my assigned courses (Instructor only)
+        /// </summary>
+        [Authorize(Roles = "Instructor")]
+        [HttpGet("my-courses")]
+        public async Task<IActionResult> GetMyCourses()
+        {
+            var instructorId = GetCurrentUserId();
+            var result = await _courseService.GetInstructorCoursesAsync(instructorId);
             return Ok(result);
         }
     }

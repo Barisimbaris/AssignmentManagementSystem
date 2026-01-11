@@ -1,6 +1,7 @@
 ﻿using AMS.Application.Common.Exceptions;
 using AMS.Application.Common.Results;
 using AMS.Application.DTOs.Class;
+using AMS.Application.DTOs.User;
 using AMS.Application.Services.Interfaces;
 using AMS.Domain.Entities;
 using AMS.Domain.Interfaces;
@@ -18,17 +19,23 @@ namespace AMS.Application.Services.Implementations
         private readonly ICourseRepository _courseRepository;
         private readonly IUserRepository _userRepository;
         private readonly IEnrollmentRepository _enrollmentRepository;
+        private readonly ICourseInstructorRepository _courseInstructorRepository;
+        private readonly INotificationService _notificationService; // ✅ YENİ
 
         public ClassService(
             IClassRepository classRepository,
             ICourseRepository courseRepository,
             IUserRepository userRepository,
-            IEnrollmentRepository enrollmentRepository)
+            IEnrollmentRepository enrollmentRepository,
+            ICourseInstructorRepository courseInstructorRepository,
+            INotificationService notificationService) // ✅ YENİ
         {
             _classRepository = classRepository;
             _courseRepository = courseRepository;
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
+            _courseInstructorRepository = courseInstructorRepository;
+            _notificationService = notificationService; // ✅ YENİ
         }
 
         public async Task<Result<ClassResponseDto>> GetByIdAsync(int id)
@@ -46,12 +53,12 @@ namespace AMS.Application.Services.Implementations
             {
                 Id = classEntity.Id,
                 CourseId = classEntity.CourseId,
-                CourseName = classEntity.Course.CourseName,
-                CourseCode = classEntity.Course.CourseCode,
+                CourseName = classEntity.Course?.CourseName ?? string.Empty,
+                CourseCode = classEntity.Course?.CourseCode ?? string.Empty,
                 ClassName = classEntity.ClassName,
                 ClassCode = classEntity.ClassCode,
                 InstructorId = classEntity.InstructorId,
-                InstructorName = $"{classEntity.Instructor.FirstName} {classEntity.Instructor.LastName}",
+                InstructorName = $"{classEntity.Instructor?.FirstName ?? ""} {classEntity.Instructor?.LastName ?? ""}".Trim(),
                 MaxCapacity = classEntity.MaxCapacity,
                 CurrentEnrollment = enrollmentCount,
                 Semester = classEntity.Semester,
@@ -75,12 +82,12 @@ namespace AMS.Application.Services.Implementations
                 {
                     Id = c.Id,
                     CourseId = c.CourseId,
-                    CourseName = c.Course.CourseName,
-                    CourseCode = c.Course.CourseCode,
+                    CourseName = c.Course?.CourseName ?? string.Empty,
+                    CourseCode = c.Course?.CourseCode ?? string.Empty,
                     ClassName = c.ClassName,
                     ClassCode = c.ClassCode,
                     InstructorId = c.InstructorId,
-                    InstructorName = $"{c.Instructor.FirstName} {c.Instructor.LastName}",
+                    InstructorName = $"{c.Instructor?.FirstName ?? ""} {c.Instructor?.LastName ?? ""}".Trim(),
                     MaxCapacity = c.MaxCapacity,
                     CurrentEnrollment = enrollmentCount,
                     Semester = c.Semester,
@@ -135,12 +142,12 @@ namespace AMS.Application.Services.Implementations
                 {
                     Id = c.Id,
                     CourseId = c.CourseId,
-                    CourseName = c.Course.CourseName,
-                    CourseCode = c.Course.CourseCode,
+                    CourseName = c.Course?.CourseName ?? string.Empty,
+                    CourseCode = c.Course?.CourseCode ?? string.Empty,
                     ClassName = c.ClassName,
                     ClassCode = c.ClassCode,
                     InstructorId = c.InstructorId,
-                    InstructorName = $"{c.Instructor?.FirstName} {c.Instructor?.LastName}",
+                    InstructorName = $"{c.Instructor?.FirstName ?? ""} {c.Instructor?.LastName ?? ""}".Trim(),
                     MaxCapacity = c.MaxCapacity,
                     CurrentEnrollment = enrollmentCount,
                     Semester = c.Semester,
@@ -151,18 +158,20 @@ namespace AMS.Application.Services.Implementations
             return Result<List<ClassResponseDto>>.Success(response);
         }
 
-        public async Task<Result<ClassResponseDto>> CreateAsync(CreateClassRequestDto request)
+        public async Task<Result<ClassResponseDto>> CreateAsync(CreateClassRequestDto request,
+    int instructorId)
         {
+            var isAssigned = await _courseInstructorRepository.IsAssignedAsync(request.CourseId, instructorId);
             var course = await _courseRepository.GetByIdAsync(request.CourseId);
             if (course == null)
             {
                 throw new NotFoundException("Course", request.CourseId);
             }
 
-            var instructor = await _userRepository.GetByIdAsync(request.InstructorId);
+            var instructor = await _userRepository.GetByIdAsync(instructorId);
             if (instructor == null)
             {
-                throw new NotFoundException("Instructor", request.InstructorId);
+                throw new NotFoundException("Instructor", instructorId);
             }
 
             var classEntity = new Class
@@ -170,7 +179,7 @@ namespace AMS.Application.Services.Implementations
                 CourseId = request.CourseId,
                 ClassName = request.ClassName,
                 ClassCode = request.ClassCode,
-                InstructorId = request.InstructorId,
+                InstructorId = instructorId,
                 MaxCapacity = request.MaxCapacity,
                 Semester = request.Semester,
                 CreatedAt = DateTime.UtcNow
@@ -302,6 +311,9 @@ namespace AMS.Application.Services.Implementations
             await _enrollmentRepository.AddAsync(enrollment);
             await _enrollmentRepository.SaveChangesAsync();
 
+            // ✅ YENİ: Enrollment email notification gönder
+            await _notificationService.CreateAndSendEnrollmentNotificationAsync(classId, studentId);
+
             return Result.Success("Student enrolled successfully");
         }
 
@@ -318,6 +330,31 @@ namespace AMS.Application.Services.Implementations
             await _enrollmentRepository.SaveChangesAsync();
 
             return Result.Success("Student unenrolled successfully");
+        }
+
+        public async Task<Result<List<UserResponseDto>>> GetClassStudentsAsync(int classId)
+        {
+            var enrollments = await _enrollmentRepository.GetByClassIdAsync(classId);
+            
+            var students = new List<UserResponseDto>();
+            foreach (var enrollment in enrollments)
+            {
+                if (enrollment.Student != null)
+                {
+                    students.Add(new UserResponseDto
+                    {
+                        Id = enrollment.Student.Id,
+                        FirstName = enrollment.Student.FirstName,
+                        LastName = enrollment.Student.LastName,
+                        Email = enrollment.Student.Email,
+                        StudentNumber = enrollment.Student.StudentNumber,
+                        Department = enrollment.Student.Department,
+                        Role = enrollment.Student.Role.ToString(),
+                    });
+                }
+            }
+
+            return Result<List<UserResponseDto>>.Success(students);
         }
     }
 }

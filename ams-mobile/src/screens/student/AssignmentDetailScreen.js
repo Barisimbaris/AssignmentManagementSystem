@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../api/client';
 import { colors } from '../../theme/colors';
 import * as DocumentPicker from 'expo-document-picker';
+import * as groupAPI from '../../api/endpoints/groups';
 
 const AssignmentDetailScreen = ({ route, navigation }) => {
   const { assignmentId } = route.params;
@@ -19,6 +20,8 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
   const [assignment, setAssignment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [myGroup, setMyGroup] = useState(null);
+  const [isGroupLeader, setIsGroupLeader] = useState(false);
 
   useEffect(() => {
     fetchAssignmentDetail();
@@ -56,6 +59,23 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
           }
         } catch (submissionError) {
           console.warn('⚠️ Teslim kontrolü başarısız:', submissionError.message);
+        }
+
+        // Grup ödevi ise grup bilgisini çek
+        if (response.data.data.type === 'Group' || response.data.data.assignmentType === 'Group') {
+          try {
+            const groupResponse = await groupAPI.getMyGroup(assignmentId);
+            if (groupResponse.isSuccess && groupResponse.data) {
+              setMyGroup(groupResponse.data);
+              
+              // Grup lideri kontrolü
+              if (groupResponse.data.leaderStudentId === user?.id) {
+                setIsGroupLeader(true);
+              }
+            }
+          } catch (groupError) {
+            console.warn('⚠️ Grup bilgisi alınamadı:', groupError.message);
+          }
         }
       }
     } catch (error) {
@@ -268,6 +288,48 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        {/* Group Info - If Group Assignment */}
+        {(assignment.type === 'Group' || assignment.assignmentType === 'Group') && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>👥 Grup Bilgisi</Text>
+            {myGroup ? (
+              <View style={styles.groupInfoBox}>
+                <View style={styles.groupHeader}>
+                  <Text style={styles.groupName}>{myGroup.groupName}</Text>
+                  {isGroupLeader && (
+                    <View style={styles.leaderBadge}>
+                      <Text style={styles.leaderBadgeText}>👑 Lider</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.groupMembers}>
+                  Üyeler: {myGroup.members?.length || 0} kişi
+                </Text>
+                {!isGroupLeader && (
+                  <Text style={styles.groupNote}>
+                    ⚠️ Sadece grup lideri ödev yükleyebilir
+                  </Text>
+                )}
+              </View>
+            ) : (
+              <View style={styles.groupInfoBox}>
+                <Text style={styles.groupNote}>
+                  Henüz bir gruba dahil değilsiniz
+                </Text>
+                <TouchableOpacity
+                  style={styles.createGroupButton}
+                  onPress={() => navigation.navigate('CreateGroup', {
+                    assignmentId,
+                    assignment,
+                  })}
+                >
+                  <Text style={styles.createGroupButtonText}>+ Grup Oluştur</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Description */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>📝 Açıklama</Text>
@@ -337,20 +399,31 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
             )}
           </View>
         ) : (
-          <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleFileUpload}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={colors.white} />
+          <>
+            {/* Grup ödevi ve grup lideri değilse submit butonu gösterilmez */}
+            {(assignment.type === 'Group' || assignment.assignmentType === 'Group') && !isGroupLeader ? (
+              <View style={styles.footerInfo}>
+                <Text style={styles.footerInfoText}>
+                  ⚠️ Sadece grup lideri ödev yükleyebilir
+                </Text>
+              </View>
             ) : (
-              <>
-                <Text style={styles.submitButtonIcon}>📎</Text>
-                <Text style={styles.submitButtonText}>Ödev Teslim Et</Text>
-              </>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleFileUpload}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <>
+                    <Text style={styles.submitButtonIcon}>📎</Text>
+                    <Text style={styles.submitButtonText}>Ödev Teslim Et</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </>
         )}
       </View>
     </View>
@@ -601,6 +674,67 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  groupInfoBox: {
+    backgroundColor: colors.backgroundSecondary,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  groupName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+  },
+  leaderBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  leaderBadgeText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  groupMembers: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  groupNote: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
+  createGroupButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  createGroupButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  footerInfo: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  footerInfoText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });
 

@@ -29,8 +29,9 @@ namespace AMS.API.Controllers
         }
 
         /// <summary>
-        /// Get all classes
+        /// Get all classes (Admin only)
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -61,7 +62,7 @@ namespace AMS.API.Controllers
         /// <summary>
         /// Get my classes (as instructor)
         /// </summary>
-        [Authorize(Roles = "Instructor,Admin")]
+        [Authorize(Roles = "Instructor")]
         [HttpGet("my-classes")]
         public async Task<IActionResult> GetMyClasses()
         {
@@ -71,13 +72,14 @@ namespace AMS.API.Controllers
         }
 
         /// <summary>
-        /// Create new class (Instructor or Admin)
+        /// Create new class (Admin only)
         /// </summary>
-        [Authorize(Roles = "Instructor,Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateClassRequestDto request)
         {
-            var result = await _classService.CreateAsync(request);
+            // ✅ FIX: request.InstructorId kullan, currentUserId değil
+            var result = await _classService.CreateAsync(request, request.InstructorId);
 
             if (!result.IsSuccess)
             {
@@ -88,9 +90,9 @@ namespace AMS.API.Controllers
         }
 
         /// <summary>
-        /// Update class (Instructor or Admin)
+        /// Update class (Admin only)
         /// </summary>
-        [Authorize(Roles = "Instructor,Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateClassRequestDto request)
         {
@@ -122,16 +124,13 @@ namespace AMS.API.Controllers
         }
 
         /// <summary>
-        /// Enroll student to class
+        /// Enroll student to class (Admin only)
         /// </summary>
-        [Authorize(Roles = "Student,Admin")]
-        [HttpPost("{classId}/enroll")]
-        public async Task<IActionResult> EnrollStudent(int classId, [FromBody] int? studentId = null)
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{classId}/enroll/{studentId}")]
+        public async Task<IActionResult> EnrollStudent(int classId, int studentId)
         {
-            // If studentId not provided, use current user
-            var enrollStudentId = studentId ?? GetCurrentUserId();
-
-            var result = await _classService.EnrollStudentAsync(classId, enrollStudentId);
+            var result = await _classService.EnrollStudentAsync(classId, studentId);
 
             if (!result.IsSuccess)
             {
@@ -142,22 +141,85 @@ namespace AMS.API.Controllers
         }
 
         /// <summary>
-        /// Unenroll student from class
+        /// Unenroll student from class (Admin only)
         /// </summary>
-        [Authorize(Roles = "Student,Admin")]
-        [HttpPost("{classId}/unenroll")]
-        public async Task<IActionResult> UnenrollStudent(int classId, [FromBody] int? studentId = null)
+        [Authorize(Roles = "Admin")]
+        [HttpPost("{classId}/unenroll/{studentId}")]
+        public async Task<IActionResult> UnenrollStudent(int classId, int studentId)
         {
-            // If studentId not provided, use current user
-            var unenrollStudentId = studentId ?? GetCurrentUserId();
-
-            var result = await _classService.UnenrollStudentAsync(classId, unenrollStudentId);
+            var result = await _classService.UnenrollStudentAsync(classId, studentId);
 
             if (!result.IsSuccess)
             {
                 return BadRequest(result);
             }
 
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Enroll myself to class (Student only)
+        /// </summary>
+        [Authorize(Roles = "Student")]
+        [HttpPost("{classId}/enroll-me")]
+        public async Task<IActionResult> EnrollMyself(int classId)
+        {
+            var studentId = GetCurrentUserId();
+            var result = await _classService.EnrollStudentAsync(classId, studentId);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Unenroll myself from class (Student only)
+        /// </summary>
+        [Authorize(Roles = "Student")]
+        [HttpPost("{classId}/unenroll-me")]
+        public async Task<IActionResult> UnenrollMyself(int classId)
+        {
+            var studentId = GetCurrentUserId();
+            var result = await _classService.UnenrollStudentAsync(classId, studentId);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get students enrolled in class (Instructor/Admin only)
+        /// </summary>
+        [Authorize(Roles = "Instructor,Admin")]
+        [HttpGet("{classId}/students")]
+        public async Task<IActionResult> GetClassStudents(int classId)
+        {
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+
+            // Instructor sadece kendi class'larının öğrencilerini görebilir
+            if (userRole == "Instructor")
+            {
+                var classEntity = await _classService.GetByIdAsync(classId);
+                if (!classEntity.IsSuccess || classEntity.Data == null)
+                {
+                    return NotFound("Class not found");
+                }
+
+                // Class'ın instructor'ı kontrol et
+                if (classEntity.Data.InstructorId != userId)
+                {
+                    return Forbid("You can only view students of your own classes");
+                }
+            }
+
+            var result = await _classService.GetClassStudentsAsync(classId);
             return Ok(result);
         }
     }

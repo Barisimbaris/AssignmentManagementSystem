@@ -14,9 +14,9 @@ namespace AMS.Application.Services.Interfaces
         Task<Result<List<AssignmentResponseDto>>> GetAllAsync();
         Task<Result<List<AssignmentResponseDto>>> GetByClassIdAsync(int classId);
         Task<Result<List<AssignmentResponseDto>>> GetByStudentIdAsync(int studentId);
-        Task<Result<AssignmentResponseDto>> CreateAsync(CreateAssignmentRequestDto request, int instructorId);
-        Task<Result<AssignmentResponseDto>> UpdateAsync(int id, UpdateAssignmentRequestDto request, int instructorId);
-        Task<Result> DeleteAsync(int id, int instructorId);
+        Task<Result<AssignmentResponseDto>> CreateAsync(CreateAssignmentRequestDto request, int userId);
+        Task<Result<AssignmentResponseDto>> UpdateAsync(int id, UpdateAssignmentRequestDto request, int userId);
+        Task<Result> DeleteAsync(int id, int userId);
         Task<Result<List<AssignmentResponseDto>>> GetByInstructorIdAsync(int instructorId); // ✅ EKLE
         
     }

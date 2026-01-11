@@ -39,6 +39,7 @@ namespace AMS.Infrastructure.Data.Repositories
         public async Task<List<Class>> GetByCourseIdAsync(int courseId)
         {
             return await _context.Classes
+                .Include(c => c.Course)
                 .Include(c => c.Instructor)
                 .Where(c => c.CourseId == courseId)
                 .ToListAsync();
@@ -47,11 +48,13 @@ namespace AMS.Infrastructure.Data.Repositories
         public async Task<List<Class>> GetByInstructorIdAsync(int instructorId)
         {
             return await _context.Classes
-        .Include(c => c.Course)
-        .Include(c => c.Instructor)
-        .Include(c => c.Enrollments)
-        .Where(c => c.InstructorId == instructorId)
-        .ToListAsync();
+                .Include(c => c.Course)
+                .Include(c => c.Instructor)
+                .Include(c => c.Enrollments)
+                .Include(c => c.Assignments)
+                    .ThenInclude(a => a.Submissions)
+                .Where(c => c.InstructorId == instructorId)
+                .ToListAsync();
         }
 
         public async Task<Class> AddAsync(Class classEntity)

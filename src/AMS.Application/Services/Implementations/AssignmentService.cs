@@ -19,18 +19,22 @@ namespace AMS.Application.Services.Implementations
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IUserRepository _userRepository;
         private readonly IEnrollmentRepository _enrollmentRepository;
+        private readonly INotificationService _notificationService; // ✅ YENİ
+
         public AssignmentService(
             IAssignmentRepository assignmentRepository,
             IClassRepository classRepository,
             ISubmissionRepository submissionRepository,
             IUserRepository userRepository,
-             IEnrollmentRepository enrollmentRepository)
+            IEnrollmentRepository enrollmentRepository,
+            INotificationService notificationService) // ✅ YENİ
         {
             _assignmentRepository = assignmentRepository;
             _classRepository = classRepository;
             _submissionRepository = submissionRepository;
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
+            _notificationService = notificationService; // ✅ YENİ
         }
 
         public async Task<Result<AssignmentResponseDto>> GetByIdAsync(int id)
@@ -84,12 +88,14 @@ namespace AMS.Application.Services.Implementations
                     ClassId = a.ClassId,
                     ClassName = a.Class.ClassName,
                     AssignmentType = a.Type.ToString(),
+                    Type = a.Type.ToString(), // ✅ EKLENDİ
                     DueDate = a.DueDate,
                     MaxScore = a.MaxScore,
                     AllowLateSubmission = a.AllowLateSubmission,
                     AllowResubmission = a.AllowResubmission,
                     AttachmentPath = a.AttachmentPath,
                     TotalSubmissions = submissions.Count,
+                    InstructorId = a.Class.InstructorId, // ✅ KRİTİK EKLENTİ
                     CreatedAt = a.CreatedAt
                 });
             }
@@ -115,12 +121,14 @@ namespace AMS.Application.Services.Implementations
                     ClassId = a.ClassId,
                     ClassName = a.Class?.ClassName ?? "",
                     AssignmentType = a.Type.ToString(),
+                    Type = a.Type.ToString(), // ✅ EKLENDİ
                     DueDate = a.DueDate,
                     MaxScore = a.MaxScore,
                     AllowLateSubmission = a.AllowLateSubmission,
                     AllowResubmission = a.AllowResubmission,
                     AttachmentPath = a.AttachmentPath,
                     TotalSubmissions = submissions.Count,
+                    InstructorId = a.Class?.InstructorId ?? 0, // ✅ KRİTİK EKLENTİ
                     CreatedAt = a.CreatedAt
                 });
             }
@@ -163,8 +171,7 @@ namespace AMS.Application.Services.Implementations
             return Result<List<AssignmentResponseDto>>.Success(response);
         }
         
-
-        public async Task<Result<AssignmentResponseDto>> CreateAsync(CreateAssignmentRequestDto request, int instructorId)
+        public async Task<Result<AssignmentResponseDto>> CreateAsync(CreateAssignmentRequestDto request, int userId)
         {
             var classEntity = await _classRepository.GetByIdAsync(request.ClassId);
 
@@ -173,10 +180,21 @@ namespace AMS.Application.Services.Implementations
                 throw new NotFoundException("Class", request.ClassId);
             }
 
-            if (classEntity.InstructorId != instructorId)
+            // Get current user to check role
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException("User", userId);
+            }
+
+            // Admin can create assignments for any class
+            // Instructor can only create assignments for their own classes
+            if (user.Role == Domain.Enums.UserRole.Instructor && classEntity.InstructorId != userId)
             {
                 throw new UnauthorizedException("Only the class instructor can create assignments");
             }
+            
+            // For Admin role, no additional checks needed
 
             var assignment = new Assignment
             {
@@ -194,6 +212,15 @@ namespace AMS.Application.Services.Implementations
             await _assignmentRepository.AddAsync(assignment);
             await _assignmentRepository.SaveChangesAsync();
 
+            // ✅ YENİ: Email notification gönder
+            var enrollments = await _enrollmentRepository.GetByClassIdAsync(request.ClassId);
+            var studentIds = enrollments.Select(e => e.StudentId).ToList();
+            
+            if (studentIds.Any())
+            {
+                await _notificationService.CreateAndSendAssignmentNotificationAsync(assignment.Id, studentIds);
+            }
+
             var response = new AssignmentResponseDto
             {
                 Id = assignment.Id,
@@ -202,19 +229,21 @@ namespace AMS.Application.Services.Implementations
                 ClassId = assignment.ClassId,
                 ClassName = classEntity.ClassName,
                 AssignmentType = assignment.Type.ToString(),
+                Type = assignment.Type.ToString(),
                 DueDate = assignment.DueDate,
                 MaxScore = assignment.MaxScore,
-                AllowLateSubmission = assignment.AllowLateSubmission,
-                AllowResubmission = assignment.AllowResubmission,
+                AllowLateSubmission = request.AllowLateSubmission,
+                AllowResubmission = request.AllowResubmission,
                 AttachmentPath = assignment.AttachmentPath,
                 TotalSubmissions = 0,
+                InstructorId = classEntity.InstructorId,
                 CreatedAt = assignment.CreatedAt
             };
 
             return Result<AssignmentResponseDto>.Success(response, "Assignment created successfully");
         }
 
-        public async Task<Result<AssignmentResponseDto>> UpdateAsync(int id, UpdateAssignmentRequestDto request, int instructorId)
+        public async Task<Result<AssignmentResponseDto>> UpdateAsync(int id, UpdateAssignmentRequestDto request, int userId)
         {
             var assignment = await _assignmentRepository.GetByIdAsync(id);
 
@@ -223,7 +252,16 @@ namespace AMS.Application.Services.Implementations
                 throw new NotFoundException("Assignment", id);
             }
 
-            if (assignment.Class.InstructorId != instructorId)
+            // Get current user to check role
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException("User", userId);
+            }
+
+            // Admin can update any assignment
+            // Instructor can only update their own class assignments
+            if (user.Role == Domain.Enums.UserRole.Instructor && assignment.Class.InstructorId != userId)
             {
                 throw new UnauthorizedException("Only the class instructor can update this assignment");
             }
@@ -261,19 +299,21 @@ namespace AMS.Application.Services.Implementations
                 ClassId = assignment.ClassId,
                 ClassName = assignment.Class.ClassName,
                 AssignmentType = assignment.Type.ToString(),
+                Type = assignment.Type.ToString(), // ✅ EKLENDİ
                 DueDate = assignment.DueDate,
                 MaxScore = assignment.MaxScore,
                 AllowLateSubmission = assignment.AllowLateSubmission,
                 AllowResubmission = assignment.AllowResubmission,
                 AttachmentPath = assignment.AttachmentPath,
                 TotalSubmissions = submissions.Count,
+                InstructorId = assignment.Class.InstructorId, // ✅ KRİTİK EKLENTİ
                 CreatedAt = assignment.CreatedAt
             };
 
             return Result<AssignmentResponseDto>.Success(response, "Assignment updated successfully");
         }
 
-        public async Task<Result> DeleteAsync(int id, int instructorId)
+        public async Task<Result> DeleteAsync(int id, int userId)
         {
             var assignment = await _assignmentRepository.GetByIdAsync(id);
 
@@ -282,7 +322,16 @@ namespace AMS.Application.Services.Implementations
                 throw new NotFoundException("Assignment", id);
             }
 
-            if (assignment.Class.InstructorId != instructorId)
+            // Get current user to check role
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundException("User", userId);
+            }
+
+            // Admin can delete any assignment
+            // Instructor can only delete their own class assignments
+            if (user.Role == Domain.Enums.UserRole.Instructor && assignment.Class.InstructorId != userId)
             {
                 throw new UnauthorizedException("Only the class instructor can delete this assignment");
             }
@@ -327,4 +376,5 @@ namespace AMS.Application.Services.Implementations
             return Result<List<AssignmentResponseDto>>.Success(response);
 
         }
-    } }
+    }
+}

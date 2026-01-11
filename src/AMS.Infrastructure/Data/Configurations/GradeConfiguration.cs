@@ -1,77 +1,53 @@
 ﻿using AMS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
 
 namespace AMS.Infrastructure.Data.Configurations;
 
-public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
+public class GradeConfiguration : IEntityTypeConfiguration<Grade>
 {
-    public void Configure(EntityTypeBuilder<Submission> builder)
+    public void Configure(EntityTypeBuilder<Grade> builder)
     {
-        builder.ToTable("Submissions");
+        builder.ToTable("Grades");
 
-        builder.HasKey(s => s.Id);
+        builder.HasKey(g => g.Id);
 
-        builder.Property(s => s.FilePath)
+        builder.Property(g => g.Score)
             .IsRequired()
-            .HasMaxLength(500);
+            .HasColumnType("decimal(18,2)");
 
-        builder.Property(s => s.FileType)
-            .IsRequired()
-            .HasConversion<int>();
+        builder.Property(g => g.Feedback)
+            .HasMaxLength(2000);
 
-        builder.Property(s => s.FileSizeInBytes)
-            .IsRequired();
-
-        builder.Property(s => s.SubmittedAt)
+        builder.Property(g => g.GradedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
 
-        builder.Property(s => s.Status)
-            .IsRequired()
-            .HasConversion<int>();
-
-        builder.Property(s => s.IsLate)
+        builder.Property(g => g.IsPublished)
             .IsRequired()
             .HasDefaultValue(false);
 
-        builder.Property(s => s.Comments)
-            .HasMaxLength(1000);
-
-        builder.Property(s => s.CreatedAt)
+        builder.Property(g => g.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
 
-        builder.Property(s => s.IsDeleted)
+        builder.Property(g => g.IsDeleted)
             .IsRequired()
             .HasDefaultValue(false);
 
-        builder.HasOne(s => s.Assignment)
-            .WithMany(a => a.Submissions)
-            .HasForeignKey(s => s.AssignmentId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(g => g.SubmissionId)
+            .IsUnique();
 
-        builder.HasOne(s => s.Student)
-            .WithMany(u => u.Submissions)
-            .HasForeignKey(s => s.StudentId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(g => g.InstructorId);
 
-        builder.HasOne(s => s.Group)
-            .WithMany()
-            .HasForeignKey(s => s.GroupId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        builder.HasOne(s => s.Grade)
-            .WithOne(g => g.Submission)
+        builder.HasOne(g => g.Submission)
+            .WithOne(s => s.Grade)
             .HasForeignKey<Grade>(g => g.SubmissionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(g => g.Instructor)
+            .WithMany()
+            .HasForeignKey(g => g.InstructorId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
-

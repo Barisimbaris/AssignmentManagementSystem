@@ -25,6 +25,7 @@ namespace AMS.Infrastructure.Data.Context
         public DbSet<GroupMember> GroupMembers { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<CourseInstructor> CourseInstructors { get; set; }
+        public DbSet<ClassSchedule> ClassSchedules { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -40,23 +41,8 @@ namespace AMS.Infrastructure.Data.Context
             modelBuilder.Entity<AssignmentGroup>().HasQueryFilter(ag => !ag.IsDeleted);
             modelBuilder.Entity<GroupMember>().HasQueryFilter(gm => !gm.IsDeleted);
             modelBuilder.Entity<Notification>().HasQueryFilter(n => !n.IsDeleted);
-            modelBuilder.Entity<CourseInstructor>()
-       .HasOne(ci => ci.Course)
-       .WithMany()
-       .HasForeignKey(ci => ci.CourseId)
-       .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<CourseInstructor>()
-                .HasOne(ci => ci.Instructor)
-                .WithMany()
-                .HasForeignKey(ci => ci.InstructorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Unique constraint: Bir instructor aynı course'a birden fazla atanamaz
-            modelBuilder.Entity<CourseInstructor>()
-                .HasIndex(ci => new { ci.CourseId, ci.InstructorId, ci.AcademicYear })
-                .IsUnique();
-
+            modelBuilder.Entity<ClassSchedule>().HasQueryFilter(cs => !cs.IsDeleted);
+            modelBuilder.Entity<CourseInstructor>().HasQueryFilter(ci => !ci.IsDeleted);
         }
     }
     }

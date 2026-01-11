@@ -42,44 +42,52 @@ namespace AMS.API.Controllers
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
 
-            // Admin tüm öğrencileri görebilir
-            if (userRole == "Admin")
-            {
-                var allResult = await _userService.GetStudentsAsync();
-                return Ok(allResult);
-            }
-
-            // Instructor sadece kendi derslerindeki öğrencileri görebilir
-            var result = await _userService.GetStudentsByInstructorIdAsync(userId);
+            // Admin ve Instructor tüm öğrencileri görebilir (şimdilik)
+            var result = await _userService.GetStudentsAsync();
             return Ok(result);
         }
 
-        [HttpGet("instructors")]
-        public async Task<IActionResult> GetInstructors() { 
-        var result = await _userService.GetInstructorsAsync();
-            return Ok(result);
-        }
-
-        [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser() { 
-        var userId = GetCurrentUserId();
+        /// <summary>
+        /// Get current user profile
+        /// </summary>
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = GetCurrentUserId();
             var result = await _userService.GetByIdAsync(userId);
             return Ok(result);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequestDto request)
+        /// <summary>
+        /// Get all instructors
+        /// </summary>
+        [HttpGet("instructors")]
+        public async Task<IActionResult> GetInstructors()
         {
-            var currentUserId = GetCurrentUserId();
-            var currentUserRole = GetCurrentUserRole();
+            var result = await _userService.GetInstructorsAsync();
+            return Ok(result);
+        }
 
-            // Only allow users to update their own profile, unless they're Admin
-            if (id != currentUserId && currentUserRole != "Admin")
-            {
-                return Forbid();
-            }
+        /// <summary>
+        /// Get my students (Instructor only) - Students enrolled in instructor's classes
+        /// </summary>
+        [Authorize(Roles = "Instructor")]
+        [HttpGet("my-students")]
+        public async Task<IActionResult> GetMyStudents()
+        {
+            var instructorId = GetCurrentUserId();
+            var result = await _userService.GetInstructorStudentsAsync(instructorId);
+            return Ok(result);
+        }
 
-            var result = await _userService.UpdateAsync(id, request);
+        /// <summary>
+        /// Update user profile
+        /// </summary>
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserRequestDto request)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _userService.UpdateAsync(userId, request);
 
             if (!result.IsSuccess)
             {
@@ -104,6 +112,39 @@ namespace AMS.API.Controllers
             }
 
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Bulk import users from CSV/Excel (Admin only)
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("bulk-import")]
+        public async Task<IActionResult> BulkImport([FromBody] BulkImportRequestDto request)
+        {
+            var result = await _userService.BulkImportAsync(request);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Download bulk import template (Admin only)
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("bulk-import-template")]
+        public IActionResult DownloadTemplate()
+        {
+            var csvContent = "FirstName,LastName,Email,Password,Role,StudentNumber,Department,PhoneNumber\n" +
+                           "Ahmet,Yılmaz,ahmet.yilmaz@example.com,TempPass123,1,20240001,Computer Engineering,+905551234567\n" +
+                           "Ayşe,Kaya,ayse.kaya@example.com,TempPass123,1,20240002,Computer Engineering,+905551234568\n" +
+                           "Dr. Mehmet,Özkan,mehmet.ozkan@example.com,TempPass123,2,,Computer Engineering,+905551234569";
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
+            return File(bytes, "text/csv", "bulk_user_import_template.csv");
         }
     }
 }

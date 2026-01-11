@@ -56,7 +56,7 @@
   <script>
     // Sayfa yüklendiğinde backend'i kontrol et
     document.addEventListener("DOMContentLoaded", async () => {
-      const backendUrl = "http://localhost:8080/swagger";
+      const backendUrl = "http://localhost:5281/swagger";
       
       try {
         const response = await fetch(backendUrl, { method: "HEAD", mode: "no-cors" });
