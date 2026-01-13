@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analiz ve Raporlar - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="reportsPage">
+    <h1>📊 Analiz ve Raporlar</h1>
+
+    <!-- Çıkış butonu navigation'da var -->
+
+    <div class="section">
+      <h2>Sınıfa Özel Analiz</h2>
+      <div class="form-row">
+        <select id="analysisClassSelect">
+          <option value="">Sınıf seçiniz</option>
+        </select>
+        <button id="loadClassAnalysis">Analizi Yükle</button>
+      </div>
+      <div id="classAnalysisContainer" class="analysis-container">
+        <p>Sınıf seçin ve analizi yükleyin.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Kişiye Özel Analiz</h2>
+      <div class="form-row">
+        <input type="text" id="studentSearchInput" placeholder="Öğrenci adı, soyadı veya ID girin...">
+        <button id="searchStudent">Ara</button>
+      </div>
+      <div id="studentAnalysisContainer" class="analysis-container">
+        <p>Öğrenci arayın ve kişiye özel analiz görüntüleyin.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Grafik Analiz</h2>
+      <div class="charts-grid">
+        <div class="chart-container">
+          <h3>Sınıf Performans Dağılımı</h3>
+          <canvas id="classPerformanceChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Teslim Oranları</h3>
+          <canvas id="submissionRateChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Tüm Sınıflar Özet</h2>
+      <div id="allClassesSummary" class="summary-grid">
+        <p>Yükleniyor...</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="reports.js"></script>
+</body>
+</html>

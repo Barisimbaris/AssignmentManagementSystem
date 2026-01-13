@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Programı Yönetimi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+    <nav id="mainNav">
+      <ul>
+        <!-- Navigation links will be dynamically loaded here -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="scheduleManagementPage">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h1>Ders Programı Yönetimi</h1>
+      <button onclick="window.location.href='teacher_dashboard.html'" class="btn-secondary">← Geri</button>
+    </div>
+
+    <div style="background: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <h2 style="margin-bottom: 1rem;">Sınıf Seçin</h2>
+      <select id="classSelect" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+        <option value="">Sınıf seçiniz...</option>
+      </select>
+    </div>
+
+    <div id="schedulesSection" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 id="selectedClassName">Ders Programı</h2>
+        <button id="createScheduleBtn" class="btn-primary" onclick="openCreateScheduleModal()">+ Yeni Program Ekle</button>
+      </div>
+
+      <div id="schedulesList" class="assignment-list">
+        <p>Yükleniyor...</p>
+      </div>
+    </div>
+
+    <!-- Create Schedule Modal -->
+    <div id="createScheduleModal" class="modal hidden">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3>Yeni Ders Programı Ekle</h3>
+          <button class="close-btn" onclick="closeCreateScheduleModal()">&times;</button>
+        </div>
+        <form id="createScheduleForm">
+          <input type="hidden" id="scheduleClassId">
+          <div class="form-group">
+            <label for="scheduleDayOfWeek">Haftanın Günü *</label>
+            <select id="scheduleDayOfWeek" required>
+              <option value="">Seçiniz...</option>
+              <option value="1">Pazartesi</option>
+              <option value="2">Salı</option>
+              <option value="3">Çarşamba</option>
+              <option value="4">Perşembe</option>
+              <option value="5">Cuma</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="scheduleStartTime">Başlangıç Saati *</label>
+              <input type="time" id="scheduleStartTime" required>
+            </div>
+            <div class="form-group">
+              <label for="scheduleEndTime">Bitiş Saati *</label>
+              <input type="time" id="scheduleEndTime" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="scheduleRoomNumber">Derslik Numarası</label>
+            <input type="text" id="scheduleRoomNumber" placeholder="Örn: A-101">
+          </div>
+          <div class="form-group">
+            <label for="scheduleBuilding">Bina</label>
+            <input type="text" id="scheduleBuilding" placeholder="Örn: Mühendislik Fakültesi">
+          </div>
+          <div class="form-group">
+            <label for="scheduleNotes">Notlar</label>
+            <textarea id="scheduleNotes" rows="3" placeholder="Ek notlar..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="scheduleIsActive" checked>
+              Aktif
+            </label>
+          </div>
+          <div id="scheduleFormResult"></div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeCreateScheduleModal()">İptal</button>
+            <button type="submit" class="btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="class-schedule-management.js"></script>
+</body>
+</html>

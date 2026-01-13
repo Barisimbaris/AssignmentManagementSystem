@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teslimlerim - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Mobil Header -->
+  <div class="mobile-header">
+    <div class="mobile-header-left">
+      <div class="mobile-header-greeting">📤 Teslimlerim</div>
+    </div>
+    <div class="mobile-header-right">
+      <a href="javascript:history.back()" class="mobile-header-icon">←</a>
+    </div>
+  </div>
+
+  <section class="dashboard content-with-bottom-nav" id="submissionsPage">
+    <!-- Filtre Butonları -->
+    <div class="filter-buttons">
+      <button class="filter-btn active" data-filter="all">📋 Tümü</button>
+      <button class="filter-btn" data-filter="pending">⏳ Bekleyen</button>
+      <button class="filter-btn" data-filter="graded">✅ Notlandı</button>
+    </div>
+
+    <!-- Teslimler Listesi -->
+    <div id="submissionsList"></div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="student_dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="submissions.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon">📤</div>
+      <div class="bottom-nav-label">Teslimler</div>
+    </a>
+    <a href="exam_results.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📊</div>
+      <div class="bottom-nav-label">Notlar</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="submissions.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

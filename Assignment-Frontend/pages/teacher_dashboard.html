@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğretmen Kontrol Paneli</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Mobil Header - Profil ikonu olmadan -->
+  <div class="mobile-header" style="display: flex !important; flex-direction: row; justify-content: flex-start; align-items: center; padding: 20px; padding-top: 60px; padding-bottom: 20px; background-color: var(--background); border-bottom: 1px solid var(--border);">
+    <div class="mobile-header-left" style="flex: 1;">
+      <div class="mobile-header-greeting" id="teacherMobileGreeting" style="font-size: 16px; color: var(--text-secondary);">👋 Hoş geldin,</div>
+      <div id="teacherMobileUserName" style="font-size: 24px; font-weight: bold; color: var(--text-primary);"></div>
+    </div>
+  </div>
+
+  <section class="dashboard content-with-bottom-nav" id="teacherDashboard">
+    <!-- İstatistikler -->
+    <div class="stats-grid-mobile">
+      <div class="stat-card-mobile">
+        <div class="stat-card-mobile-icon">📚</div>
+        <div class="stat-card-mobile-value" id="statAssignments">0</div>
+        <div class="stat-card-mobile-label">Ödevler</div>
+      </div>
+      <div class="stat-card-mobile">
+        <div class="stat-card-mobile-icon">⏳</div>
+        <div class="stat-card-mobile-value" id="statPending">0</div>
+        <div class="stat-card-mobile-label">Bekleyen</div>
+      </div>
+      <div class="stat-card-mobile">
+        <div class="stat-card-mobile-icon">✅</div>
+        <div class="stat-card-mobile-value" id="statGraded">0</div>
+        <div class="stat-card-mobile-label">Notlandı</div>
+      </div>
+      <div class="stat-card-mobile">
+        <div class="stat-card-mobile-icon">👥</div>
+        <div class="stat-card-mobile-value" id="statStudents">0</div>
+        <div class="stat-card-mobile-label">Öğrenci</div>
+      </div>
+    </div>
+
+    <!-- Hızlı İşlemler - Mobil uygulamaya göre -->
+    <div style="padding: 20px;">
+      <h2 class="section-title-mobile" style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin-bottom: 16px;">Hızlı İşlemler</h2>
+    <div class="quick-actions">
+      <a href="assignments.html" class="quick-action-btn">
+        <div class="quick-action-icon blue">📝</div>
+        <div class="quick-action-content">
+          <div class="quick-action-title">Yeni Ödev</div>
+          <div class="quick-action-subtitle">Yeni ödev oluştur</div>
+        </div>
+      </a>
+      <a href="grading.html" class="quick-action-btn">
+        <div class="quick-action-icon green">✏️</div>
+        <div class="quick-action-content">
+          <div class="quick-action-title">Değerlendir</div>
+          <div class="quick-action-subtitle">Ödevleri değerlendir</div>
+        </div>
+      </a>
+      <a href="class_management.html" class="quick-action-btn">
+        <div class="quick-action-icon orange">👥</div>
+        <div class="quick-action-content">
+          <div class="quick-action-title">Öğrenciler</div>
+          <div class="quick-action-subtitle">Öğrencileri yönet</div>
+        </div>
+      </a>
+    </div>
+    </div>
+
+    <!-- Derslerim - Mobil uygulamaya göre -->
+    <div style="padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 class="section-title-mobile" style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin: 0;">📚 Derslerim</h2>
+        <a href="class_management.html" style="font-size: 14px; color: var(--primary); font-weight: 600; text-decoration: none;">Tümünü Gör →</a>
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+        <button id="openCreateCourseModal" style="flex: 1; padding: 12px; background-color: var(--primary); color: var(--text-white); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px;">+ Yeni Ders</button>
+        <button id="openCreateClassModal" style="flex: 1; padding: 12px; background-color: var(--primary); color: var(--text-white); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px;">+ Yeni Sınıf</button>
+      </div>
+      <a href="class_management.html" style="display: block; background-color: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; text-decoration: none; color: var(--text-primary); font-weight: 600;">
+        📚 Derslerimi ve Classlarımı Gör
+      </a>
+    </div>
+
+    <!-- Ödevlerim - Mobil uygulamaya göre -->
+    <div style="padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 class="section-title-mobile" style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin: 0;">📚 Ödevlerim</h2>
+        <a href="assignments.html" style="font-size: 14px; color: var(--primary); font-weight: 600; text-decoration: none;">Tümünü Gör →</a>
+      </div>
+      <div id="teacherAssignmentsList"></div>
+    </div>
+
+    <!-- Desktop için eski bölümler -->
+    <div class="section" style="display: none;" id="desktopSections">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>📚 Derslerim</h3>
+        <button id="openCreateCourseModal" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">+ Yeni Ders Oluştur</button>
+      </div>
+      <div id="teacherCourses" class="assignment-list">Yükleniyor...</div>
+    </div>
+
+    <div class="section" style="display: none;" id="desktopSections2">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>🏫 Sınıflarım</h3>
+        <button id="openCreateClassModal" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">+ Yeni Sınıf Oluştur</button>
+      </div>
+      <div id="teacherClasses" class="assignment-list">Yükleniyor...</div>
+    </div>
+    
+    <!-- Modal: Yeni Ders Oluştur -->
+    <div id="createCourseModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+      <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="margin: 0;">📚 Yeni Ders Oluştur</h2>
+          <button id="closeCourseModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <form id="createCourseForm">
+          <div class="form-row">
+            <input type="text" id="courseCode" placeholder="Ders Kodu (örn. MAT101)" required>
+            <input type="text" id="courseName" placeholder="Ders Adı" required>
+          </div>
+          <textarea id="courseDescription" placeholder="Ders Açıklaması (opsiyonel)" rows="2"></textarea>
+          <div class="form-row">
+            <input type="text" id="courseDepartment" placeholder="Bölüm" required>
+            <input type="number" id="creditHours" placeholder="AKTS" min="1" max="10" required>
+          </div>
+          <input type="text" id="academicYear" placeholder="Akademik Yıl (örn. 2024-2025)" required>
+          <button type="submit" id="createCourseButton" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Ders Oluştur</button>
+        </form>
+        <div id="createCourseResult"></div>
+      </div>
+    </div>
+    
+    <!-- Modal: Yeni Sınıf Oluştur -->
+    <div id="createClassModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+      <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="margin: 0;">🏫 Yeni Sınıf Oluştur</h2>
+          <button id="closeClassModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <form id="createClassForm">
+          <div class="form-row">
+            <select id="courseSelect">
+              <option value="">Ders seçiniz</option>
+            </select>
+            <input type="text" id="className" placeholder="Sınıf adı" required>
+          </div>
+          <div class="form-row">
+            <input type="text" id="classCode" placeholder="Sınıf kodu (opsiyonel)">
+            <input type="number" id="maxCapacity" placeholder="Kontenjan (örn. 50)" min="1" max="500">
+          </div>
+          <input type="text" id="semester" placeholder="Dönem (örn. 2024-2025 Güz)" required>
+          <button type="submit" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Sınıf Oluştur</button>
+        </form>
+        <div id="createClassResult"></div>
+      </div>
+    </div>
+  </section>
+
+    <!-- Desktop için eski modal'lar -->
+    <div id="desktopModals" style="display: none;">
+      <!-- Modal: Yeni Ders Oluştur -->
+      <div id="createCourseModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">📚 Yeni Ders Oluştur</h2>
+            <button id="closeCourseModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+          </div>
+          <form id="createCourseForm">
+            <div class="form-row">
+              <input type="text" id="courseCode" placeholder="Ders Kodu (örn. MAT101)" required>
+              <input type="text" id="courseName" placeholder="Ders Adı" required>
+            </div>
+            <textarea id="courseDescription" placeholder="Ders Açıklaması (opsiyonel)" rows="2"></textarea>
+            <div class="form-row">
+              <input type="text" id="courseDepartment" placeholder="Bölüm" required>
+              <input type="number" id="creditHours" placeholder="AKTS" min="1" max="10" required>
+            </div>
+            <input type="text" id="academicYear" placeholder="Akademik Yıl (örn. 2024-2025)" required>
+            <button type="submit" id="createCourseButton" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Ders Oluştur</button>
+          </form>
+          <div id="createCourseResult"></div>
+        </div>
+      </div>
+      
+      <!-- Modal: Yeni Sınıf Oluştur -->
+      <div id="createClassModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">🏫 Yeni Sınıf Oluştur</h2>
+            <button id="closeClassModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+          </div>
+          <form id="createClassForm">
+            <div class="form-row">
+              <select id="courseSelect">
+                <option value="">Ders seçiniz</option>
+              </select>
+              <input type="text" id="className" placeholder="Sınıf adı" required>
+            </div>
+            <div class="form-row">
+              <input type="text" id="classCode" placeholder="Sınıf kodu (opsiyonel)">
+              <input type="number" id="maxCapacity" placeholder="Kontenjan (örn. 50)" min="1" max="500">
+            </div>
+            <input type="text" id="semester" placeholder="Dönem (örn. 2024-2025 Güz)" required>
+            <button type="submit" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Sınıf Oluştur</button>
+          </form>
+          <div id="createClassResult"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="teacher_dashboard.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="class_management.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👥</div>
+      <div class="bottom-nav-label">Öğrenciler</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="teacher.js"></script>
+</body>
+</html>

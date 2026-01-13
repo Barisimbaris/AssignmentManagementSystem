@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard content-with-bottom-nav" id="profilePage">
+    <!-- Avatar -->
+    <div style="text-align: center; padding: 2rem 0;">
+      <div class="profile-avatar-large" id="profileAvatar">👤</div>
+    </div>
+
+    <!-- Bilgilerim -->
+    <h2 class="section-title-mobile">ℹ️ Bilgilerim</h2>
+    <div class="profile-info-card" id="profileInfoCard">
+      <p>Yükleniyor...</p>
+    </div>
+
+    <!-- Güvenlik -->
+    <button class="profile-action-btn" id="securityBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+      🔒 Güvenlik
+    </button>
+
+    <!-- Şifre Değiştir Formu -->
+    <div id="changePasswordSection" style="display: none; padding: 0 1.5rem 2rem;">
+      <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h2 style="margin: 0 0 1.5rem 0; font-size: 1.25rem; font-weight: 700; color: #333;">🔐 Şifre Değiştir</h2>
+        <form id="changePasswordForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #666; font-weight: 500;">Mevcut Şifre</label>
+            <input type="password" id="currentPassword" placeholder="Mevcut şifrenizi girin" required style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; transition: border-color 0.3s;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #666; font-weight: 500;">Yeni Şifre</label>
+            <input type="password" id="newPassword" placeholder="Yeni şifrenizi girin (min 6 karakter)" required style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; transition: border-color 0.3s;">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #666; font-weight: 500;">Yeni Şifre Tekrar</label>
+            <input type="password" id="confirmNewPassword" placeholder="Yeni şifrenizi tekrar girin" required style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; transition: border-color 0.3s;">
+          </div>
+          <button type="submit" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s;">🔐 Şifreyi Değiştir</button>
+        </form>
+        <div id="passwordResult" style="margin-top: 1rem;"></div>
+      </div>
+    </div>
+
+    <!-- Versiyon Bilgisi -->
+    <div class="version-info">Versiyon 1.0.0</div>
+
+    <!-- Çıkış Butonu -->
+    <button class="profile-logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+
+    <!-- Desktop için eski formlar -->
+    <div class="section" style="display: none;" id="desktopProfileSection">
+      <h2>Profil Düzenle</h2>
+      <form id="updateProfileForm">
+        <div class="form-row">
+          <input type="text" id="firstName" placeholder="Ad" required>
+          <input type="text" id="lastName" placeholder="Soyad" required>
+        </div>
+        <input type="email" id="email" placeholder="E-posta" readonly>
+        <div class="form-row">
+          <input type="text" id="studentNumber" placeholder="Öğrenci No (opsiyonel)">
+          <input type="text" id="department" placeholder="Bölüm (opsiyonel)">
+        </div>
+        <input type="text" id="phoneNumber" placeholder="Telefon (opsiyonel)">
+        <button type="submit">Bilgileri Güncelle</button>
+      </form>
+      <div id="updateResult"></div>
+    </div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="student_dashboard.html" class="bottom-nav-item" id="profileBottomNavHome">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item" id="profileBottomNavAssignments">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="submissions.html" class="bottom-nav-item" id="profileBottomNavSubmissions">
+      <div class="bottom-nav-icon">📤</div>
+      <div class="bottom-nav-label">Teslimler</div>
+    </a>
+    <a href="exam_results.html" class="bottom-nav-item" id="profileBottomNavGrades">
+      <div class="bottom-nav-icon">📊</div>
+      <div class="bottom-nav-label">Notlar</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script>
+    function handleLogout() {
+      if (confirm("Çıkış yapmak istediğinize emin misiniz?")) {
+        if (typeof clearAuthSession === 'function') {
+          clearAuthSession();
+        }
+        window.location.href = "login.html";
+      }
+    }
+    
+    // Rol bazlı alt tab bar güncelle
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = typeof getAuthUser === 'function' ? getAuthUser() : null;
+      const userRole = (user?.role || "").toLowerCase();
+      
+      if (userRole === "instructor" || userRole === "admin") {
+        // Öğretmen için alt tab bar
+        document.getElementById("profileBottomNavHome")?.setAttribute("href", "teacher_dashboard.html");
+        document.getElementById("profileBottomNavAssignments")?.setAttribute("href", "assignments.html");
+        document.getElementById("profileBottomNavSubmissions")?.style.setProperty("display", "none");
+        document.getElementById("profileBottomNavGrades")?.style.setProperty("display", "none");
+        const studentsNav = document.createElement("a");
+        studentsNav.href = "class_management.html";
+        studentsNav.className = "bottom-nav-item";
+        studentsNav.innerHTML = '<div class="bottom-nav-icon">👥</div><div class="bottom-nav-label">Öğrenciler</div>';
+        const nav = document.querySelector(".bottom-nav");
+        if (nav && document.getElementById("profileBottomNavSubmissions")) {
+          nav.insertBefore(studentsNav, document.getElementById("profileBottomNavGrades"));
+        }
+      }
+    });
+  </script>
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>
+
+
+
+

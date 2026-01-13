@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS Postman Environment Variables</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #e74c3c;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 13px;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .variable-name {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #2980b9;
+            background-color: #ecf0f1;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .type {
+            color: #27ae60;
+            font-weight: 500;
+        }
+        .empty {
+            color: #95a5a6;
+            font-style: italic;
+        }
+        .description {
+            color: #34495e;
+        }
+        .instructions {
+            background-color: #e8f5e8;
+            border: 1px solid #27ae60;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .step::before {
+            content: "? ";
+            margin-right: 10px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .code {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? AMS Postman Environment Variables</h1>
+        <p class="subtitle">Assignment Management System - Complete Testing Setup</p>
+        
+        <h2>?? Environment Variables Table</h2>
+        <div class="instructions">
+            <strong>Environment Name:</strong> AMS Development
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Variable Name</th>
+                    <th>Type</th>
+                    <th>Initial Value</th>
+                    <th>Current Value</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="variable-name">baseUrl</span></td>
+                    <td><span class="type">string</span></td>
+                    <td>http://localhost:5281</td>
+                    <td>http://localhost:5281</td>
+                    <td class="description">API Base URL - Main endpoint</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">adminToken</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Admin JWT Token - Set after login</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">instructorToken</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Instructor JWT Token - Set after login</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">studentToken</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Student JWT Token - Set after login</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">courseId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Created Course ID - Auto-set from course creation</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">classId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Created Class ID - Auto-set from class creation</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">assignmentId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Created Assignment ID - Auto-set from assignment creation</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">submissionId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Created Submission ID - Auto-set from submission</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">instructorId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Instructor User ID - Get from user list</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">studentId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Student User ID - Get from user list</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">gradeId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Created Grade ID - Auto-set from grading</td>
+                </tr>
+                <tr>
+                    <td><span class="variable-name">notificationId</span></td>
+                    <td><span class="type">string</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td><span class="empty">(empty)</span></td>
+                    <td class="description">Notification ID - Get from notifications</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>?? Postman Setup Instructions</h2>
+        <div class="instructions">
+            <div class="step">Open Postman Application</div>
+            <div class="step">Click on "Environments" in the left sidebar</div>
+            <div class="step">Click the "+" button to create new environment</div>
+            <div class="step">Set Environment name as "AMS Development"</div>
+            <div class="step">Add all variables from the table above</div>
+            <div class="step">Click "Save" to save the environment</div>
+            <div class="step">Select "AMS Development" from environment dropdown</div>
+        </div>
+
+        <h2>?? Usage Examples</h2>
+        <p><strong>In Request URLs:</strong></p>
+        <div class="code">
+{{baseUrl}}/api/Auth/register<br>
+{{baseUrl}}/api/Course/{{courseId}}<br>
+{{baseUrl}}/api/Class/{{classId}}/enroll/{{studentId}}
+        </div>
+
+        <p><strong>In Request Headers:</strong></p>
+        <div class="code">
+Authorization: Bearer {{adminToken}}<br>
+Authorization: Bearer {{instructorToken}}<br>
+Authorization: Bearer {{studentToken}}
+        </div>
+
+        <p><strong>In Request Body:</strong></p>
+        <div class="code">
+{<br>
+&nbsp;&nbsp;"courseId": {{courseId}},<br>
+&nbsp;&nbsp;"classId": {{classId}},<br>
+&nbsp;&nbsp;"assignmentId": {{assignmentId}}<br>
+}
+        </div>
+
+        <h2>? Auto-Set Values with Test Scripts</h2>
+        <p>Add this script to the "Tests" tab of your requests to automatically set variables:</p>
+        <div class="code">
+// Auto-set token from login response<br>
+if (pm.response.code === 200) {<br>
+&nbsp;&nbsp;const response = pm.response.json();<br>
+&nbsp;&nbsp;if (response.data.token) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pm.environment.set('adminToken', response.data.token);<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;if (response.data.id) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pm.environment.set('courseId', response.data.id);<br>
+&nbsp;&nbsp;}<br>
+}
+        </div>
+
+        <div class="warning">
+            <strong>?? Important Notes:</strong><br>
+            • Make sure your API is running on http://localhost:5281<br>
+            • Tokens will expire - you'll need to re-login periodically<br>
+            • Set the environment as active before running tests<br>
+            • Variables marked as (empty) will be filled during testing
+        </div>
+
+        <h2>?? Test Sequence</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Test Name</th>
+                    <th>Sets Variable</th>
+                    <th>Uses Variable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Admin Register</td>
+                    <td>-</td>
+                    <td>baseUrl</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Admin Login</td>
+                    <td>adminToken</td>
+                    <td>baseUrl</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Create Course</td>
+                    <td>courseId</td>
+                    <td>baseUrl, adminToken</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Create Class</td>
+                    <td>classId</td>
+                    <td>baseUrl, adminToken, courseId</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Create Assignment</td>
+                    <td>assignmentId</td>
+                    <td>baseUrl, instructorToken, classId</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Submit Assignment</td>
+                    <td>submissionId</td>
+                    <td>baseUrl, studentToken, assignmentId</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Create Grade</td>
+                    <td>gradeId</td>
+                    <td>baseUrl, instructorToken, submissionId</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="text-align: center; margin-top: 40px; color: #7f8c8d;">
+            <p><strong>?? Ready to test your Assignment Management System API!</strong></p>
+            <p>Follow the sequence and enjoy automated testing with Postman! ?</p>
+        </div>
+    </div>
+</body>
+</html>

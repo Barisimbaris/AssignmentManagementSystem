@@ -1,0 +1,438 @@
+### AMS API Test Collection
+### Variables
+@baseUrl = http://localhost:5281
+@adminToken = 
+@instructorToken = 
+@studentToken = 
+@courseId = 
+@classId = 
+@assignmentId = 
+@submissionId = 
+
+###############################################################################
+### 1. AUTHENTICATION ENDPOINTS
+###############################################################################
+
+### 1.1 Admin Register
+POST {{baseUrl}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "firstName": "System",
+  "lastName": "Admin",
+  "email": "admin@ams.com",
+  "password": "Admin123!",
+  "confirmPassword": "Admin123!",
+  "role": 3,
+  "department": "IT",
+  "phoneNumber": "555-0001"
+}
+
+### 1.2 Admin Login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ams.com",
+  "password": "Admin123!"
+}
+
+### 1.3 Instructor Register
+POST {{baseUrl}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Instructor",
+  "email": "instructor@ams.com",
+  "password": "Instructor123!",
+  "confirmPassword": "Instructor123!",
+  "role": 2,
+  "department": "Computer Science",
+  "phoneNumber": "555-0002"
+}
+
+### 1.4 Student Register
+POST {{baseUrl}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Jane",
+  "lastName": "Student",
+  "email": "student@ams.com",
+  "password": "Student123!",
+  "confirmPassword": "Student123!",
+  "role": 1,
+  "studentNumber": "CS2024001",
+  "department": "Computer Science",
+  "phoneNumber": "555-0003"
+}
+
+###############################################################################
+### 2. USER MANAGEMENT ENDPOINTS
+###############################################################################
+
+### 2.1 Get All Users (Admin)
+GET {{baseUrl}}/api/User
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Get Students (Admin/Instructor)
+GET {{baseUrl}}/api/User/students
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Get Instructors
+GET {{baseUrl}}/api/User/instructors
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Get My Profile
+GET {{baseUrl}}/api/User/me
+Authorization: Bearer {{adminToken}}
+
+### 2.5 Get User by ID
+GET {{baseUrl}}/api/User/1
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+### 3. COURSE MANAGEMENT ENDPOINTS
+###############################################################################
+
+### 3.1 Create Course (Admin)
+POST {{baseUrl}}/api/Course
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "courseCode": "CS101",
+  "courseName": "Introduction to Programming",
+  "description": "Basic programming concepts and algorithms",
+  "department": "Computer Science",
+  "creditHours": 3,
+  "academicYear": "2024-2025"
+}
+
+### 3.2 Get All Courses
+GET {{baseUrl}}/api/Course
+Authorization: Bearer {{adminToken}}
+
+### 3.3 Get Course by ID
+GET {{baseUrl}}/api/Course/1
+Authorization: Bearer {{adminToken}}
+
+### 3.4 Get Courses by Department
+GET {{baseUrl}}/api/Course/department/Computer Science
+Authorization: Bearer {{adminToken}}
+
+### 3.5 Update Course (Admin)
+PUT {{baseUrl}}/api/Course/{{courseId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "courseName": "Advanced Programming",
+  "description": "Updated description",
+  "creditHours": 4
+}
+
+### 3.6 Assign Instructor to Course
+POST {{baseUrl}}/api/Course/{{courseId}}/assign-instructor
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "instructorId": 2,
+  "academicYear": "2024-2025"
+}
+
+### 3.7 Get Course Instructors
+GET {{baseUrl}}/api/Course/{{courseId}}/instructors
+Authorization: Bearer {{adminToken}}
+
+### 3.8 Get My Courses (Instructor)
+GET {{baseUrl}}/api/Course/my-courses
+Authorization: Bearer {{instructorToken}}
+
+### 3.9 Remove Instructor from Course
+DELETE {{baseUrl}}/api/Course/{{courseId}}/instructor/2
+Authorization: Bearer {{adminToken}}
+
+### 3.10 Delete Course
+DELETE {{baseUrl}}/api/Course/{{courseId}}
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+### 4. CLASS MANAGEMENT ENDPOINTS
+###############################################################################
+
+### 4.1 Create Class (Admin)
+POST {{baseUrl}}/api/Class
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "className": "CS101-Fall2024",
+  "classCode": "CS101-01",
+  "instructorId": 2,
+  "maxCapacity": 30,
+  "semester": "Fall 2024"
+}
+
+### 4.2 Get All Classes (Admin)
+GET {{baseUrl}}/api/Class
+Authorization: Bearer {{adminToken}}
+
+### 4.3 Get Class by ID
+GET {{baseUrl}}/api/Class/1
+Authorization: Bearer {{adminToken}}
+
+### 4.4 Get Classes by Course
+GET {{baseUrl}}/api/Class/course/{{courseId}}
+Authorization: Bearer {{adminToken}}
+
+### 4.5 Get My Classes (Instructor)
+GET {{baseUrl}}/api/Class/my-classes
+Authorization: Bearer {{instructorToken}}
+
+### 4.6 Get Classes by Instructor
+GET {{baseUrl}}/api/Class/instructor/2
+Authorization: Bearer {{adminToken}}
+
+### 4.7 Update Class (Admin)
+PUT {{baseUrl}}/api/Class/{{classId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "className": "CS101-Spring2025",
+  "maxCapacity": 35
+}
+
+### 4.8 Enroll Student (Admin)
+POST {{baseUrl}}/api/Class/{{classId}}/enroll/3
+Authorization: Bearer {{adminToken}}
+
+### 4.9 Enroll Myself (Student)
+POST {{baseUrl}}/api/Class/{{classId}}/enroll-me
+Authorization: Bearer {{studentToken}}
+
+### 4.10 Unenroll Student (Admin)
+POST {{baseUrl}}/api/Class/{{classId}}/unenroll/3
+Authorization: Bearer {{adminToken}}
+
+### 4.11 Unenroll Myself (Student)
+POST {{baseUrl}}/api/Class/{{classId}}/unenroll-me
+Authorization: Bearer {{studentToken}}
+
+### 4.12 Delete Class
+DELETE {{baseUrl}}/api/Class/{{classId}}
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+### 5. ASSIGNMENT MANAGEMENT ENDPOINTS
+###############################################################################
+
+### 5.1 Create Assignment (Instructor)
+POST {{baseUrl}}/api/Assignment
+Authorization: Bearer {{instructorToken}}
+Content-Type: application/json
+
+{
+  "title": "Programming Assignment 1",
+  "description": "Implement a basic calculator using Python",
+  "classId": 1,
+  "type": "Individual",
+  "dueDate": "2024-12-31T23:59:59Z",
+  "maxScore": 100,
+  "allowLateSubmission": true,
+  "allowResubmission": false
+}
+
+### 5.2 Get All Assignments
+GET {{baseUrl}}/api/Assignment
+Authorization: Bearer {{instructorToken}}
+
+### 5.3 Get Assignment by ID
+GET {{baseUrl}}/api/Assignment/{{assignmentId}}
+Authorization: Bearer {{instructorToken}}
+
+### 5.4 Get Assignments by Class
+GET {{baseUrl}}/api/Assignment/class/{{classId}}
+Authorization: Bearer {{instructorToken}}
+
+### 5.5 Get My Assignments (Student)
+GET {{baseUrl}}/api/Assignment/my-assignments
+Authorization: Bearer {{studentToken}}
+
+### 5.6 Update Assignment (Instructor)
+PUT {{baseUrl}}/api/Assignment/{{assignmentId}}
+Authorization: Bearer {{instructorToken}}
+Content-Type: application/json
+
+{
+  "title": "Updated Assignment Title",
+  "description": "Updated description",
+  "maxScore": 120
+}
+
+### 5.7 Delete Assignment
+DELETE {{baseUrl}}/api/Assignment/{{assignmentId}}
+Authorization: Bearer {{instructorToken}}
+
+###############################################################################
+### 6. SUBMISSION MANAGEMENT ENDPOINTS
+###############################################################################
+
+### 6.1 Submit Assignment (Student) - Multipart
+POST {{baseUrl}}/api/Submission
+Authorization: Bearer {{studentToken}}
+Content-Type: multipart/form-data
+
+assignmentId=1
+comments=This is my solution for the calculator assignment
+file=@calculator.py
+
+### 6.2 Get Submission by ID
+GET {{baseUrl}}/api/Submission/{{submissionId}}
+Authorization: Bearer {{studentToken}}
+
+### 6.3 Get Submissions by Assignment (Instructor)
+GET {{baseUrl}}/api/Submission/assignment/{{assignmentId}}
+Authorization: Bearer {{instructorToken}}
+
+### 6.4 Get My Submissions (Student)
+GET {{baseUrl}}/api/Submission/my-submissions
+Authorization: Bearer {{studentToken}}
+
+### 6.5 Get Submissions by Student (Admin)
+GET {{baseUrl}}/api/Submission/student/3
+Authorization: Bearer {{adminToken}}
+
+### 6.6 Download Submission
+GET {{baseUrl}}/api/Submission/{{submissionId}}/download
+Authorization: Bearer {{instructorToken}}
+
+### 6.7 Resubmit Assignment (Student)
+PUT {{baseUrl}}/api/Submission/{{submissionId}}/resubmit
+Authorization: Bearer {{studentToken}}
+Content-Type: multipart/form-data
+
+file=@calculator_v2.py
+
+### 6.8 Delete Submission
+DELETE {{baseUrl}}/api/Submission/{{submissionId}}
+Authorization: Bearer {{studentToken}}
+
+###############################################################################
+### 7. GRADE MANAGEMENT ENDPOINTS
+###############################################################################
+
+### 7.1 Create Grade (Instructor)
+POST {{baseUrl}}/api/Grade
+Authorization: Bearer {{instructorToken}}
+Content-Type: application/json
+
+{
+  "submissionId": 1,
+  "score": 85,
+  "feedback": "Good implementation, but missing error handling.",
+  "isPublished": true
+}
+
+### 7.2 Get Grade by ID
+GET {{baseUrl}}/api/Grade/1
+Authorization: Bearer {{instructorToken}}
+
+### 7.3 Get Grade by Submission
+GET {{baseUrl}}/api/Grade/submission/{{submissionId}}
+Authorization: Bearer {{instructorToken}}
+
+### 7.4 Get Grades by Student (Admin)
+GET {{baseUrl}}/api/Grade/student/3
+Authorization: Bearer {{adminToken}}
+
+### 7.5 Get My Grades (Student)
+GET {{baseUrl}}/api/Grade/my-grades
+Authorization: Bearer {{studentToken}}
+
+### 7.6 Get Grades by Class (Instructor)
+GET {{baseUrl}}/api/Grade/class/{{classId}}
+Authorization: Bearer {{instructorToken}}
+
+### 7.7 Update Grade (Instructor)
+PUT {{baseUrl}}/api/Grade/1
+Authorization: Bearer {{instructorToken}}
+Content-Type: application/json
+
+{
+  "score": 90,
+  "feedback": "Updated feedback after review.",
+  "isPublished": true
+}
+
+### 7.8 Publish Grades (Instructor)
+PUT {{baseUrl}}/api/Grade/publish
+Authorization: Bearer {{instructorToken}}
+Content-Type: application/json
+
+[1, 2, 3]
+
+### 7.9 Delete Grade
+DELETE {{baseUrl}}/api/Grade/1
+Authorization: Bearer {{instructorToken}}
+
+###############################################################################
+### 8. NOTIFICATION ENDPOINTS
+###############################################################################
+
+### 8.1 Get My Notifications
+GET {{baseUrl}}/api/Notification/my-notifications
+Authorization: Bearer {{studentToken}}
+
+### 8.2 Get Unread Count
+GET {{baseUrl}}/api/Notification/unread-count
+Authorization: Bearer {{studentToken}}
+
+### 8.3 Mark Notification as Read
+PUT {{baseUrl}}/api/Notification/1/mark-read
+Authorization: Bearer {{studentToken}}
+
+###############################################################################
+### 9. DASHBOARD & STATISTICS ENDPOINTS
+###############################################################################
+
+### 9.1 Admin Dashboard
+GET {{baseUrl}}/api/Dashboard/admin
+Authorization: Bearer {{adminToken}}
+
+### 9.2 Instructor Dashboard
+GET {{baseUrl}}/api/Dashboard/instructor
+Authorization: Bearer {{instructorToken}}
+
+### 9.3 Student Dashboard
+GET {{baseUrl}}/api/Dashboard/student
+Authorization: Bearer {{studentToken}}
+
+### 9.4 Course Statistics (Admin)
+GET {{baseUrl}}/api/Dashboard/statistics/courses
+Authorization: Bearer {{adminToken}}
+
+### 9.5 Department Statistics (Admin)
+GET {{baseUrl}}/api/Dashboard/statistics/departments
+Authorization: Bearer {{adminToken}}
+
+### 9.6 My Class Statistics (Instructor)
+GET {{baseUrl}}/api/Dashboard/statistics/my-classes
+Authorization: Bearer {{instructorToken}}
+
+###############################################################################
+### 10. HEALTH CHECK & TESTING
+###############################################################################
+
+### 10.1 API Health Check
+GET {{baseUrl}}/api/health
+
+### 10.2 Swagger JSON
+GET {{baseUrl}}/swagger/v1/swagger.json
+
+### 10.3 Swagger UI
+GET {{baseUrl}}/swagger/index.html

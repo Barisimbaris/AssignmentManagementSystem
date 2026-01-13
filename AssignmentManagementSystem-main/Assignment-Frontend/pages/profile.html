@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="profilePage">
+    <h1>👤 Profil</h1>
+
+    <!-- Çıkış butonu navigation'da var -->
+
+    <div class="section">
+      <h2>Profil Bilgilerim</h2>
+      <div class="profile-display" id="profileDisplay">
+        <p>Yükleniyor...</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Profil Düzenle</h2>
+      <form id="updateProfileForm">
+        <div class="form-row">
+          <input type="text" id="firstName" placeholder="Ad" required>
+          <input type="text" id="lastName" placeholder="Soyad" required>
+        </div>
+        <input type="email" id="email" placeholder="E-posta" readonly>
+        <div class="form-row">
+          <input type="text" id="studentNumber" placeholder="Öğrenci No (opsiyonel)">
+          <input type="text" id="department" placeholder="Bölüm (opsiyonel)">
+        </div>
+        <input type="text" id="phoneNumber" placeholder="Telefon (opsiyonel)">
+        <button type="submit">Bilgileri Güncelle</button>
+      </form>
+      <div id="updateResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>Şifre Değiştir</h2>
+      <form id="changePasswordForm">
+        <input type="password" id="currentPassword" placeholder="Mevcut Şifre" required>
+        <input type="password" id="newPassword" placeholder="Yeni Şifre (min 6 karakter)" required>
+        <input type="password" id="confirmNewPassword" placeholder="Yeni Şifre Tekrar" required>
+        <button type="submit">Şifreyi Değiştir</button>
+      </form>
+      <div id="passwordResult"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>
+
+
+
+

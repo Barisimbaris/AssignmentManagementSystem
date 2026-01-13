@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğrenci Kontrol Paneli</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Mobil Header - Profil ikonu olmadan -->
+  <div class="mobile-header" style="display: flex !important; flex-direction: row; justify-content: flex-start; align-items: center; padding: 20px; padding-top: 60px; padding-bottom: 20px; background-color: var(--background); border-bottom: 1px solid var(--border);">
+    <div class="mobile-header-left" style="flex: 1;">
+      <div class="mobile-header-greeting" id="mobileGreeting" style="font-size: 16px; color: var(--text-secondary);">👋 Hoş geldin,</div>
+      <div id="mobileUserName" style="font-size: 24px; font-weight: bold; color: var(--text-primary);"></div>
+    </div>
+  </div>
+
+  <section class="dashboard content-with-bottom-nav" id="studentDashboard" style="padding: 0;">
+    <!-- Stats Summary Bar - Mobil uygulamaya göre -->
+    <div id="statsBar" style="background-color: var(--background-secondary); padding: 16px; text-align: center; display: none;">
+      <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
+        📊 <span id="activeAssignmentsCount">0</span> aktif ödevin var
+      </div>
+    </div>
+
+    <!-- Yaklaşan Ödevler - Mobil uygulamaya göre -->
+    <div style="padding: 20px;">
+      <h2 class="section-title-mobile" style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin-bottom: 16px;">📚 Yaklaşan Ödevler</h2>
+      <div id="upcomingAssignmentsList"></div>
+    </div>
+
+    <!-- Derslerim - Mobil uygulamaya göre -->
+    <div style="padding: 20px;">
+      <h2 class="section-title-mobile" style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin-bottom: 16px;">📖 Derslerim</h2>
+      <div id="enrolledClassesList" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 1rem; scroll-snap-type: x mandatory;"></div>
+    </div>
+
+    <!-- Bu Hafta İstatistikleri - Mobil uygulamaya göre -->
+    <div style="padding: 20px;">
+      <h2 class="section-title-mobile" style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin-bottom: 16px;">📈 Bu Hafta</h2>
+      <div id="weekStatsCard" style="background-color: var(--background); border-radius: 12px; padding: 16px; border: 1px solid var(--border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+          <span style="font-size: 16px; color: var(--text-primary);">✅ Tamamlanan:</span>
+          <span style="font-size: 18px; font-weight: bold; color: var(--primary);" id="completedAssignments">0/0</span>
+        </div>
+        <div style="height: 1px; background-color: var(--border);"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+          <span style="font-size: 16px; color: var(--text-primary);">⭐ Ortalama Not:</span>
+          <span style="font-size: 18px; font-weight: bold; color: var(--primary);" id="averageGrade">-</span>
+        </div>
+        <div style="height: 1px; background-color: var(--border);"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+          <span style="font-size: 16px; color: var(--text-primary);">🔥 Seri:</span>
+          <span style="font-size: 18px; font-weight: bold; color: var(--primary);" id="streak">0 gün</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bottom Spacing -->
+    <div style="height: 80px;"></div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="student_dashboard.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="submissions.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📤</div>
+      <div class="bottom-nav-label">Teslimler</div>
+    </a>
+    <a href="exam_results.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📊</div>
+      <div class="bottom-nav-label">Notlar</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

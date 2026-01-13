@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not Verme - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Mobil Header -->
+  <div class="mobile-header">
+    <div class="mobile-header-left">
+      <div class="mobile-header-greeting">✏️ Not Verme</div>
+    </div>
+    <div class="mobile-header-right">
+      <a href="javascript:history.back()" class="mobile-header-icon">←</a>
+    </div>
+  </div>
+
+  <section class="dashboard content-with-bottom-nav" id="gradingPage">
+    <!-- Ödev Seçimi -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 1.5rem; margin: 1rem 1.5rem;">
+      <h2 style="color: white; margin-bottom: 1rem; font-size: 1.2rem;">📝 Ödev Seç</h2>
+      <select id="gradingAssignmentSelect" style="width: 100%; padding: 0.75rem; border-radius: 12px; border: none; font-size: 1rem; margin-bottom: 1rem; background: white; color: #333;">
+        <option value="">Ödev seçiniz</option>
+      </select>
+      <button id="loadSubmissions" style="width: 100%; padding: 0.75rem; background: white; color: #667eea; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 1rem;">📥 Teslimleri Yükle</button>
+    </div>
+
+    <!-- Ödev Teslimleri -->
+    <div id="submissionsSection" style="display: none;">
+      <h2 class="section-title-mobile">📋 Ödev Teslimleri</h2>
+      <div id="assignmentInfo" style="background: white; border-radius: 16px; padding: 1.5rem; margin: 0 1.5rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+      <div id="submissionsList" style="padding: 0 1.5rem;">
+        <p style="text-align: center; color: #666; padding: 2rem;">Ödev seçin ve teslimleri yükleyin.</p>
+      </div>
+    </div>
+
+    <!-- Not Verme Formu -->
+    <div id="gradingFormSection" style="display: none; padding: 0 1.5rem 2rem;">
+      <h2 class="section-title-mobile">✏️ Not Ver</h2>
+      <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <form id="gradingForm">
+          <input type="hidden" id="submissionId">
+          <input type="hidden" id="gradeId">
+          <div class="grading-info" id="gradingStudentInfo" style="background: #f8f9fa; padding: 1rem; border-radius: 12px; margin-bottom: 1rem;"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <input type="number" id="scoreInput" placeholder="Puan" min="0" step="0.1" required style="padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem;">
+            <input type="number" id="maxScoreDisplay" placeholder="Max Puan" readonly style="padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; background: #f5f5f5;">
+          </div>
+          <textarea id="feedbackInput" placeholder="💬 Geri bildirim (opsiyonel)" rows="4" style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; margin-bottom: 1rem; resize: vertical;"></textarea>
+          <button type="submit" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: all 0.3s;">✅ Notu Kaydet ve Yayınla</button>
+        </form>
+        <div id="gradingResult" style="margin-top: 1rem;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="teacher_dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="class_management.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👥</div>
+      <div class="bottom-nav-label">Öğrenciler</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="grading.js"></script>
+</body>
+</html>
+
+

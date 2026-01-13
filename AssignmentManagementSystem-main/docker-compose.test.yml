@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password123
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Password123 -Q 'SELECT 1'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  # AMS API
+  ams-api:
+    build:
+      context: .
+      dockerfile: src/AMS.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=AMSDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=true;
+    ports:
+      - "5281:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/swagger/v1/swagger.json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  # Newman Test Runner
+  newman-tests:
+    image: postman/newman:alpine
+    volumes:
+      - ./newman:/etc/newman
+      - ./newman/reports:/var/newman/reports
+    command: >
+      newman run /etc/newman/ams-collection.json
+      --environment /etc/newman/ams-environment.json
+      --reporters cli,htmlextra,json
+      --reporter-htmlextra-export /var/newman/reports/api-test-report.html
+      --reporter-json-export /var/newman/reports/api-test-results.json
+      --timeout 15000
+      --bail false
+      --color on
+    depends_on:
+      ams-api:
+        condition: service_healthy
+
+volumes:
+  sqlserver_data:

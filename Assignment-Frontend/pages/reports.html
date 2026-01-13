@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analiz ve Raporlar - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Mobil Header -->
+  <div class="mobile-header">
+    <div class="mobile-header-left">
+      <div class="mobile-header-greeting">📊 Analizler</div>
+    </div>
+    <div class="mobile-header-right">
+      <a href="javascript:history.back()" class="mobile-header-icon">←</a>
+    </div>
+  </div>
+
+  <section class="dashboard content-with-bottom-nav" id="reportsPage">
+    <!-- Sınıfa Özel Analiz -->
+    <h2 class="section-title-mobile">📈 Sınıfa Özel Analiz</h2>
+    <div style="padding: 0 1.5rem 1rem;">
+      <select id="analysisClassSelect" style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; margin-bottom: 1rem; background: white;">
+        <option value="">Sınıf seçiniz</option>
+      </select>
+      <button id="loadClassAnalysis" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem;">📊 Analizi Yükle</button>
+    </div>
+    <div id="classAnalysisContainer" style="padding: 0 1.5rem 2rem;">
+      <p style="text-align: center; color: #666; padding: 2rem;">Sınıf seçin ve analizi yükleyin.</p>
+    </div>
+
+    <!-- Kişiye Özel Analiz -->
+    <h2 class="section-title-mobile">👤 Kişiye Özel Analiz</h2>
+    <div style="padding: 0 1.5rem 1rem;">
+      <div style="display: flex; gap: 0.75rem;">
+        <input type="text" id="studentSearchInput" placeholder="Öğrenci adı, soyadı veya ID..." style="flex: 1; padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem;">
+        <button id="searchStudent" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem;">🔍 Ara</button>
+      </div>
+    </div>
+    <div id="studentAnalysisContainer" style="padding: 0 1.5rem 2rem;">
+      <p style="text-align: center; color: #666; padding: 2rem;">Öğrenci arayın ve kişiye özel analiz görüntüleyin.</p>
+    </div>
+
+    <!-- Grafik Analiz -->
+    <h2 class="section-title-mobile">📉 Grafik Analiz</h2>
+    <div style="padding: 0 1.5rem 2rem;">
+      <div class="chart-container" style="background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: #333;">📊 Sınıf Performans Dağılımı</h3>
+        <canvas id="classPerformanceChart" style="max-height: 300px;"></canvas>
+      </div>
+      <div class="chart-container" style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: #333;">📈 Teslim Oranları</h3>
+        <canvas id="submissionRateChart" style="max-height: 300px;"></canvas>
+      </div>
+    </div>
+
+    <!-- Tüm Sınıflar Özet -->
+    <h2 class="section-title-mobile">📋 Tüm Sınıflar Özet</h2>
+    <div id="allClassesSummary" style="padding: 0 1.5rem 2rem;">
+      <p style="text-align: center; color: #666; padding: 2rem;">Yükleniyor...</p>
+    </div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="teacher_dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="class_management.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👥</div>
+      <div class="bottom-nav-label">Öğrenciler</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="reports.js"></script>
+</body>
+</html>

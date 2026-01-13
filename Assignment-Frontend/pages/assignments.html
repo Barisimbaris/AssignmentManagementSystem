@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ödev Yönetimi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav id="mainNav">
+      <ul>
+        <!-- Navigation links will be dynamically loaded here -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="assignmentsPage">
+    <h1>Ödev Modülü</h1>
+
+    <div class="section hidden" id="studentAssignmentsSection">
+      <h2>Ödevlerim</h2>
+      <p>Kayıtlı olduğunuz sınıflara ait ödevler burada listelenir.</p>
+      <div id="studentAssignmentsList" class="assignment-list">Yükleniyor...</div>
+      
+      <!-- Ödev Teslim Modal -->
+      <div id="submissionModal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Ödev Teslim Et</h3>
+            <button id="closeSubmissionModal" class="close-btn">&times;</button>
+          </div>
+          <form id="submissionForm">
+            <input type="hidden" id="submissionAssignmentId">
+            <div class="form-group">
+              <label>Ödev:</label>
+              <p id="submissionAssignmentTitle" class="assignment-title-display"></p>
+            </div>
+            <div class="form-group">
+              <label for="submissionFileInput">Dosya Seçin (PDF, JPG, PNG):</label>
+              <input type="file" id="submissionFileInput" accept=".pdf,.jpg,.jpeg,.png" required>
+              <small>Maksimum 10MB</small>
+            </div>
+            <div class="form-group">
+              <label for="submissionGroupId">Grup ID (Sadece grup ödevleri için):</label>
+              <input type="text" id="submissionGroupId" placeholder="Boş bırakabilirsiniz">
+              <small>Grup ödevi değilse boş bırakın</small>
+            </div>
+            <div class="form-group">
+              <label for="submissionComments">Yorum (Opsiyonel):</label>
+              <textarea id="submissionComments" rows="3" placeholder="Ödev hakkında eklemek istediğiniz notlar..."></textarea>
+            </div>
+            <div id="submissionResult"></div>
+            <div class="modal-actions">
+              <button type="button" id="cancelSubmission" class="btn-secondary">İptal</button>
+              <button type="submit" class="btn-primary">Teslim Et</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="section hidden" id="teacherAssignmentsSection">
+      <h2>📝 Ödev Oluştur ve Yönet</h2>
+      
+      <div class="create-assignment-card">
+        <h3>Yeni Ödev Oluştur</h3>
+        <form id="assignmentForm" enctype="multipart/form-data">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="assignmentClassSelect">Ders *</label>
+              <select id="assignmentClassSelect" required>
+                <option value="">Ders seçiniz</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="assignmentTypeSelect">Ödev Türü *</label>
+              <select id="assignmentTypeSelect" required>
+                <option value="1">Bireysel Ödev</option>
+                <option value="2">Grup Ödevi</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="assignmentTitle">Ödev Başlığı *</label>
+            <input type="text" id="assignmentTitle" placeholder="Örn: Matematik Final Ödevi" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="assignmentDescription">Ödev Açıklaması *</label>
+            <textarea id="assignmentDescription" placeholder="Ödev detaylarını buraya yazın..." rows="5" required></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="assignmentAttachmentFile">Ek Dosya (Opsiyonel)</label>
+            <div class="file-upload-wrapper">
+              <input type="file" id="assignmentAttachmentFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip,.rar">
+              <label for="assignmentAttachmentFile" class="file-upload-label">
+                <span class="file-upload-icon">📎</span>
+                <span class="file-upload-text">Dosya seçin (PDF, Word, Resim, ZIP - Max 20MB)</span>
+              </label>
+              <div id="assignmentFilePreview" class="file-preview hidden"></div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="assignmentDueDate">Son Teslim Tarihi *</label>
+              <input type="datetime-local" id="assignmentDueDate" required>
+            </div>
+            <div class="form-group">
+              <label for="assignmentMaxScore">Maksimum Puan *</label>
+              <input type="number" id="assignmentMaxScore" placeholder="100" min="1" max="1000" value="100" required>
+            </div>
+          </div>
+          
+          <div class="form-row checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="allowLate">
+              <span>Geç teslim izin ver</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="allowResubmission">
+              <span>Yeniden teslim izin ver</span>
+            </label>
+          </div>
+          
+          <button type="submit" class="btn-primary submit-btn-large">
+            <span>✨ Ödev Oluştur</span>
+          </button>
+        </form>
+        <div id="assignmentFormResult"></div>
+      </div>
+
+      <div class="section">
+        <div class="form-row">
+          <select id="teacherClassFilter">
+            <option value="">Sınıf seçerek ödevleri görüntüleyin</option>
+          </select>
+          <button id="refreshAssignmentsButton" type="button">Listeyi Yenile</button>
+        </div>
+        <div id="teacherAssignmentsList" class="assignment-list">Sınıf seçiniz...</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="assignments.js"></script>
+</body>
+</html>

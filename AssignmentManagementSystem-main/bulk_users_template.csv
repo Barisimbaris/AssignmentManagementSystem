@@ -1,0 +1,7 @@
+FirstName,LastName,Email,Password,Role,StudentNumber,Department,PhoneNumber
+Dr. Ahmet,Y?lmaz,ahmet.yilmaz@university.edu,Inst123!,2,,Computer Engineering,+905551234567
+Dr. Ay?e,Kaya,ayse.kaya@university.edu,Inst123!,2,,Computer Engineering,+905551234568
+Dr. Mehmet,Özkan,mehmet.ozkan@university.edu,Inst123!,2,,Computer Engineering,+905551234569
+Ali,Veli,ali.veli@student.university.edu,Stud123!,1,20240001,Computer Engineering,+905561234567
+Fatma,Nur,fatma.nur@student.university.edu,Stud123!,1,20240002,Computer Engineering,+905561234568
+Emre,Tan,emre.tan@student.university.edu,Stud123!,1,20240003,Computer Engineering,+905561234569

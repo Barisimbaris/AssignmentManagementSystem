@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sınav Karnesi - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard content-with-bottom-nav" id="examResultsPage">
+    <!-- İstatistikler - Mobil uygulamaya göre -->
+    <div id="statsContainer" style="display: none; flex-direction: row; padding: 16px; gap: 10px;">
+      <div class="stat-card-mobile" style="flex: 1; background-color: var(--background); border-radius: 12px; padding: 12px; align-items: center; border: 1px solid var(--border);">
+        <div style="font-size: 24px; margin-bottom: 8px;">📈</div>
+        <div id="averageGrade" style="font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 4px;">-</div>
+        <div style="font-size: 12px; color: var(--text-secondary);">Ortalama</div>
+      </div>
+      <div class="stat-card-mobile" style="flex: 1; background-color: var(--background); border-radius: 12px; padding: 12px; align-items: center; border: 1px solid var(--border);">
+        <div style="font-size: 24px; margin-bottom: 8px;">🌟</div>
+        <div id="highestGrade" style="font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 4px;">-</div>
+        <div style="font-size: 12px; color: var(--text-secondary);">En Yüksek</div>
+      </div>
+      <div class="stat-card-mobile" style="flex: 1; background-color: var(--background); border-radius: 12px; padding: 12px; align-items: center; border: 1px solid var(--border);">
+        <div style="font-size: 24px; margin-bottom: 8px;">📚</div>
+        <div id="lowestGrade" style="font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 4px;">-</div>
+        <div style="font-size: 12px; color: var(--text-secondary);">En Düşük</div>
+      </div>
+      <div class="stat-card-mobile" style="flex: 1; background-color: var(--background); border-radius: 12px; padding: 12px; align-items: center; border: 1px solid var(--border);">
+        <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+        <div id="totalGraded" style="font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 4px;">-</div>
+        <div style="font-size: 12px; color: var(--text-secondary);">Toplam</div>
+      </div>
+    </div>
+
+    <!-- Notlarım - Mobil uygulamaya göre -->
+    <div style="padding: 20px;">
+      <h2 class="section-title-mobile" style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin-bottom: 16px;">📚 Notlarım</h2>
+      <div id="gradesList" style="padding: 0;"></div>
+    </div>
+
+    <!-- Desktop için eski bölümler -->
+    <div class="section" style="display: none;" id="desktopSections">
+      <h2>Ders Bazlı Analiz</h2>
+      <div id="subjectAnalysis" class="subject-analysis-container">
+        <p>Yükleniyor...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="student_dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="submissions.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📤</div>
+      <div class="bottom-nav-label">Teslimler</div>
+    </a>
+    <a href="exam_results.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon">📊</div>
+      <div class="bottom-nav-label">Notlar</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="examResults.js"></script>
+</body>
+</html>

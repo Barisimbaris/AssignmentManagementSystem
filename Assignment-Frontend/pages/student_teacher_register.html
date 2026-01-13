@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğrenci ve Öğretmen Kaydı</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <li><a href="login.html">Giriş Yap</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="register" style="height: calc(100vh - 100px); display: flex; align-items: flex-start; justify-content: center; padding: 0.4rem; padding-top: 0.6rem; overflow: hidden;">
+    <div style="max-width: 340px; width: 100%; background: white; border-radius: 8px; padding: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid var(--border); overflow: visible;">
+      <div style="text-align: center; margin-bottom: 0.5rem;">
+        <h1 style="font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 0.15rem;">📝 Kayıt Ol</h1>
+        <p style="color: var(--text-secondary); font-size: 10px; margin: 0;">Yeni hesap oluşturun</p>
+      </div>
+      
+      <form id="registerForm" style="display: flex; flex-direction: column; gap: 0.3rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem;">
+          <input type="text" id="firstName" placeholder="Ad" required 
+                 style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px; transition: all 0.3s;">
+          <input type="text" id="lastName" placeholder="Soyad" required
+                 style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px; transition: all 0.3s;">
+        </div>
+        <input type="email" id="email" placeholder="E-posta" required
+               style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px; transition: all 0.3s;">
+        <input type="text" id="studentNumber" placeholder="Öğrenci/Personel No (opsiyonel)"
+               style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px;">
+        <input type="text" id="department" placeholder="Bölüm (opsiyonel)"
+               style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px;">
+        <input type="tel" id="phoneNumber" placeholder="Telefon (opsiyonel)"
+               style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px;">
+        <input type="password" id="password" placeholder="Şifre" required
+               style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px; transition: all 0.3s;">
+        <input type="password" id="confirmPassword" placeholder="Şifre Tekrar" required
+               style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 5px; font-size: 11px; transition: all 0.3s;">
+        <div class="user-type" style="display: flex; gap: 0.5rem; justify-content: center; padding: 0.4rem; background: var(--background-secondary); border-radius: 5px;">
+          <label for="student" style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer; font-size: 11px;">
+            <input type="radio" id="student" name="user-type" value="1" checked style="cursor: pointer; width: 12px; height: 12px;">
+            <span>👨‍🎓 Öğrenci</span>
+          </label>
+          <label for="instructor" style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer; font-size: 11px;">
+            <input type="radio" id="instructor" name="user-type" value="2" style="cursor: pointer; width: 12px; height: 12px;">
+            <span>👨‍🏫 Öğretmen</span>
+          </label>
+        </div>
+        <button type="submit" style="background-color: var(--primary); color: var(--text-white); border: none; padding: 0.5rem 0.9rem; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-top: 0.15rem;">
+          Kayıt Ol
+        </button>
+      </form>
+      <p style="text-align: center; margin-top: 0.4rem; font-size: 10px; color: var(--text-secondary);">
+        Zaten hesabınız var mı? <a href="login.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Giriş Yap</a>
+      </p>
+    </div>
+  </section>
+
+  <footer style="display: none;">
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="register.js"></script>
+</body>
+</html>

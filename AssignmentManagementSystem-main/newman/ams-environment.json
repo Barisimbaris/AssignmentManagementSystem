@@ -1,0 +1,108 @@
+{
+  "id": "ams-test-environment",
+  "name": "AMS Test Environment - Comprehensive",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5281",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@ams.com",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin123!",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "adminUserId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "instructorYakupId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "instructorZeynepId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "instructorKivancId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "studentAhmetId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "courseVeriYapilariId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "courseProgramlamaId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "classVeriYapilariId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "assignmentIndividualId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "assignmentGroupId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "groupCodeWarriorsId",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "yakupToken",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "ahmetToken",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    }
+  ]
+}

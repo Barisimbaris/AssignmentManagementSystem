@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Programı</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation menüsü navigation.js tarafından doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <main class="schedule-container">
+    <div class="schedule-header">
+      <h1>📅 Ders Programım</h1>
+      <div class="schedule-controls">
+        <button id="prevWeekBtn" class="btn-secondary">← Önceki Hafta</button>
+        <span id="currentWeekText" class="week-indicator">Hafta Yükleniyor...</span>
+        <button id="nextWeekBtn" class="btn-secondary">Sonraki Hafta →</button>
+        <button id="currentWeekBtn" class="btn-primary">Bu Hafta</button>
+      </div>
+    </div>
+
+    <div id="loadingIndicator" class="loading-placeholder">
+      <div class="loading-spinner"></div>
+      <p>Ders programı yükleniyor...</p>
+    </div>
+
+    <div id="scheduleContent" class="schedule-content" style="display: none;">
+      <!-- Haftalık program buraya eklenecek -->
+      <div class="schedule-grid">
+        <div class="time-column">
+          <div class="time-header">Saat</div>
+          <div class="time-slots"></div>
+        </div>
+        <div class="days-container">
+          <div class="day-column" data-day="monday">
+            <div class="day-header">Pazartesi</div>
+            <div class="day-slots"></div>
+          </div>
+          <div class="day-column" data-day="tuesday">
+            <div class="day-header">Salı</div>
+            <div class="day-slots"></div>
+          </div>
+          <div class="day-column" data-day="wednesday">
+            <div class="day-header">Çarşamba</div>
+            <div class="day-slots"></div>
+          </div>
+          <div class="day-column" data-day="thursday">
+            <div class="day-header">Perşembe</div>
+            <div class="day-slots"></div>
+          </div>
+          <div class="day-column" data-day="friday">
+            <div class="day-header">Cuma</div>
+            <div class="day-slots"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sınıf listesi -->
+      <div class="classes-summary">
+        <h2>📚 Kayıtlı Olduğum Dersler</h2>
+        <div id="classesList" class="classes-grid"></div>
+      </div>
+    </div>
+
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <div class="empty-icon">📅</div>
+      <h3 id="emptyTitle">Henüz ders programı bulunmuyor</h3>
+      <p id="emptyText">Kayıtlı olduğunuz sınıflar için ders planları henüz eklenmemiş.</p>
+    </div>
+
+    <div id="errorState" class="error-state" style="display: none;">
+      <div class="error-icon">⚠️</div>
+      <h3>Bir hata oluştu</h3>
+      <p id="errorMessage"></p>
+      <button onclick="location.reload()" class="btn-primary">Yeniden Dene</button>
+    </div>
+  </main>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="classSchedule.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,501 @@
+{
+  "info": {
+    "name": "AMP API Email Notification Test Collection",
+    "description": "Complete Assignment Management Platform API Testing with Email Notifications",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "?? Authentication & Setup",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('AMP API is accessible', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('? AMP API Health Check passed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/swagger/v1/swagger.json"
+          }
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.environment.set('adminToken', response.data.token);",
+                  "        console.log('? Admin token saved');",
+                  "    }",
+                  "    if (response.data && response.data.user) {",
+                  "        pm.environment.set('adminId', response.data.user.id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ams.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": "{{baseUrl}}/api/Auth/login"
+          }
+        },
+        {
+          "name": "Register Test Student (Real Email)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Student registration with real email', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        const response = pm.response.json();",
+                  "        if (response.data && response.data.id) {",
+                  "            pm.environment.set('testStudentId', response.data.id);",
+                  "            console.log('? Test student created with real email - ID:', response.data.id);",
+                  "        }",
+                  "    } else {",
+                  "        console.log('?? Student already exists - will get ID from user list');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Email\",\n  \"lastName\": \"Test\",\n  \"email\": \"blackk.mm1@gmail.com\",\n  \"password\": \"Test123!\",\n  \"confirmPassword\": \"Test123!\",\n  \"role\": 1,\n  \"studentNumber\": \"EMAIL001\",\n  \"department\": \"Computer Science\",\n  \"phoneNumber\": \"555-0099\"\n}"
+            },
+            "url": "{{baseUrl}}/api/Auth/register"
+          }
+        },
+        {
+          "name": "Get All Users (Setup IDs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Users retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && Array.isArray(response.data)) {",
+                  "        const instructor = response.data.find(u => u.role === 'Instructor');",
+                  "        if (instructor) {",
+                  "            pm.environment.set('instructorId', instructor.id);",
+                  "            console.log('? Instructor ID:', instructor.id);",
+                  "        }",
+                  "        ",
+                  "        // Find student with the configured email",
+                  "        const testStudent = response.data.find(u => u.email === 'blackk.mm1@gmail.com');",
+                  "        if (testStudent) {",
+                  "            pm.environment.set('testStudentId', testStudent.id);",
+                  "            console.log('? Test Student ID for email tests:', testStudent.id);",
+                  "        } else {",
+                  "            // Find any student as fallback",
+                  "            const anyStudent = response.data.find(u => u.role === 'Student');",
+                  "            if (anyStudent) {",
+                  "                pm.environment.set('testStudentId', anyStudent.id);",
+                  "                console.log('? Using fallback Student ID:', anyStudent.id);",
+                  "            }",
+                  "        }",
+                  "        console.log('?? Total users:', response.data.length);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/User"
+          }
+        }
+      ]
+    },
+    {
+      "name": "?? Course & Class Setup",
+      "item": [
+        {
+          "name": "Create AMP Test Course",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('AMP test course creation', function () {",
+                  "    pm.expect([201, 400]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 201) {",
+                  "        const response = pm.response.json();",
+                  "        if (response.data && response.data.id) {",
+                  "            pm.environment.set('emailTestCourseId', response.data.id);",
+                  "            console.log('? AMP test course created - ID:', response.data.id);",
+                  "        }",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseCode\": \"AMP101\",\n  \"courseName\": \"AMP Email Notification Test Course\",\n  \"description\": \"Course specifically created for testing AMP email notifications\",\n  \"department\": \"Computer Science\",\n  \"creditHours\": 3,\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": "{{baseUrl}}/api/Course"
+          }
+        },
+        {
+          "name": "Get Courses (Fallback)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Courses retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && Array.isArray(response.data) && response.data.length > 0) {",
+                  "        if (!pm.environment.get('emailTestCourseId')) {",
+                  "            pm.environment.set('emailTestCourseId', response.data[0].id);",
+                  "        }",
+                  "        console.log('? Using course ID:', pm.environment.get('emailTestCourseId'));",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/Course"
+          }
+        },
+        {
+          "name": "Assign Instructor to AMP Course",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Instructor assignment for AMP course', function () {",
+                  "    const courseId = pm.environment.get('emailTestCourseId');",
+                  "    const instructorId = pm.environment.get('instructorId');",
+                  "    if (!courseId || !instructorId) {",
+                  "        console.log('?? Skipping - missing IDs');",
+                  "        return;",
+                  "    }",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        console.log('? Instructor assigned to AMP test course');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"instructorId\": {{instructorId}},\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": "{{baseUrl}}/api/Course/{{emailTestCourseId}}/assign-instructor"
+          }
+        },
+        {
+          "name": "Create AMP Test Class",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('AMP test class creation', function () {",
+                  "    const courseId = pm.environment.get('emailTestCourseId');",
+                  "    const instructorId = pm.environment.get('instructorId');",
+                  "    if (!courseId || !instructorId) {",
+                  "        console.log('?? Skipping - missing dependencies');",
+                  "        return;",
+                  "    }",
+                  "    pm.expect([201, 400]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 201) {",
+                  "        const response = pm.response.json();",
+                  "        if (response.data && response.data.id) {",
+                  "            pm.environment.set('emailTestClassId', response.data.id);",
+                  "            console.log('? AMP test class created - ID:', response.data.id);",
+                  "        }",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": {{emailTestCourseId}},\n  \"className\": \"AMP101-Test\",\n  \"instructorId\": {{instructorId}},\n  \"classCode\": \"AMP-TEST\",\n  \"maxCapacity\": 5,\n  \"semester\": \"Fall 2024\"\n}"
+            },
+            "url": "{{baseUrl}}/api/Class"
+          }
+        }
+      ]
+    },
+    {
+      "name": "?? AMP EMAIL NOTIFICATION TESTS",
+      "item": [
+        {
+          "name": "?? Test 1: Student Enrollment Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('?? AMP STUDENT ENROLLMENT EMAIL TEST', function () {",
+                  "    const classId = pm.environment.get('emailTestClassId');",
+                  "    const studentId = pm.environment.get('testStudentId');",
+                  "    if (!classId || !studentId) {",
+                  "        console.log('?? Skipping - missing Class/Student ID');",
+                  "        return;",
+                  "    }",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        console.log('? Student enrolled successfully');",
+                  "        console.log('?? AMP ENROLLMENT EMAIL SENT! Check your inbox!');",
+                  "        console.log('?? Email subject: \"Enrolled in Class: [Class Name]\"');",
+                  "        console.log('?? Expected recipient: blackk.mm1@gmail.com');",
+                  "        console.log('?? From: AMP - Assignment Management Platform');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/Class/{{emailTestClassId}}/enroll/{{testStudentId}}"
+          }
+        },
+        {
+          "name": "?? Test 2: Assignment Creation Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('?? AMP ASSIGNMENT CREATION EMAIL TEST', function () {",
+                  "    const classId = pm.environment.get('emailTestClassId');",
+                  "    if (!classId) {",
+                  "        console.log('?? Skipping - missing Class ID');",
+                  "        return;",
+                  "    }",
+                  "    pm.expect([201, 400, 401]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 201) {",
+                  "        const response = pm.response.json();",
+                  "        if (response.data && response.data.id) {",
+                  "            pm.environment.set('emailTestAssignmentId', response.data.id);",
+                  "            console.log('? Assignment created - ID:', response.data.id);",
+                  "            console.log('?? AMP ASSIGNMENT EMAIL SENT! Check your inbox!');",
+                  "            console.log('?? Email subject: \"New Assignment: [Assignment Title]\"');",
+                  "            console.log('?? Expected recipient: blackk.mm1@gmail.com');",
+                  "            console.log('?? From: AMP - Assignment Management Platform');",
+                  "        }",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"AMP Email Notification Test Assignment\",\n  \"description\": \"This assignment was created to test AMP email notifications. Please check your email!\",\n  \"classId\": {{emailTestClassId}},\n  \"type\": \"Individual\",\n  \"dueDate\": \"2024-12-31T23:59:59Z\",\n  \"maxScore\": 100,\n  \"allowLateSubmission\": true,\n  \"allowResubmission\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/Assignment"
+          }
+        },
+        {
+          "name": "Create Test Submission",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Test submission creation', function () {",
+                  "    const assignmentId = pm.environment.get('emailTestAssignmentId');",
+                  "    if (!assignmentId) {",
+                  "        console.log('?? Skipping - missing Assignment ID');",
+                  "        return;",
+                  "    }",
+                  "    pm.expect([201, 400, 401]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 201) {",
+                  "        const response = pm.response.json();",
+                  "        if (response.data && response.data.id) {",
+                  "            pm.environment.set('emailTestSubmissionId', response.data.id);",
+                  "            console.log('? Test submission created - ID:', response.data.id);",
+                  "        }",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignmentId\": {{emailTestAssignmentId}},\n  \"submissionText\": \"This is a test submission for AMP email notification testing. The assignment was completed successfully.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/Submission"
+          }
+        },
+        {
+          "name": "?? Test 3: Grade Email Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('?? AMP GRADE EMAIL NOTIFICATION TEST', function () {",
+                  "    const submissionId = pm.environment.get('emailTestSubmissionId');",
+                  "    if (!submissionId) {",
+                  "        console.log('?? Skipping - missing Submission ID');",
+                  "        return;",
+                  "    }",
+                  "    pm.expect([201, 400, 401]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 201) {",
+                  "        const response = pm.response.json();",
+                  "        if (response.data && response.data.id) {",
+                  "            pm.environment.set('emailTestGradeId', response.data.id);",
+                  "            console.log('? Grade created - ID:', response.data.id);",
+                  "            console.log('?? AMP GRADE EMAIL SENT! Check your inbox!');",
+                  "            console.log('?? Email subject: \"Grade Released: [Assignment Title]\"');",
+                  "            console.log('?? Expected recipient: blackk.mm1@gmail.com');",
+                  "            console.log('?? From: AMP - Assignment Management Platform');",
+                  "        }",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submissionId\": {{emailTestSubmissionId}},\n  \"score\": 95,\n  \"feedback\": \"Excellent work! Your solution demonstrates a deep understanding of the AMP concepts. The code is well-structured and efficient. Keep up the great work!\"\n}"
+            },
+            "url": "{{baseUrl}}/api/Grade"
+          }
+        }
+      ]
+    },
+    {
+      "name": "?? Final AMP Dashboard Check",
+      "item": [
+        {
+          "name": "AMP Admin Dashboard (Final Stats)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Final AMP admin dashboard stats', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    if (response.data) {",
+                  "        console.log('?? FINAL AMP SYSTEM STATS:');",
+                  "        console.log('  ?? Total Users:', response.data.totalUsers || 'N/A');",
+                  "        console.log('  ?? Total Courses:', response.data.totalCourses || 'N/A');",
+                  "        console.log('  ?? Total Classes:', response.data.totalClasses || 'N/A');",
+                  "        console.log('  ?? Total Assignments:', response.data.totalAssignments || 'N/A');",
+                  "        console.log('  ?? Total Submissions:', response.data.totalSubmissions || 'N/A');",
+                  "        console.log('  ?? Total Grades:', response.data.totalGrades || 'N/A');",
+                  "        console.log('');",
+                  "        console.log('?? AMP EMAIL NOTIFICATION TESTS COMPLETED!');",
+                  "        console.log('?? Check your email for:');",
+                  "        console.log('  1. Enrollment welcome email from AMP');",
+                  "        console.log('  2. New assignment notification from AMP');",
+                  "        console.log('  3. Grade notification email from AMP');",
+                  "        console.log('?? All emails sent from: AMP - Assignment Management Platform');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/Dashboard/admin"
+          }
+        }
+      ]
+    }
+  ]
+}

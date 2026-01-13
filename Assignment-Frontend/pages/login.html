@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş Yap - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+  </header>
+
+  <section class="login-container" style="min-height: calc(100vh - 140px); display: flex; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;">
+    <div class="login-card" style="max-width: 400px; width: 100%; background: var(--background); border-radius: 16px; padding: 2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.1); border: 1px solid var(--border);">
+      <!-- Logo/Header - Mobil uygulamaya göre -->
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="width: 60px; height: 60px; border-radius: 30px; background-color: var(--card-orange); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-size: 32px;">
+          🎓
+        </div>
+        <h1 style="font-size: 20px; font-weight: bold; color: var(--text-primary); margin-bottom: 0.25rem;">Giriş Yap</h1>
+        <p class="subtitle" id="roleSubtitle" style="color: var(--text-secondary); font-size: 14px;">Hoş geldiniz!</p>
+      </div>
+
+      <div class="manual-login">
+        <form id="loginForm" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <!-- Email Input -->
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Email</label>
+            <div style="display: flex; align-items: center; background-color: var(--background); border-radius: 8px; border: 1px solid var(--border); padding: 0 10px;">
+              <span style="font-size: 18px; margin-right: 6px;">📧</span>
+              <input type="email" id="email" placeholder="ornek@email.com" required 
+                     style="flex: 1; height: 42px; border: none; outline: none; font-size: 14px; color: var(--text-primary); background: transparent;">
+            </div>
+          </div>
+          
+          <!-- Password Input -->
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Şifre</label>
+            <div style="display: flex; align-items: center; background-color: var(--background); border-radius: 8px; border: 1px solid var(--border); padding: 0 10px;">
+              <span style="font-size: 18px; margin-right: 6px;">🔒</span>
+              <input type="password" id="password" placeholder="Şifreniz" required
+                     style="flex: 1; height: 42px; border: none; outline: none; font-size: 14px; color: var(--text-primary); background: transparent;">
+              <button type="button" id="togglePassword" style="background: none; border: none; padding: 6px; cursor: pointer; font-size: 18px;">👁️</button>
+            </div>
+          </div>
+          
+          <!-- Forgot Password -->
+          <div style="align-self: flex-end; margin-bottom: 1rem;">
+            <a href="#" style="color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none;">Şifremi Unuttum</a>
+          </div>
+          
+          <!-- Login Button -->
+          <button type="submit" id="loginButton" style="background-color: var(--primary); color: var(--text-white); border: none; height: 44px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+            Giriş Yap
+          </button>
+        </form>
+        <p style="text-align: center; margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+          Hesabınız yok mu? <a href="student_teacher_register.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Kayıt Ol</a>
+        </p>
+        <p style="text-align: center; margin-top: 0.5rem;">
+          <a href="index.html" style="color: var(--primary); font-size: 0.8rem; text-decoration: none;">← Ana Sayfaya Dön</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi - Backend API Versiyonu</p>
+    <p style="margin-top: 0.5rem;">
+      <a href="backend-test.html" style="color: #2196F3; font-size: 0.9rem;">🔍 Backend Bağlantı Testi</a>
+    </p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="login.js"></script>
+  <script>
+    // Backend kontrolü kaldırıldı - giriş yaparken kontrol edilecek
+  </script>
+</body>
+</html>

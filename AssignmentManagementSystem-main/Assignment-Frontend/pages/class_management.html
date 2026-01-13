@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sınıf Yönetimi - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <section class="dashboard" id="classManagementPage">
+    <h1>🏫 Sınıf Yönetimi</h1>
+
+    <!-- Çıkış butonu navigation'da var -->
+
+    <div class="section">
+      <h2>Tüm Sınıflarım</h2>
+      <p style="color: #666; margin-bottom: 1rem;">Öğrencilerini görmek için bir sınıfa tıklayın</p>
+      <div id="allClasses" class="assignment-list">
+        <p>Yükleniyor...</p>
+      </div>
+    </div>
+
+    <div class="section" id="studentsSection" style="display: none;">
+      <h2>Sınıf Öğrencileri</h2>
+      <div id="classInfo" class="class-info-box"></div>
+      <div id="studentsList" class="students-list">
+        <p>Yükleniyor...</p>
+      </div>
+    </div>
+
+    <div class="section" id="enrollSection" style="display: none;">
+      <h2>Öğrenci Ekle/Çıkar</h2>
+      <div class="form-row" style="position: relative;">
+        <input type="text" id="studentSearchInput" placeholder="Öğrenci adı, soyadı veya ID girin..." autocomplete="off" style="flex: 1;">
+        <div id="studentSearchResults" style="display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; top: 100%; left: 0; right: 0; margin-top: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+        <button id="enrollStudentBtn">Sınıfa Ekle</button>
+        <button id="unenrollStudentBtn" class="danger-btn">Sınıftan Çıkar</button>
+      </div>
+      <input type="hidden" id="studentIdInput">
+      <div id="enrollResult"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="classManagement.js"></script>
+</body>
+</html>
