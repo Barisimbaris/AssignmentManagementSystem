@@ -167,7 +167,7 @@ namespace AMS.API.Controllers
             var currentUserId = GetCurrentUserId();
             var currentUserRole = GetCurrentUserRole();
 
-            // Permission check: Grup üyesi mi veya instructor m??
+            // Permission check: Grup ï¿½yesi mi veya instructor m??
             if (currentUserRole == "Student")
             {
                 var isMember = group.Members.Any(m => m.StudentId == currentUserId);
@@ -184,7 +184,7 @@ namespace AMS.API.Controllers
                 return Ok(new { hasSubmission = false, group = group });
             }
 
-            // GroupId kontrolü için submission'lar? filtrele (geçici çözüm)
+            // GroupId kontrolï¿½ iï¿½in submission'lar? filtrele (geï¿½ici ï¿½ï¿½zï¿½m)
             var groupSubmission = submissionResult.Data!
                 .Where(s => s.Comments != null && s.Comments.Contains($"GroupId:{groupId}"))
                 .FirstOrDefault();
@@ -194,6 +194,42 @@ namespace AMS.API.Controllers
                 submission = groupSubmission,
                 group = group 
             });
+        }
+
+        /// <summary>
+        /// Add member to group (Student - Leader only)
+        /// </summary>
+        [Authorize(Roles = "Student")]
+        [HttpPost("{groupId}/add-member")]
+        public async Task<IActionResult> AddGroupMember(int groupId, [FromBody] AddGroupMemberRequestDto request)
+        {
+            var leaderStudentId = GetCurrentUserId();
+            var result = await _groupService.AddGroupMemberAsync(groupId, request.StudentId, leaderStudentId);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+            
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Remove member from group (Student - Leader only)
+        /// </summary>
+        [Authorize(Roles = "Student")]
+        [HttpPost("{groupId}/remove-member")]
+        public async Task<IActionResult> RemoveGroupMember(int groupId, [FromBody] RemoveGroupMemberRequestDto request)
+        {
+            var leaderStudentId = GetCurrentUserId();
+            var result = await _groupService.RemoveGroupMemberAsync(groupId, request.StudentId, leaderStudentId);
+            
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+            
+            return Ok(result);
         }
     }
 }

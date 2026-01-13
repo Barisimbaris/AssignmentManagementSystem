@@ -131,17 +131,17 @@ public class SubmissionController : BaseController
         // Validate file
         if (file == null || file.Length == 0)
         {
-            return BadRequest(new { message = "File is required" });
+            return BadRequest(new { message = "Dosya gereklidir" });
         }
 
         if (!_fileService.IsValidFileType(file.FileName, AllowedExtensions))
         {
-            return BadRequest(new { message = $"Invalid file type. Allowed: {string.Join(", ", AllowedExtensions)}" });
+            return BadRequest(new { message = $"Geçersiz dosya türü. İzin verilen türler: {string.Join(", ", AllowedExtensions)}" });
         }
 
         if (_fileService.GetFileSizeInBytes(file) > MaxFileSizeInBytes)
         {
-            return BadRequest(new { message = $"File size exceeds maximum limit of {MaxFileSizeInBytes / (1024 * 1024)} MB" });
+            return BadRequest(new { message = $"Dosya boyutu maksimum limit olan {MaxFileSizeInBytes / (1024 * 1024)} MB'ı aşıyor" });
         }
 
         var studentId = GetCurrentUserId();
@@ -155,7 +155,7 @@ public class SubmissionController : BaseController
             if (!isLeader)
             {
                 Console.WriteLine($"❌ User {studentId} is not leader of group {groupId}");
-                return BadRequest(new { message = "Only group leader can submit for the group" });
+                return BadRequest(new { message = "Sadece grup lideri grup adına ödev teslim edebilir" });
             }
             
             Console.WriteLine($"✅ Leadership confirmed for user {studentId} in group {groupId}");
@@ -199,17 +199,17 @@ public class SubmissionController : BaseController
         // Validate file
         if (file == null || file.Length == 0)
         {
-            return BadRequest(new { message = "File is required" });
+            return BadRequest(new { message = "Dosya gereklidir" });
         }
 
         if (!_fileService.IsValidFileType(file.FileName, AllowedExtensions))
         {
-            return BadRequest(new { message = $"Invalid file type. Allowed: {string.Join(", ", AllowedExtensions)}" });
+            return BadRequest(new { message = $"Geçersiz dosya türü. İzin verilen türler: {string.Join(", ", AllowedExtensions)}" });
         }
 
         if (_fileService.GetFileSizeInBytes(file) > MaxFileSizeInBytes)
         {
-            return BadRequest(new { message = $"File size exceeds maximum limit of {MaxFileSizeInBytes / (1024 * 1024)} MB" });
+            return BadRequest(new { message = $"Dosya boyutu maksimum limit olan {MaxFileSizeInBytes / (1024 * 1024)} MB'ı aşıyor" });
         }
 
         var studentId = GetCurrentUserId();
