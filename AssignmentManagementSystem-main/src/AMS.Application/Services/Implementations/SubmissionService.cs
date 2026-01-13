@@ -19,17 +19,23 @@ namespace AMS.Application.Services.Implementations
         private readonly IAssignmentRepository _assignmentRepository;
         private readonly IUserRepository _userRepository;
         private readonly IGroupService _groupService;
+        private readonly IGroupMemberRepository _groupMemberRepository; // Grup üyeleri için
+        private readonly IEnrollmentRepository _enrollmentRepository; // Öğrencinin class'larını bulmak için
 
         public SubmissionService(
             ISubmissionRepository submissionRepository,
             IAssignmentRepository assignmentRepository,
             IUserRepository userRepository,
-            IGroupService groupService)
+            IGroupService groupService,
+            IGroupMemberRepository groupMemberRepository,
+            IEnrollmentRepository enrollmentRepository)
         {
             _submissionRepository = submissionRepository;
             _assignmentRepository = assignmentRepository;
             _userRepository = userRepository;
             _groupService = groupService;
+            _groupMemberRepository = groupMemberRepository;
+            _enrollmentRepository = enrollmentRepository;
         }
 
         public async Task<Result<SubmissionResponseDto>> GetByIdAsync(int id)
@@ -90,8 +96,86 @@ namespace AMS.Application.Services.Implementations
         public async Task<Result<List<SubmissionResponseDto>>> GetByStudentIdAsync(int studentId)
         {
             var submissions = await _submissionRepository.GetByStudentIdAsync(studentId);
+            
+            // ✅ Grup ödevleri için: Öğrenci bir grubun üyesiyse, liderin submission'ını da göster
+            var groupSubmissions = new List<Submission>();
+            
+            // ✅ Öğrencinin üye olduğu tüm grupları bul (submission yapmış olsun ya da olmasın)
+            // Önce öğrencinin kayıtlı olduğu class'ları bul
+            var enrollments = await _enrollmentRepository.GetByStudentIdAsync(studentId);
+            var classIds = enrollments
+                .Where(e => e.IsActive && !e.IsDeleted)
+                .Select(e => e.ClassId)
+                .Distinct()
+                .ToList();
+            
+            // Bu class'ların grup assignment'larını bul
+            var groupAssignments = new List<Domain.Entities.Assignment>();
+            foreach (var classId in classIds)
+            {
+                var classAssignments = await _assignmentRepository.GetByClassIdAsync(classId);
+                var groupAssignmentsInClass = classAssignments
+                    .Where(a => a.Type == AssignmentType.Group && !a.IsDeleted)
+                    .ToList();
+                groupAssignments.AddRange(groupAssignmentsInClass);
+            }
+            
+            // Her grup assignment için öğrencinin grubunu bul
+            var studentGroups = new List<Domain.Entities.AssignmentGroup>();
+            foreach (var assignment in groupAssignments)
+            {
+                var studentGroup = await _groupMemberRepository.GetStudentGroupAsync(assignment.Id, studentId);
+                if (studentGroup != null)
+                {
+                    studentGroups.Add(studentGroup);
+                }
+            }
+            
+            foreach (var group in studentGroups)
+            {
+                if (group == null || group.Assignment == null) continue;
+                
+                // Grup liderini bul
+                var leader = group.Members?.FirstOrDefault(m => m.IsLeader);
+                if (leader != null && leader.StudentId != studentId)
+                {
+                    // Liderin submission'ını bul
+                    var leaderSubmission = await _submissionRepository.GetByAssignmentAndStudentAsync(
+                        group.AssignmentId, 
+                        leader.StudentId
+                    );
+                    
+                    if (leaderSubmission != null)
+                    {
+                        // Liderin submission'ını ekle (öğrenci kendi submission'ı olarak görecek)
+                        groupSubmissions.Add(leaderSubmission);
+                    }
+                }
+            }
+            
+            // Tüm submission'ları birleştir (kendi submission'ları + grup submission'ları)
+            // Aynı assignment için hem kendi submission hem grup submission varsa, kendi submission'ı öncelikli
+            var allSubmissionsList = new List<Submission>();
+            var addedAssignmentIds = new HashSet<int>();
+            
+            // Önce kendi submission'larını ekle
+            foreach (var sub in submissions)
+            {
+                allSubmissionsList.Add(sub);
+                addedAssignmentIds.Add(sub.AssignmentId);
+            }
+            
+            // Sonra grup submission'larını ekle (eğer aynı assignment için kendi submission'ı yoksa)
+            foreach (var sub in groupSubmissions)
+            {
+                if (!addedAssignmentIds.Contains(sub.AssignmentId))
+                {
+                    allSubmissionsList.Add(sub);
+                    addedAssignmentIds.Add(sub.AssignmentId);
+                }
+            }
 
-            var response = submissions.Select(s => new SubmissionResponseDto
+            var response = allSubmissionsList.Select(s => new SubmissionResponseDto
             {
                 Id = s.Id,
                 AssignmentId = s.AssignmentId,
@@ -106,7 +190,8 @@ namespace AMS.Application.Services.Implementations
                 IsLate = s.IsLate,
                 Comments = s.Comments,
                 Score = s.Grade?.Score,
-                Feedback = s.Grade?.Feedback
+                Feedback = s.Grade?.Feedback,
+                GroupId = s.GroupId // Grup ID'yi de ekle
             }).ToList();
 
             return Result<List<SubmissionResponseDto>>.Success(response);
@@ -125,14 +210,14 @@ namespace AMS.Application.Services.Implementations
 
             if (existingSubmission != null && !assignment.AllowResubmission)
             {
-                return Result<SubmissionResponseDto>.Failure("Resubmission is not allowed for this assignment");
+                return Result<SubmissionResponseDto>.Failure("Bu ödev için yeniden teslim izni verilmemiştir");
             }
 
             var isLate = DateTime.UtcNow > assignment.DueDate;
 
             if (isLate && !assignment.AllowLateSubmission)
             {
-                return Result<SubmissionResponseDto>.Failure("Late submission is not allowed for this assignment");
+                return Result<SubmissionResponseDto>.Failure("Bu ödev için geç teslim izni verilmemiştir");
             }
 
             // Grup ödevi ise grup lideri kontrolü
@@ -140,13 +225,13 @@ namespace AMS.Application.Services.Implementations
             {
                 if (!request.GroupId.HasValue)
                 {
-                    return Result<SubmissionResponseDto>.Failure("Group ID is required for group assignments");
+                    return Result<SubmissionResponseDto>.Failure("Grup ödevleri için grup ID gereklidir");
                 }
 
                 var isLeader = await _groupService.IsUserGroupLeaderAsync(request.GroupId.Value, studentId);
                 if (!isLeader)
                 {
-                    return Result<SubmissionResponseDto>.Failure("Only the group leader can submit assignments for group projects");
+                    return Result<SubmissionResponseDto>.Failure("Grup ödevleri için sadece grup lideri teslim edebilir");
                 }
             }
 
@@ -171,6 +256,18 @@ namespace AMS.Application.Services.Implementations
 
             await _submissionRepository.AddAsync(submission);
             await _submissionRepository.SaveChangesAsync();
+
+            // ✅ LOG: Grup ödevi teslim edildi
+            if (assignment.Type == AssignmentType.Group && request.GroupId.HasValue)
+            {
+                var group = await _groupMemberRepository.GetStudentGroupAsync(assignment.Id, studentId);
+                var leaderUser = await _userRepository.GetByIdAsync(studentId);
+                Console.WriteLine($"[GROUP_LOG] Grup ödevi teslim edildi - Grup: {group?.GroupName ?? "Bilinmiyor"} (ID: {request.GroupId.Value}), " +
+                    $"Assignment: {assignment.Title} (ID: {assignment.Id}), " +
+                    $"Lider: {leaderUser?.FirstName} {leaderUser?.LastName} (ID: {studentId}), " +
+                    $"Dosya: {filePath}, " +
+                    $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+            }
 
             var student = await _userRepository.GetByIdAsync(studentId);
 
@@ -204,14 +301,14 @@ namespace AMS.Application.Services.Implementations
 
             if (submission.StudentId != studentId)
             {
-                throw new UnauthorizedException("You can only resubmit your own submissions");
+                throw new UnauthorizedException("Sadece kendi teslimlerinizi yeniden teslim edebilirsiniz");
             }
 
             var assignment = await _assignmentRepository.GetByIdAsync(submission.AssignmentId);
 
             if (!assignment!.AllowResubmission)
             {
-                return Result<SubmissionResponseDto>.Failure("Resubmission is not allowed for this assignment");
+                return Result<SubmissionResponseDto>.Failure("Bu ödev için yeniden teslim izni verilmemiştir");
             }
 
             // Grup ödevi ise grup lideri kontrolü
@@ -220,7 +317,7 @@ namespace AMS.Application.Services.Implementations
                 var isLeader = await _groupService.IsUserGroupLeaderAsync(submission.GroupId.Value, studentId);
                 if (!isLeader)
                 {
-                    return Result<SubmissionResponseDto>.Failure("Only the group leader can resubmit assignments for group projects");
+                    return Result<SubmissionResponseDto>.Failure("Grup ödevleri için sadece grup lideri yeniden teslim edebilir");
                 }
             }
 

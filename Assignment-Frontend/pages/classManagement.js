@@ -567,9 +567,9 @@ const handleUnenrollStudent = async () => {
   }
 
   try {
-    await apiFetch(`/Class/${classId}/unenroll`, {
-      method: "POST",
-      body: { StudentId: studentId }
+    // Backend endpoint: /Class/{classId}/unenroll/{studentId} - URL parametrelerinden alıyor
+    await apiFetch(`/Class/${classId}/unenroll/${studentId}`, {
+      method: "POST"
     });
 
     showToast("Öğrenci sınıftan çıkarıldı");

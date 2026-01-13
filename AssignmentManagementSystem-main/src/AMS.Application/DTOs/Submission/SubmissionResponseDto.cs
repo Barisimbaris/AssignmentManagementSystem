@@ -22,5 +22,6 @@ namespace AMS.Application.DTOs.Submission
         public string? Comments { get; set; }
         public decimal? Score { get; set; }
         public string? Feedback { get; set; }
+        public int? GroupId { get; set; }
     }
 }

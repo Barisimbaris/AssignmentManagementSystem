@@ -147,7 +147,7 @@ const renderSubmissionsList = (submissions = [], assignment) => {
   let ungroupedSubmissions = [];
 
   if (isGroupAssignment) {
-    // Grup ödevleri: GroupId'ye göre grupla
+    // Grup ödevleri: Sadece liderin submission'ını göster
     const groupMap = new Map();
     
     submissions.forEach(submission => {
@@ -156,15 +156,25 @@ const renderSubmissionsList = (submissions = [], assignment) => {
         if (!groupMap.has(groupId)) {
           groupMap.set(groupId, []);
         }
-        groupMap.get(groupId).push(submission);
+        // Sadece gerçek submission'ları ekle (dummy submission'ları değil)
+        // Dummy submission'lar: FilePath boş, FileSizeInBytes 0, veya Status Submitted/Late/Resubmitted değil
+        const filePath = submission.filePath || submission.FilePath || "";
+        const fileSize = submission.fileSizeInBytes || submission.FileSizeInBytes || 0;
+        const status = submission.status || submission.Status || "";
+        const isRealSubmission = filePath && filePath.trim() !== "" && 
+                                  fileSize > 0 && 
+                                  (status === "Submitted" || status === "Late" || status === "Resubmitted");
+        
+        if (isRealSubmission) {
+          groupMap.get(groupId).push(submission);
+        }
       } else {
         ungroupedSubmissions.push(submission);
       }
     });
     
-    // Grupları sırala (GroupId'ye göre) ve flatten et
+    // Grupları sırala (GroupId'ye göre) ve sadece her grubun ilk submission'ını al (liderin submission'ı)
     const sortedGroups = Array.from(groupMap.entries()).sort((a, b) => {
-      // GroupId'yi parse et (GroupName formatından: "Grup_1" -> 1)
       const groupA = a[1][0]?.groupName || a[1][0]?.GroupName || "";
       const groupB = b[1][0]?.groupName || b[1][0]?.GroupName || "";
       const numA = parseInt(groupA.replace("Grup_", "")) || 0;
@@ -172,8 +182,11 @@ const renderSubmissionsList = (submissions = [], assignment) => {
       return numA - numB;
     });
     
+    // Her gruptan sadece ilk submission'ı al (liderin submission'ı)
     sortedGroups.forEach(([groupId, groupSubmissions]) => {
-      groupedSubmissions.push(...groupSubmissions);
+      if (groupSubmissions.length > 0) {
+        groupedSubmissions.push(groupSubmissions[0]); // Sadece liderin submission'ı
+      }
     });
   } else {
     // Bireysel ödevler: sıralama yok

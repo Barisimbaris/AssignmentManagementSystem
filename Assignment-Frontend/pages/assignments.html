@@ -17,11 +17,25 @@
   </header>
 
   <section class="dashboard" id="assignmentsPage">
-    <h1>Ödev Modülü</h1>
+   <!-- <h1>Ödev Modülü</h1>-->
 
     <div class="section hidden" id="studentAssignmentsSection">
       <h2>Ödevlerim</h2>
       <p>Kayıtlı olduğunuz sınıflara ait ödevler burada listelenir.</p>
+      
+      <!-- Grup Yönetimi Modal -->
+      <div id="groupManagementModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 600px;">
+          <div class="modal-header">
+            <h3 id="groupModalTitle">Grup Oluştur</h3>
+            <button id="closeGroupModal" class="close-btn">&times;</button>
+          </div>
+          <div id="groupManagementContent">
+            <!-- İçerik dinamik olarak yüklenecek -->
+          </div>
+        </div>
+      </div>
+      
       <div id="studentAssignmentsList" class="assignment-list">Yükleniyor...</div>
       
       <!-- Ödev Teslim Modal -->
@@ -41,11 +55,6 @@
               <label for="submissionFileInput">Dosya Seçin (PDF, JPG, PNG):</label>
               <input type="file" id="submissionFileInput" accept=".pdf,.jpg,.jpeg,.png" required>
               <small>Maksimum 10MB</small>
-            </div>
-            <div class="form-group">
-              <label for="submissionGroupId">Grup ID (Sadece grup ödevleri için):</label>
-              <input type="text" id="submissionGroupId" placeholder="Boş bırakabilirsiniz">
-              <small>Grup ödevi değilse boş bırakın</small>
             </div>
             <div class="form-group">
               <label for="submissionComments">Yorum (Opsiyonel):</label>

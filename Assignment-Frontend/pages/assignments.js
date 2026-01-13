@@ -2,7 +2,8 @@ const assignmentsState = {
   role: "",
   classes: [],
   assignments: [],
-  selectedClassId: null
+  selectedClassId: null,
+  currentGroupId: null // Grup ödevi için otomatik alınan grup ID
 };
 
 const assignmentsSelectors = {
@@ -60,17 +61,33 @@ const handleAssignmentsUnauthorized = (error) => {
 };
 
 const showSection = (section) => {
-  if (section) {
-    section.classList.remove("hidden");
-    console.log("[showSection] Section gösterildi:", section.id);
-  } else {
+  if (!section) {
     console.warn("[showSection] Section bulunamadı!");
+    return;
   }
+  
+  // Tüm gizleme class'larını kaldır
+  section.classList.remove("hidden");
+  section.classList.remove("force-hidden");
+  
+  // Inline style ekle - CSS'deki kuralları override etmek için
+  section.style.display = "block";
+  section.style.visibility = "visible";
+  section.style.opacity = "1";
+  section.style.height = "auto";
+  section.style.overflow = "visible";
+  
+  console.log("[showSection] Section gösterildi:", section.id);
+  console.log("[showSection] Section computed display:", window.getComputedStyle(section).display);
+  console.log("[showSection] Section has hidden class:", section.classList.contains("hidden"));
 };
 
 const hideSection = (section) => {
   if (section) {
     section.classList.add("hidden");
+    // CSS'deki !important kurallarını override etmek için inline style ekle
+    section.style.display = "none";
+    section.style.visibility = "hidden";
   }
 };
 
@@ -208,13 +225,19 @@ const renderStudentAssignments = (assignments = []) => {
             <p><small>🕐 Geç teslim izni: ${allowLate ? "✅ Evet" : "❌ Hayır"}</small></p>
             <p><small>🔄 Yeniden teslim izni: ${allowResubmission ? "✅ Evet" : "❌ Hayır"}</small></p>
           </div>
+          ${assignmentType === "Group" || assignmentType === "2" ? 
+            `<div style="margin-top: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;" id="groupManagementSection_${assignmentId}">
+              <button class="submit-btn" onclick="openGroupManagementModal(${assignmentId}, '${escapedTitle}').catch(err => { console.error('Grup yönetimi hatası:', err); showToast('Grup yönetimi açılırken hata oluştu. Lütfen tekrar deneyin.', true); })" style="background: #667eea; margin-bottom: 0.5rem;">
+                👥 Grup Yönetimi
+              </button>
+            </div>` : ''}
           ${isPastDue && !allowLate && !hasSubmission ? 
             '<button class="submit-btn" disabled style="opacity: 0.6; cursor: not-allowed;">❌ Süresi Doldu - Teslim Edilemez</button>' : 
             isPastDue && allowLate && !hasSubmission ?
-            `<button class="submit-btn" onclick="openSubmissionModal(${assignmentId}, '${escapedTitle}', '${assignmentType}')" style="background: #ff9800;">
+            `<button class="submit-btn" id="submitBtn_${assignmentId}" onclick="openSubmissionModal(${assignmentId}, '${escapedTitle}', '${assignmentType}').catch(err => { console.error('Modal açma hatası:', err); showToast('Teslim modalı açılırken hata oluştu. Lütfen tekrar deneyin.', true); })" style="background: #ff9800;">
               ⏰ Geç Teslim Et
             </button>` :
-            `<button class="submit-btn" onclick="openSubmissionModal(${assignmentId}, '${escapedTitle}', '${assignmentType}')">
+            `<button class="submit-btn" id="submitBtn_${assignmentId}" onclick="openSubmissionModal(${assignmentId}, '${escapedTitle}', '${assignmentType}').catch(err => { console.error('Modal açma hatası:', err); showToast('Teslim modalı açılırken hata oluştu. Lütfen tekrar deneyin.', true); })">
               📤 Ödevi Teslim Et
             </button>`}
         </div>
@@ -326,12 +349,30 @@ const loadStudentAssignments = async () => {
 
 const loadTeacherClasses = async () => {
   try {
+    console.log("[loadTeacherClasses] Sınıflar yükleniyor...");
     const response = await apiFetch("/Class/my-classes");
     // apiFetch zaten normalize ediyor
     assignmentsState.classes = Array.isArray(response) ? response : [];
-    populateClassSelect(assignmentsSelectors.classSelect(), assignmentsState.classes);
-    populateClassSelect(assignmentsSelectors.classFilter(), assignmentsState.classes);
+    console.log("[loadTeacherClasses] Yüklenen sınıf sayısı:", assignmentsState.classes.length);
+    
+    const classSelect = assignmentsSelectors.classSelect();
+    const classFilter = assignmentsSelectors.classFilter();
+    
+    if (classSelect) {
+      populateClassSelect(classSelect, assignmentsState.classes);
+      console.log("[loadTeacherClasses] Class select dolduruldu");
+    } else {
+      console.warn("[loadTeacherClasses] Class select bulunamadı!");
+    }
+    
+    if (classFilter) {
+      populateClassSelect(classFilter, assignmentsState.classes);
+      console.log("[loadTeacherClasses] Class filter dolduruldu");
+    } else {
+      console.warn("[loadTeacherClasses] Class filter bulunamadı!");
+    }
   } catch (error) {
+    console.error("[loadTeacherClasses] ❌ Hata:", error);
     if (handleAssignmentsUnauthorized(error)) return;
     showToast(error.message || "Sınıflar alınamadı", true);
   }
@@ -441,15 +482,22 @@ const loadTeacherAssignments = async (classId) => {
   }
 
   try {
+    console.log("[loadTeacherAssignments] Sınıf ID:", classId);
     const response = await apiFetch(`/Assignment/class/${classId}`);
     // apiFetch zaten normalize ediyor
     assignmentsState.assignments = Array.isArray(response) ? response : [];
+    console.log("[loadTeacherAssignments] Yüklenen ödev sayısı:", assignmentsState.assignments.length);
     
-    renderTeacherAssignments(assignmentsState.assignments);
+    if (container) {
+      renderTeacherAssignments(assignmentsState.assignments);
+    } else {
+      console.warn("[loadTeacherAssignments] Teacher list container bulunamadı!");
+    }
   } catch (error) {
+    console.error("[loadTeacherAssignments] ❌ Hata:", error);
     if (handleAssignmentsUnauthorized(error)) return;
     if (container) {
-      container.innerHTML = `<p style="color:red">${error.message}</p>`;
+      container.innerHTML = `<p style="color:red">${error.message || "Ödevler yüklenirken hata oluştu"}</p>`;
     }
   }
 };
@@ -667,14 +715,11 @@ window.clearAssignmentFile = () => {
 };
 
 // Ödev teslim modal'ını aç
-window.openSubmissionModal = (assignmentId, assignmentTitle, assignmentType) => {
+window.openSubmissionModal = async (assignmentId, assignmentTitle, assignmentType) => {
   const modal = assignmentsSelectors.submissionModal();
   const assignmentIdInput = assignmentsSelectors.submissionAssignmentId();
   const assignmentTitleDisplay = assignmentsSelectors.submissionAssignmentTitle();
   const resultContainer = assignmentsSelectors.submissionResult();
-  const groupIdInput = assignmentsSelectors.submissionGroupId();
-  const groupIdLabel = groupIdInput?.closest('.form-group')?.querySelector('label');
-  const groupIdSmall = groupIdInput?.closest('.form-group')?.querySelector('small');
   
   if (!modal || !assignmentIdInput || !assignmentTitleDisplay) {
     showToast("Modal öğeleri bulunamadı", true);
@@ -718,31 +763,27 @@ window.openSubmissionModal = (assignmentId, assignmentTitle, assignmentType) => 
   // Ödev tipini kontrol et
   const isGroupAssignment = assignmentType === "Group" || assignmentType === "2" || assignmentType === 2;
   
-  if (groupIdInput && groupIdLabel && groupIdSmall) {
-    if (isGroupAssignment) {
-      // Grup ödevi - grup ID zorunlu
-      groupIdInput.required = true;
-      groupIdInput.placeholder = "Grup ID girin (zorunlu)";
-      if (groupIdLabel) {
-        groupIdLabel.textContent = "Grup ID (Zorunlu):";
+  // Grup ödevi ise, öğrencinin grubunu otomatik al
+  if (isGroupAssignment) {
+    try {
+      const myGroupResponse = await apiFetch(`/Group/my-group/${assignmentId}`);
+      const myGroup = myGroupResponse?.data || myGroupResponse;
+      if (myGroup && myGroup.id) {
+        // Grup var, grup ID'yi sakla (form submit'te kullanılacak)
+        assignmentsState.currentGroupId = myGroup.id;
+      } else {
+        showToast("Bu grup ödevi için henüz bir grubunuz yok. Lütfen önce grup oluşturun.", true);
+        closeSubmissionModal();
+        return;
       }
-      if (groupIdSmall) {
-        groupIdSmall.textContent = "Bu ödev grup ödevidir. Grup ID girmelisiniz.";
-      }
-      groupIdInput.closest('.form-group')?.classList.remove('hidden');
-    } else {
-      // Bireysel ödev - grup ID gereksiz
-      groupIdInput.required = false;
-      groupIdInput.placeholder = "Boş bırakın (bireysel ödev)";
-      if (groupIdLabel) {
-        groupIdLabel.textContent = "Grup ID (Bireysel ödev için boş bırakın):";
-      }
-      if (groupIdSmall) {
-        groupIdSmall.textContent = "Bu ödev bireysel ödevdir. Grup ID girmeyin.";
-      }
-      // Bireysel ödevde grup ID alanını gizleyelim
-      groupIdInput.closest('.form-group')?.classList.add('hidden');
+    } catch (error) {
+      console.error("[openSubmissionModal] Grup bilgisi alınamadı:", error);
+      showToast("Grup bilgisi alınamadı. Lütfen tekrar deneyin.", true);
+      closeSubmissionModal();
+      return;
     }
+  } else {
+    assignmentsState.currentGroupId = null;
   }
   
   if (resultContainer) {
@@ -785,7 +826,6 @@ const handleSubmissionFormSubmit = async (event) => {
   
   const assignmentId = assignmentsSelectors.submissionAssignmentId()?.value;
   const fileInput = assignmentsSelectors.submissionFileInput();
-  const groupIdInput = assignmentsSelectors.submissionGroupId()?.value.trim();
   const comments = assignmentsSelectors.submissionComments()?.value.trim();
   const resultContainer = assignmentsSelectors.submissionResult();
   
@@ -843,27 +883,15 @@ const handleSubmissionFormSubmit = async (event) => {
     // Geç teslim izni varsa, süre geçse bile bir defalık teslim edilebilir
   }
   
-  // Grup ID kontrolü
+  // Grup ID kontrolü - otomatik alınan grup ID'yi kullan
   let groupIdValue = null;
   if (isGroupAssignment) {
-    // Grup ödevi - grup ID zorunlu
-    if (!groupIdInput || groupIdInput.trim() === "") {
-      showToast("Bu ödev grup ödevidir. Lütfen grup ID girin.", true);
+    // Grup ödevi - otomatik alınan grup ID'yi kullan
+    if (!assignmentsState.currentGroupId) {
+      showToast("Bu ödev grup ödevidir. Lütfen önce grup oluşturun.", true);
       return;
     }
-    
-    const parsedGroupId = parseInt(groupIdInput.trim(), 10);
-    if (isNaN(parsedGroupId) || parsedGroupId <= 0) {
-      showToast("Grup ID geçerli bir pozitif sayı olmalıdır.", true);
-      return;
-    }
-    groupIdValue = parsedGroupId.toString();
-  } else {
-    // Bireysel ödev - grup ID olmamalı
-    if (groupIdInput && groupIdInput.trim() !== "") {
-      showToast("Bu ödev bireysel ödevdir. Grup ID girmemelisiniz.", true);
-      return;
-    }
+    groupIdValue = assignmentsState.currentGroupId.toString();
   }
   
   const formData = new FormData();
@@ -1010,9 +1038,50 @@ const initAssignmentsPage = async () => {
   }
 
   const user = getAuthUser();
+  if (!user) {
+    console.error("[initAssignmentsPage] Kullanıcı bilgisi bulunamadı!");
+    redirectToLogin("Oturum bilgisi bulunamadı");
+    return;
+  }
+  
   assignmentsState.role = (user?.role || "").toLowerCase();
   
   console.log("[initAssignmentsPage] Kullanıcı rolü:", assignmentsState.role, "User:", user);
+
+  // Navigation menüsünü önce güncelle (her zaman)
+  if (typeof updateNavigationByRole === "function") {
+    updateNavigationByRole();
+    // Navigation'ın görünür olduğundan emin ol
+    setTimeout(() => {
+      const nav = document.querySelector("nav");
+      const header = document.querySelector("header");
+      if (nav) {
+        nav.style.setProperty("display", "block", "important");
+        nav.style.setProperty("visibility", "visible", "important");
+        nav.classList.remove("hidden");
+        console.log("[initAssignmentsPage] Navigation görünür yapıldı");
+      }
+      if (header) {
+        header.style.setProperty("display", "flex", "important");
+        header.style.setProperty("visibility", "visible", "important");
+        header.classList.remove("hidden");
+        console.log("[initAssignmentsPage] Header görünür yapıldı");
+      }
+    }, 50);
+  }
+  
+  // Önce section'ları kontrol et ve varsayılan olarak gizle
+  const studentSection = assignmentsSelectors.studentSection();
+  const teacherSection = assignmentsSelectors.teacherSection();
+  
+  if (studentSection) {
+    studentSection.classList.add("hidden");
+    studentSection.style.display = "none";
+  }
+  if (teacherSection) {
+    teacherSection.classList.add("hidden");
+    teacherSection.style.display = "none";
+  }
 
   // Tüm kullanıcılar için event'leri bağla (modal için)
   bindAssignmentEvents();
@@ -1020,27 +1089,65 @@ const initAssignmentsPage = async () => {
   if (assignmentsState.role === "student") {
     console.log("[initAssignmentsPage] Öğrenci sayfası gösteriliyor");
     
-    // Navigation menüsünü güncelle
-    if (typeof updateNavigationByRole === "function") {
-      updateNavigationByRole();
+    // Öğrenci bölümünü göster, öğretmen bölümünü gizle
+    if (studentSection) {
+      studentSection.classList.remove("hidden", "force-hidden");
+      studentSection.style.setProperty("display", "block", "important");
+      studentSection.style.setProperty("visibility", "visible", "important");
+      studentSection.style.setProperty("opacity", "1", "important");
+      console.log("[initAssignmentsPage] Student section gösterildi");
+    }
+    if (teacherSection) {
+      teacherSection.classList.add("hidden", "force-hidden");
+      teacherSection.style.setProperty("display", "none", "important");
+      teacherSection.style.setProperty("visibility", "hidden", "important");
+      teacherSection.style.setProperty("opacity", "0", "important");
+      console.log("[initAssignmentsPage] Teacher section gizlendi");
     }
     
-    showSection(assignmentsSelectors.studentSection());
-    hideSection(assignmentsSelectors.teacherSection());
+    // Ekstra güvenlik: Eğer hala görünmüyorsa, zorla göster
+    setTimeout(() => {
+      if (studentSection) {
+        const computedStyle = window.getComputedStyle(studentSection);
+        const isHidden = computedStyle.display === "none" || 
+                        computedStyle.visibility === "hidden" || 
+                        studentSection.classList.contains("hidden") ||
+                        studentSection.classList.contains("force-hidden");
+        
+        if (isHidden) {
+          console.warn("[initAssignmentsPage] Student section hala gizli, zorla gösteriliyor...");
+          studentSection.classList.remove("hidden", "force-hidden");
+          studentSection.style.setProperty("display", "block", "important");
+          studentSection.style.setProperty("visibility", "visible", "important");
+          studentSection.style.setProperty("opacity", "1", "important");
+          studentSection.style.setProperty("height", "auto", "important");
+          studentSection.style.setProperty("overflow", "visible", "important");
+        }
+        
+        // Öğretmen section'ının gizli olduğundan emin ol
+        if (teacherSection) {
+          teacherSection.classList.add("hidden", "force-hidden");
+          teacherSection.style.setProperty("display", "none", "important");
+          teacherSection.style.setProperty("visibility", "hidden", "important");
+          teacherSection.style.setProperty("opacity", "0", "important");
+        }
+        
+        const finalStyle = window.getComputedStyle(studentSection);
+        console.log("[initAssignmentsPage] Student section final state:", {
+          display: finalStyle.display,
+          visibility: finalStyle.visibility,
+          hasHidden: studentSection.classList.contains("hidden"),
+          hasForceHidden: studentSection.classList.contains("force-hidden")
+        });
+      }
+    }, 300);
+    
     await loadStudentAssignments();
     return;
   }
 
   if (isInstructorRole(assignmentsState.role)) {
     console.log("[initAssignmentsPage] Öğretmen sayfası gösteriliyor");
-    
-    // Navigation menüsünü güncelle
-    if (typeof updateNavigationByRole === "function") {
-      updateNavigationByRole();
-    }
-    
-    const teacherSection = assignmentsSelectors.teacherSection();
-    const studentSection = assignmentsSelectors.studentSection();
     
     console.log("[initAssignmentsPage] Teacher section bulundu:", teacherSection);
     console.log("[initAssignmentsPage] Student section bulundu:", studentSection);
@@ -1053,14 +1160,56 @@ const initAssignmentsPage = async () => {
     
     // Öğrenci bölümünü gizle
     if (studentSection) {
-      studentSection.classList.add("hidden");
-      studentSection.style.display = "none";
+      studentSection.classList.add("hidden", "force-hidden");
+      studentSection.style.setProperty("display", "none", "important");
+      studentSection.style.setProperty("visibility", "hidden", "important");
+      studentSection.style.setProperty("opacity", "0", "important");
+      console.log("[initAssignmentsPage] Student section gizlendi");
     }
     
-    // Öğretmen bölümünü göster - hem class hem style
-    teacherSection.classList.remove("hidden");
-    teacherSection.style.display = "block";
-    teacherSection.style.visibility = "visible";
+    // Öğretmen bölümünü göster
+    teacherSection.classList.remove("hidden", "force-hidden");
+    teacherSection.style.setProperty("display", "block", "important");
+    teacherSection.style.setProperty("visibility", "visible", "important");
+    teacherSection.style.setProperty("opacity", "1", "important");
+    console.log("[initAssignmentsPage] Teacher section gösterildi");
+    
+    // Ekstra güvenlik: Eğer hala görünmüyorsa, zorla göster
+    setTimeout(() => {
+      if (teacherSection) {
+        const computedStyle = window.getComputedStyle(teacherSection);
+        const isHidden = computedStyle.display === "none" || 
+                        computedStyle.visibility === "hidden" || 
+                        teacherSection.classList.contains("hidden") ||
+                        teacherSection.classList.contains("force-hidden");
+        
+        if (isHidden) {
+          console.warn("[initAssignmentsPage] Teacher section hala gizli, zorla gösteriliyor...");
+          teacherSection.classList.remove("hidden", "force-hidden");
+          teacherSection.style.setProperty("display", "block", "important");
+          teacherSection.style.setProperty("visibility", "visible", "important");
+          teacherSection.style.setProperty("opacity", "1", "important");
+          teacherSection.style.setProperty("height", "auto", "important");
+          teacherSection.style.setProperty("overflow", "visible", "important");
+        }
+        
+        // Öğrenci section'ının gizli olduğundan emin ol
+        if (studentSection) {
+          studentSection.classList.add("hidden", "force-hidden");
+          studentSection.style.setProperty("display", "none", "important");
+          studentSection.style.setProperty("visibility", "hidden", "important");
+          studentSection.style.setProperty("opacity", "0", "important");
+        }
+        
+        const finalStyle = window.getComputedStyle(teacherSection);
+        console.log("[initAssignmentsPage] Teacher section final state:", {
+          display: finalStyle.display,
+          visibility: finalStyle.visibility,
+          hasHidden: teacherSection.classList.contains("hidden"),
+          hasForceHidden: teacherSection.classList.contains("force-hidden")
+        });
+      }
+    }, 300);
     
     console.log("[initAssignmentsPage] Teacher section hidden class kaldırıldı");
     console.log("[initAssignmentsPage] Teacher section görünür mü?", !teacherSection.classList.contains("hidden"));
@@ -1121,7 +1270,15 @@ window.handleAssignmentFileDownload = async (event, assignmentId) => {
         errorMessage = errorData.message || errorData.errors?.[0] || errorMessage;
         console.error("[handleAssignmentFileDownload] Backend hatası:", errorData);
       } catch (parseError) {
-        errorMessage = response.status === 404 ? "Dosya bulunamadı" : `HTTP ${response.status}: ${response.statusText}`;
+        if (response.status === 404) {
+          errorMessage = "Dosya bulunamadı";
+        } else if (response.status === 403) {
+          errorMessage = "Bu dosyaya erişim yetkiniz yok";
+        } else if (response.status === 500) {
+          errorMessage = "Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin";
+        } else {
+          errorMessage = `Sunucu hatası (${response.status}): ${response.statusText || "Bilinmeyen hata"}`;
+        }
       }
       
       throw new Error(errorMessage);
@@ -1166,7 +1323,7 @@ window.handleAssignmentFileDownload = async (event, assignmentId) => {
     const blob = await response.blob();
 
     if (blob.size === 0) {
-      throw new Error("Dosya boş veya indirilemedi");
+      throw new Error("Dosya boş veya indirilemedi. Lütfen tekrar deneyin.");
     }
 
     // Dosyayı indir
@@ -1187,7 +1344,390 @@ window.handleAssignmentFileDownload = async (event, assignmentId) => {
   }
 };
 
+// Grup Yönetimi Fonksiyonları
+const openGroupManagementModal = async (assignmentId, assignmentTitle) => {
+  const modal = document.getElementById("groupManagementModal");
+  const modalTitle = document.getElementById("groupModalTitle");
+  const modalContent = document.getElementById("groupManagementContent");
+  
+  if (!modal || !modalTitle || !modalContent) {
+    showToast("Grup yönetimi modal'ı bulunamadı", true);
+    return;
+  }
+  
+  modalTitle.textContent = `Grup Yönetimi - ${assignmentTitle}`;
+  modalContent.innerHTML = "<p>Yükleniyor...</p>";
+  modal.classList.remove("hidden");
+  
+  try {
+    // Öğrencinin grubunu kontrol et
+    const myGroupResponse = await apiFetch(`/Group/my-group/${assignmentId}`);
+    const myGroup = myGroupResponse?.data || myGroupResponse;
+    
+    // Müsait öğrencileri getir
+    const availableStudentsResponse = await apiFetch(`/Group/available-students/${assignmentId}`);
+    const availableStudents = availableStudentsResponse?.data || availableStudentsResponse || [];
+    
+    if (myGroup && myGroup.id) {
+      // Grup var - grup yönetimi göster
+      await renderGroupManagement(assignmentId, myGroup, availableStudents);
+    } else {
+      // Grup yok - grup oluşturma göster
+      await renderGroupCreation(assignmentId, availableStudents);
+    }
+  } catch (error) {
+    console.error("[openGroupManagementModal] Hata:", error);
+    const errorMessage = error.message || "Grup bilgileri yüklenemedi";
+    modalContent.innerHTML = `<p style="color: red; padding: 1rem;">❌ Hata: ${errorMessage}</p>`;
+    showToast(`Grup yönetimi açılırken hata oluştu: ${errorMessage}`, true);
+  }
+};
+
+const renderGroupCreation = async (assignmentId, availableStudents) => {
+  const modalContent = document.getElementById("groupManagementContent");
+  const user = getAuthUser();
+  const currentStudentId = user?.id || user?.Id;
+  
+  const unassignedStudents = availableStudents.filter(s => !s.isInGroup || !s.IsInGroup);
+  
+  modalContent.innerHTML = `
+    <div style="padding: 1rem;">
+      <h4>Yeni Grup Oluştur</h4>
+      <p style="color: #666; margin-bottom: 1rem;">Grup oluşturduğunuzda otomatik olarak grup lideri olursunuz.</p>
+      
+      <form id="createGroupForm">
+        <div class="form-group">
+          <label for="groupNameInput">Grup Adı *</label>
+          <input type="text" id="groupNameInput" placeholder="Örn: Grup 1" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Grup Üyeleri Seçin</label>
+          <div id="availableStudentsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem;">
+            ${unassignedStudents.length === 0 ? 
+              '<p style="color: #666; padding: 1rem; text-align: center;">Tüm öğrenciler zaten bir grupta</p>' :
+              unassignedStudents.map(student => `
+                <label style="display: flex; align-items: center; padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #eee;">
+                  <input type="checkbox" name="memberIds" value="${student.studentId || student.StudentId}" style="margin-right: 0.5rem;">
+                  <div>
+                    <strong>${student.studentName || student.StudentName}</strong>
+                    ${student.studentNumber || student.StudentNumber ? `<small style="color: #666;"> (${student.studentNumber || student.StudentNumber})</small>` : ''}
+                  </div>
+                </label>
+              `).join('')
+            }
+          </div>
+        </div>
+        
+        <div id="createGroupResult"></div>
+        <div class="modal-actions">
+          <button type="button" onclick="closeGroupModal()" class="btn-secondary">İptal</button>
+          <button type="submit" class="btn-primary">Grup Oluştur</button>
+        </div>
+      </form>
+    </div>
+  `;
+  
+  const form = document.getElementById("createGroupForm");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await handleCreateGroup(assignmentId);
+    });
+  }
+};
+
+const renderGroupManagement = async (assignmentId, myGroup, availableStudents) => {
+  const modalContent = document.getElementById("groupManagementContent");
+  const user = getAuthUser();
+  const currentStudentId = user?.id || user?.Id;
+  const isLeader = myGroup.leaderStudentId === currentStudentId || myGroup.LeaderStudentId === currentStudentId;
+  
+  const members = myGroup.members || myGroup.Members || [];
+  const unassignedStudents = availableStudents.filter(s => !s.isInGroup || !s.IsInGroup);
+  
+  modalContent.innerHTML = `
+    <div style="padding: 1rem;">
+      <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h4 style="margin: 0 0 0.5rem 0;">Grup: ${myGroup.groupName || myGroup.GroupName}</h4>
+        <p style="margin: 0; color: #666;">
+          Lider: <strong>${myGroup.leaderName || myGroup.LeaderName}</strong>
+          ${isLeader ? '<span style="background: #4CAF50; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; margin-left: 0.5rem;">Siz</span>' : ''}
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 1.5rem;">
+        <h5>Grup Üyeleri</h5>
+        <div id="groupMembersList" style="border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem;">
+          ${members.map(member => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #eee;">
+              <div>
+                <strong>${member.studentName || member.StudentName}</strong>
+                ${member.isLeader || member.IsLeader ? '<span style="background: #ff9800; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; margin-left: 0.5rem;">Lider</span>' : ''}
+                ${member.studentNumber || member.StudentNumber ? `<small style="color: #666; display: block; margin-top: 0.25rem;">${member.studentNumber || member.StudentNumber}</small>` : ''}
+              </div>
+              ${isLeader && !(member.isLeader || member.IsLeader) && !(myGroup.hasSubmission || myGroup.HasSubmission) ? 
+                `<button onclick="handleRemoveGroupMember(${myGroup.id || myGroup.Id}, ${member.studentId || member.StudentId})" 
+                         style="background: #f44336; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                  Çıkar
+                </button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      ${isLeader && !(myGroup.hasSubmission || myGroup.HasSubmission) ? `
+        <div>
+          <h5>Üye Ekle</h5>
+          <div id="availableStudentsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem; margin-bottom: 1rem;">
+            ${unassignedStudents.length === 0 ? 
+              '<p style="color: #666; padding: 1rem; text-align: center;">Eklenebilecek öğrenci yok</p>' :
+              unassignedStudents.map(student => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #eee;">
+                  <div>
+                    <strong>${student.studentName || student.StudentName}</strong>
+                    ${student.studentNumber || student.StudentNumber ? `<small style="color: #666;"> (${student.studentNumber || student.StudentNumber})</small>` : ''}
+                  </div>
+                  <button onclick="handleAddGroupMember(${myGroup.id || myGroup.Id}, ${student.studentId || student.StudentId})" 
+                          style="background: #4CAF50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                    Ekle
+                  </button>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+      ` : isLeader && (myGroup.hasSubmission || myGroup.HasSubmission) ? `
+        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+          <p style="color: #856404; margin: 0; font-weight: bold;">⚠️ Ödev teslim edildikten sonra grup üyesi eklenemez veya çıkarılamaz.</p>
+        </div>
+      ` : ''}
+      
+      <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+        <p style="color: #666; font-size: 0.9rem;">
+          ${isLeader ? 
+            '💡 Grup lideri olarak üye ekleyip çıkarabilirsiniz. Ödev teslimini sadece siz yapabilirsiniz.' :
+            '💡 Grup üyesisiniz. Ödev teslimini grup lideri yapacaktır.'}
+        </p>
+      </div>
+      
+      <div class="modal-actions" style="margin-top: 1rem;">
+        <button type="button" onclick="closeGroupModal()" class="btn-secondary">Kapat</button>
+      </div>
+    </div>
+  `;
+};
+
+const handleCreateGroup = async (assignmentId) => {
+  const groupNameInput = document.getElementById("groupNameInput");
+  const resultDiv = document.getElementById("createGroupResult");
+  const form = document.getElementById("createGroupForm");
+  
+  if (!groupNameInput || !form) return;
+  
+  const groupName = groupNameInput.value.trim();
+  if (!groupName) {
+    showToast("Grup adı gerekli", true);
+    return;
+  }
+  
+  const checkboxes = form.querySelectorAll('input[name="memberIds"]:checked');
+  const memberIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+  
+  try {
+    const response = await apiFetch("/Group/create", {
+      method: "POST",
+      body: {
+        assignmentId: parseInt(assignmentId),
+        groupName: groupName,
+        memberIds: memberIds
+      }
+    });
+    
+    showToast("✅ Grup başarıyla oluşturuldu! Artık grup liderisiniz.");
+    closeGroupModal();
+    
+    // Ödev listesini yenile
+    await loadStudentAssignments();
+  } catch (error) {
+    console.error("[handleCreateGroup] Hata:", error);
+    const errorMessage = error.message || "Grup oluşturulamadı";
+    if (resultDiv) {
+      resultDiv.innerHTML = `<p style="color: red; padding: 1rem;">❌ ${errorMessage}</p>`;
+    }
+    showToast(`Grup oluşturulurken hata oluştu: ${errorMessage}`, true);
+  }
+};
+
+const handleAddGroupMember = async (groupId, studentId) => {
+  try {
+    await apiFetch(`/Group/${groupId}/add-member`, {
+      method: "POST",
+      body: {
+        studentId: studentId
+      }
+    });
+    
+    showToast("✅ Üye başarıyla eklendi");
+    
+    // Modal'ı yenile
+    const assignmentId = assignmentsState.assignments.find(a => {
+      // Grup bilgisini almak için assignment'ı bul
+      return true; // Geçici çözüm
+    });
+    
+    // Modal'ı kapat ve yeniden aç
+    closeGroupModal();
+    // Assignment ID'yi bulmak için state'i kontrol et
+    const currentAssignment = assignmentsState.assignments.find(a => {
+      // Bu geçici bir çözüm, daha iyi bir yol bulunabilir
+      return true;
+    });
+    
+    if (currentAssignment) {
+      await openGroupManagementModal(currentAssignment.id || currentAssignment.Id, currentAssignment.title || currentAssignment.Title);
+    }
+  } catch (error) {
+    console.error("[handleAddGroupMember] Hata:", error);
+    const errorMessage = error.message || "Üye eklenemedi";
+    showToast(`Üye eklenirken hata oluştu: ${errorMessage}`, true);
+  }
+};
+
+const handleRemoveGroupMember = async (groupId, studentId) => {
+  if (!confirm("Bu üyeyi gruptan çıkarmak istediğinizden emin misiniz?")) {
+    return;
+  }
+  
+  try {
+    await apiFetch(`/Group/${groupId}/remove-member`, {
+      method: "POST",
+      body: {
+        studentId: studentId
+      }
+    });
+    
+    showToast("✅ Üye başarıyla çıkarıldı");
+    
+    // Modal'ı yenile
+    const currentAssignment = assignmentsState.assignments.find(a => {
+      return true; // Geçici çözüm
+    });
+    
+    if (currentAssignment) {
+      closeGroupModal();
+      await openGroupManagementModal(currentAssignment.id || currentAssignment.Id, currentAssignment.title || currentAssignment.Title);
+    }
+  } catch (error) {
+    console.error("[handleRemoveGroupMember] Hata:", error);
+    const errorMessage = error.message || "Üye çıkarılamadı";
+    showToast(`Üye çıkarılırken hata oluştu: ${errorMessage}`, true);
+  }
+};
+
+const closeGroupModal = () => {
+  const modal = document.getElementById("groupManagementModal");
+  if (modal) {
+    modal.classList.add("hidden");
+  }
+};
+
+window.openGroupManagementModal = openGroupManagementModal;
+window.closeGroupModal = closeGroupModal;
+window.handleAddGroupMember = handleAddGroupMember;
+window.handleRemoveGroupMember = handleRemoveGroupMember;
+
+// Modal kapatma event'leri
 document.addEventListener("DOMContentLoaded", () => {
-  if (!assignmentsSelectors.page()) return;
-  initAssignmentsPage();
+  const closeBtn = document.getElementById("closeGroupModal");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeGroupModal);
+  }
+  
+  const modal = document.getElementById("groupManagementModal");
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeGroupModal();
+      }
+    });
+  }
+});
+
+// Grup ödevi için lider kontrolü ve UI güncelleme
+const checkAndUpdateGroupAssignmentUI = async (assignmentId) => {
+  try {
+    const myGroupResponse = await apiFetch(`/Group/my-group/${assignmentId}`);
+    const myGroup = myGroupResponse?.data || myGroupResponse;
+    const user = getAuthUser();
+    const currentStudentId = user?.id || user?.Id;
+    
+    const groupManagementSection = document.getElementById(`groupManagementSection_${assignmentId}`);
+    const submitBtn = document.getElementById(`submitBtn_${assignmentId}`);
+    
+    if (myGroup && myGroup.id) {
+      // Grup var - lider kontrolü yap
+      const isLeader = myGroup.leaderStudentId === currentStudentId || myGroup.LeaderStudentId === currentStudentId;
+      
+      if (!isLeader) {
+        // Lider değil - grup yönetimi ve teslim butonlarını gizle
+        if (groupManagementSection) {
+          groupManagementSection.style.display = "none";
+        }
+        if (submitBtn) {
+          submitBtn.style.display = "none";
+        }
+      } else {
+        // Lider - butonları göster
+        if (groupManagementSection) {
+          groupManagementSection.style.display = "block";
+        }
+        if (submitBtn) {
+          submitBtn.style.display = "block";
+        }
+      }
+    } else {
+      // Grup yok - grup yönetimi butonunu göster, teslim butonunu gizle
+      if (groupManagementSection) {
+        groupManagementSection.style.display = "block";
+      }
+      if (submitBtn) {
+        submitBtn.style.display = "none"; // Grup yoksa teslim edemez
+      }
+    }
+  } catch (error) {
+    console.error("[checkAndUpdateGroupAssignmentUI] Hata:", error);
+    // Hata durumunda butonları göster (varsayılan)
+    // Kullanıcıya hata mesajı gösterme - sessizce devam et
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const page = assignmentsSelectors.page();
+  if (!page) {
+    console.warn("[assignments.js] Assignments page bulunamadı!");
+    return;
+  }
+  
+  console.log("[assignments.js] DOMContentLoaded - Sayfa başlatılıyor...");
+  
+  // initAssignmentsPage'i çalıştır
+  initAssignmentsPage().catch(error => {
+    console.error("[assignments.js] initAssignmentsPage hatası:", error);
+    showToast("Sayfa yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.", true);
+    
+    // Hata durumunda bile section'ları göstermeyi dene
+    const user = getAuthUser();
+    if (user) {
+      const role = (user.role || "").toLowerCase();
+      const studentSection = assignmentsSelectors.studentSection();
+      const teacherSection = assignmentsSelectors.teacherSection();
+      
+      if (role === "student" && studentSection) {
+        showSection(studentSection);
+      } else if ((role === "instructor" || role === "admin") && teacherSection) {
+        showSection(teacherSection);
+      }
+    }
+  });
 });

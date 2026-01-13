@@ -21,6 +21,7 @@ namespace AMS.Application.Services.Implementations
         private readonly INotificationService _notificationService; // ✅ YENİ
         private readonly IAssignmentRepository _assignmentRepository;
         private readonly IEnrollmentRepository _enrollmentRepository;
+        private readonly IGroupMemberRepository _groupMemberRepository; // Grup ödevi için
 
         public GradeService(
             IGradeRepository gradeRepository,
@@ -28,7 +29,8 @@ namespace AMS.Application.Services.Implementations
             IUserRepository userRepository,
             INotificationService notificationService, // ✅ YENİ
             IAssignmentRepository assignmentRepository,
-            IEnrollmentRepository enrollmentRepository)
+            IEnrollmentRepository enrollmentRepository,
+            IGroupMemberRepository groupMemberRepository) // Grup ödevi için
         {
             _gradeRepository = gradeRepository;
             _submissionRepository = submissionRepository;
@@ -36,6 +38,7 @@ namespace AMS.Application.Services.Implementations
             _notificationService = notificationService; // ✅ YENİ
             _assignmentRepository = assignmentRepository;
             _enrollmentRepository = enrollmentRepository;
+            _groupMemberRepository = groupMemberRepository;
         }
 
         public async Task<Result<GradeResponseDto>> GetByIdAsync(int id)
@@ -190,12 +193,116 @@ namespace AMS.Application.Services.Implementations
             await _gradeRepository.AddAsync(grade);
             await _gradeRepository.SaveChangesAsync();
 
+            // ✅ LOG: Not verildi
+            var instructorUser = await _userRepository.GetByIdAsync(instructorId);
+            var studentUser = await _userRepository.GetByIdAsync(submission.StudentId);
+            Console.WriteLine($"[GRADE_LOG] Not verildi - Assignment: {submission.Assignment?.Title ?? "Bilinmiyor"} (ID: {submission.AssignmentId}), " +
+                $"Öğrenci: {studentUser?.FirstName} {studentUser?.LastName} (ID: {submission.StudentId}), " +
+                $"Not: {request.Score}/{submission.Assignment?.MaxScore ?? 0}, " +
+                $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
+                $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+
+            // ✅ Grup ödevi ise: Lidere verilen notu tüm grup üyelerine de ver
+            if (submission.Assignment?.Type == AssignmentType.Group && submission.GroupId.HasValue)
+            {
+                var groupMembers = await _groupMemberRepository.GetGroupMembersAsync(submission.GroupId.Value);
+                
+                foreach (var member in groupMembers)
+                {
+                    // Lider zaten notlandırıldı, diğer üyelere de aynı notu ver
+                    if (member.StudentId != submission.StudentId)
+                    {
+                        // Bu üye için submission var mı kontrol et
+                        var memberSubmission = await _submissionRepository.GetByAssignmentAndStudentAsync(
+                            submission.AssignmentId, 
+                            member.StudentId
+                        );
+                        
+                        // Üye için submission yoksa, liderin submission'ına bağlı grade oluştur
+                        // (GetByStudentIdAsync'de grup submission'larını gösterdiğimiz için üye de görebilecek)
+                        int submissionIdForGrade = submission.Id; // Liderin submission'ı
+                        
+                        if (memberSubmission != null)
+                        {
+                            // Üye için submission var, ona grade ver
+                            var existingMemberGrade = await _gradeRepository.GetBySubmissionIdAsync(memberSubmission.Id);
+                            if (existingMemberGrade == null)
+                            {
+                                var memberGrade = new Grade
+                                {
+                                    SubmissionId = memberSubmission.Id,
+                                    InstructorId = instructorId,
+                                    Score = request.Score,
+                                    Feedback = request.Feedback + " (Grup notu - Lider ile aynı)",
+                                    GradedAt = DateTime.UtcNow,
+                                    IsPublished = request.IsPublished,
+                                    CreatedAt = DateTime.UtcNow,
+                                    IsDeleted = false
+                                };
+                                
+                                await _gradeRepository.AddAsync(memberGrade);
+                            }
+                        }
+                        else
+                        {
+                            // Üye için submission yok, liderin submission'ına bağlı grade oluştur
+                            // Aynı submission'a birden fazla grade olamaz, bu yüzden üye için de aynı submission'a bağlı grade oluşturamayız
+                            // Çözüm: Üye için dummy submission oluştur ve ona grade ver
+                            var dummySubmission = new Submission
+                            {
+                                AssignmentId = submission.AssignmentId,
+                                StudentId = member.StudentId,
+                                GroupId = submission.GroupId,
+                                FilePath = submission.FilePath, // Liderin dosyası
+                                FileType = submission.FileType,
+                                FileSizeInBytes = submission.FileSizeInBytes,
+                                SubmittedAt = submission.SubmittedAt,
+                                Status = submission.Status,
+                                IsLate = submission.IsLate,
+                                Comments = submission.Comments + " (Grup submission - Lider tarafından teslim edildi)",
+                                CreatedAt = DateTime.UtcNow,
+                                IsDeleted = false
+                            };
+                            
+                            await _submissionRepository.AddAsync(dummySubmission);
+                            await _submissionRepository.SaveChangesAsync();
+                            
+                            // Üye için grade oluştur
+                            var memberGrade = new Grade
+                            {
+                                SubmissionId = dummySubmission.Id,
+                                InstructorId = instructorId,
+                                Score = request.Score,
+                                Feedback = request.Feedback + " (Grup notu - Lider ile aynı)",
+                                GradedAt = DateTime.UtcNow,
+                                IsPublished = request.IsPublished,
+                                CreatedAt = DateTime.UtcNow,
+                                IsDeleted = false
+                            };
+                            
+                            await _gradeRepository.AddAsync(memberGrade);
+                            
+                            // ✅ LOG: Grup üyesine not verildi
+                            var memberUser = await _userRepository.GetByIdAsync(member.StudentId);
+                            Console.WriteLine($"[GRADE_LOG] Grup üyesine not verildi - Assignment: {submission.Assignment?.Title ?? "Bilinmiyor"} (ID: {submission.AssignmentId}), " +
+                                $"Grup: {submission.GroupId}, " +
+                                $"Üye: {memberUser?.FirstName} {memberUser?.LastName} (ID: {member.StudentId}), " +
+                                $"Not: {request.Score}/{submission.Assignment?.MaxScore ?? 0} (Grup notu - Lider ile aynı), " +
+                                $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
+                                $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+                        }
+                    }
+                }
+                
+                await _gradeRepository.SaveChangesAsync();
+            }
+
             // ✅ YENİ: Email notification gönder
             await _notificationService.CreateAndSendGradeNotificationAsync(
                 request.SubmissionId, 
                 submission.StudentId, 
                 (int)request.Score, 
-                submission.Assignment.MaxScore
+                submission.Assignment?.MaxScore ?? 0
             );
 
             var instructor = await _userRepository.GetByIdAsync(instructorId);
@@ -255,6 +362,129 @@ namespace AMS.Application.Services.Implementations
 
             await _gradeRepository.UpdateAsync(grade);
             await _gradeRepository.SaveChangesAsync();
+
+            // ✅ Grup ödevi ise: Güncellenen notu tüm grup üyelerine de uygula
+            var submission = grade.Submission;
+            if (submission?.Assignment?.Type == AssignmentType.Group && submission.GroupId.HasValue)
+            {
+                var groupMembers = await _groupMemberRepository.GetGroupMembersAsync(submission.GroupId.Value);
+                var instructorUser = await _userRepository.GetByIdAsync(instructorId);
+                
+                foreach (var member in groupMembers)
+                {
+                    // Lider zaten güncellendi, diğer üyelere de aynı güncellemeyi uygula
+                    if (member.StudentId != submission.StudentId)
+                    {
+                        // Bu üye için submission var mı kontrol et
+                        var memberSubmission = await _submissionRepository.GetByAssignmentAndStudentAsync(
+                            submission.AssignmentId, 
+                            member.StudentId
+                        );
+                        
+                        if (memberSubmission != null)
+                        {
+                            // Üye için submission var, grade'i güncelle veya oluştur
+                            var existingMemberGrade = await _gradeRepository.GetBySubmissionIdAsync(memberSubmission.Id);
+                            
+                            if (existingMemberGrade != null)
+                            {
+                                // Mevcut grade'i güncelle
+                                if (request.Score.HasValue)
+                                {
+                                    existingMemberGrade.Score = request.Score.Value;
+                                }
+                                
+                                if (!string.IsNullOrEmpty(request.Feedback))
+                                {
+                                    // Feedback'e grup notu olduğunu belirt (eğer yoksa ekle)
+                                    var feedbackText = request.Feedback;
+                                    if (!feedbackText.Contains("Grup notu"))
+                                    {
+                                        feedbackText = feedbackText + " (Grup notu - Lider ile aynı)";
+                                    }
+                                    existingMemberGrade.Feedback = feedbackText;
+                                }
+                                
+                                if (request.IsPublished.HasValue)
+                                {
+                                    existingMemberGrade.IsPublished = request.IsPublished.Value;
+                                }
+                                
+                                existingMemberGrade.UpdatedAt = DateTime.UtcNow;
+                                
+                                await _gradeRepository.UpdateAsync(existingMemberGrade);
+                                
+                                // ✅ LOG: Grup üyesinin notu güncellendi
+                                var memberUser = await _userRepository.GetByIdAsync(member.StudentId);
+                                Console.WriteLine($"[GRADE_LOG] Grup üyesinin notu güncellendi - Assignment: {submission.Assignment?.Title ?? "Bilinmiyor"} (ID: {submission.AssignmentId}), " +
+                                    $"Grup: {submission.GroupId}, " +
+                                    $"Üye: {memberUser?.FirstName} {memberUser?.LastName} (ID: {member.StudentId}), " +
+                                    $"Not: {existingMemberGrade.Score}/{submission.Assignment?.MaxScore ?? 0} (Grup notu - Lider ile aynı), " +
+                                    $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
+                                    $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+                            }
+                            else
+                            {
+                                // Üye için grade yok, yeni grade oluştur
+                                var memberGrade = new Grade
+                                {
+                                    SubmissionId = memberSubmission.Id,
+                                    InstructorId = instructorId,
+                                    Score = request.Score ?? grade.Score,
+                                    Feedback = (!string.IsNullOrEmpty(request.Feedback) ? request.Feedback : grade.Feedback) + " (Grup notu - Lider ile aynı)",
+                                    GradedAt = DateTime.UtcNow,
+                                    IsPublished = request.IsPublished ?? grade.IsPublished,
+                                    CreatedAt = DateTime.UtcNow,
+                                    IsDeleted = false
+                                };
+                                
+                                await _gradeRepository.AddAsync(memberGrade);
+                                
+                                // ✅ LOG: Grup üyesine not verildi (güncelleme sırasında)
+                                var memberUser = await _userRepository.GetByIdAsync(member.StudentId);
+                                Console.WriteLine($"[GRADE_LOG] Grup üyesine not verildi (güncelleme) - Assignment: {submission.Assignment?.Title ?? "Bilinmiyor"} (ID: {submission.AssignmentId}), " +
+                                    $"Grup: {submission.GroupId}, " +
+                                    $"Üye: {memberUser?.FirstName} {memberUser?.LastName} (ID: {member.StudentId}), " +
+                                    $"Not: {memberGrade.Score}/{submission.Assignment?.MaxScore ?? 0} (Grup notu - Lider ile aynı), " +
+                                    $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
+                                    $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+                            }
+                        }
+                        else
+                        {
+                            // Üye için submission yok - CreateAsync'de dummy submission oluşturulmuş olmalı
+                            // Eğer CreateAsync'de oluşturulmamışsa, burada da oluşturmayalım (tutarlılık için)
+                            // Bu durumda üye için grade güncellenemez, ancak bu normal bir durum değil
+                            // Çünkü CreateAsync'de grup üyeleri için dummy submission oluşturuluyor
+                            Console.WriteLine($"[GRADE_LOG] UYARI: Grup üyesi (ID: {member.StudentId}) için submission bulunamadı. " +
+                                $"Grup: {submission.GroupId}, Assignment: {submission.AssignmentId}. " +
+                                $"Bu durum CreateAsync'de dummy submission oluşturulmamış olabilir.");
+                        }
+                    }
+                }
+                
+                await _gradeRepository.SaveChangesAsync();
+                
+                // ✅ LOG: Liderin notu güncellendi ve grup üyelerine uygulandı
+                var studentUser = await _userRepository.GetByIdAsync(submission.StudentId);
+                Console.WriteLine($"[GRADE_LOG] Grup ödevi notu güncellendi - Assignment: {submission.Assignment?.Title ?? "Bilinmiyor"} (ID: {submission.AssignmentId}), " +
+                    $"Grup: {submission.GroupId}, " +
+                    $"Lider: {studentUser?.FirstName} {studentUser?.LastName} (ID: {submission.StudentId}), " +
+                    $"Not: {grade.Score}/{submission.Assignment?.MaxScore ?? 0}, " +
+                    $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
+                    $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC - Tüm grup üyelerine uygulandı");
+            }
+            else
+            {
+                // ✅ LOG: Normal ödev notu güncellendi
+                var studentUser = await _userRepository.GetByIdAsync(submission?.StudentId ?? 0);
+                var instructorUser = await _userRepository.GetByIdAsync(instructorId);
+                Console.WriteLine($"[GRADE_LOG] Not güncellendi - Assignment: {submission?.Assignment?.Title ?? "Bilinmiyor"} (ID: {submission?.AssignmentId ?? 0}), " +
+                    $"Öğrenci: {studentUser?.FirstName} {studentUser?.LastName} (ID: {submission?.StudentId ?? 0}), " +
+                    $"Not: {grade.Score}/{submission?.Assignment?.MaxScore ?? 0}, " +
+                    $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
+                    $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+            }
 
             var updated = await _gradeRepository.GetByIdAsync(id);
 

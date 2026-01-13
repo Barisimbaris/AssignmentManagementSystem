@@ -288,9 +288,29 @@ namespace AMS.Application.Services.Implementations
                 throw new NotFoundException("Student", studentId);
             }
 
+            // Önce aktif kayıt var mı kontrol et
             if (await _enrollmentRepository.IsStudentEnrolledAsync(studentId, classId))
             {
                 return Result.Failure("Student is already enrolled in this class");
+            }
+
+            // Silinmiş (IsDeleted=true) kayıt var mı kontrol et - varsa geri aktif et
+            var existingEnrollment = await _enrollmentRepository.GetByStudentAndClassAsync(studentId, classId);
+            if (existingEnrollment != null && existingEnrollment.IsDeleted)
+            {
+                // Silinmiş kaydı geri aktif et
+                existingEnrollment.IsDeleted = false;
+                existingEnrollment.IsActive = true;
+                existingEnrollment.EnrollmentDate = DateTime.UtcNow;
+                existingEnrollment.UpdatedAt = DateTime.UtcNow;
+                
+                await _enrollmentRepository.UpdateAsync(existingEnrollment);
+                await _enrollmentRepository.SaveChangesAsync();
+
+                // ✅ YENİ: Enrollment email notification gönder
+                await _notificationService.CreateAndSendEnrollmentNotificationAsync(classId, studentId);
+
+                return Result.Success("Student re-enrolled successfully");
             }
 
             var currentEnrollment = await _enrollmentRepository.GetEnrollmentCountByClassIdAsync(classId);
@@ -299,13 +319,15 @@ namespace AMS.Application.Services.Implementations
                 return Result.Failure("Class is full");
             }
 
+            // Yeni kayıt oluştur
             var enrollment = new Enrollment
             {
                 StudentId = studentId,
                 ClassId = classId,
                 EnrollmentDate = DateTime.UtcNow,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsDeleted = false
             };
 
             await _enrollmentRepository.AddAsync(enrollment);
@@ -319,11 +341,12 @@ namespace AMS.Application.Services.Implementations
 
         public async Task<Result> UnenrollStudentAsync(int classId, int studentId)
         {
-            var enrollment = await _enrollmentRepository.GetByStudentAndClassAsync(studentId, classId);
+            // Sadece aktif kayıtları getir (silinmiş kayıtları değil)
+            var enrollment = await _enrollmentRepository.GetActiveEnrollmentByStudentAndClassAsync(studentId, classId);
 
             if (enrollment == null)
             {
-                return Result.Failure("Enrollment not found");
+                return Result.Failure("Enrollment not found or student is already unenrolled");
             }
 
             await _enrollmentRepository.DeleteAsync(enrollment);

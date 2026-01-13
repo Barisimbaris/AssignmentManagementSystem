@@ -30,8 +30,17 @@ namespace AMS.Infrastructure.Data.Repositories
 
         public async Task<Enrollment?> GetByStudentAndClassAsync(int studentId, int classId)
         {
+            // IgnoreQueryFilters kullanarak silinmiş kayıtları da getir (re-enroll için gerekli)
             return await _context.Enrollments
+                .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(e => e.StudentId == studentId && e.ClassId == classId);
+        }
+
+        public async Task<Enrollment?> GetActiveEnrollmentByStudentAndClassAsync(int studentId, int classId)
+        {
+            // Sadece aktif (IsDeleted=false ve IsActive=true) kayıtları getir
+            return await _context.Enrollments
+                .FirstOrDefaultAsync(e => e.StudentId == studentId && e.ClassId == classId && !e.IsDeleted && e.IsActive);
         }
 
         public async Task<List<Enrollment>> GetByStudentIdAsync(int studentId)
@@ -72,6 +81,7 @@ namespace AMS.Infrastructure.Data.Repositories
         public Task DeleteAsync(Enrollment enrollment)
         {
             enrollment.IsDeleted = true;
+            enrollment.IsActive = false;
             enrollment.UpdatedAt = DateTime.UtcNow;
             return Task.CompletedTask;
         }

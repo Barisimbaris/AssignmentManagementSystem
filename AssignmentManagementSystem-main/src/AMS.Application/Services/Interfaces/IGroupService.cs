@@ -19,7 +19,11 @@ namespace AMS.Application.Services.Interfaces
         Task<Result<bool>> CanCreateGroupAsync(int assignmentId, int studentId);
         Task<Result<bool>> IsStudentGroupLeaderAsync(int groupId, int studentId);
         
-        // ? MOB?L ?Ç?N EKLEND? - Group leadership kontrolü
+        // MOBIL ICIN EKLENDI - Group leadership kontrol
         Task<bool> IsUserGroupLeaderAsync(int groupId, int userId);
+        
+        // Group member management (Leader only)
+        Task<Result<GroupResponseDto>> AddGroupMemberAsync(int groupId, int studentId, int leaderStudentId);
+        Task<Result<GroupResponseDto>> RemoveGroupMemberAsync(int groupId, int studentId, int leaderStudentId);
     }
 }

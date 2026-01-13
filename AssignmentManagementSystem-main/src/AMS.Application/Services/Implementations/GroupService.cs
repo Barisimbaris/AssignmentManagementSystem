@@ -42,7 +42,7 @@ namespace AMS.Application.Services.Implementations
             Console.WriteLine($"?? Creating group: {request.GroupName} for Assignment: {request.AssignmentId}");
             Console.WriteLine($"?? Leader: {leaderStudentId}, Members: [{string.Join(",", request.MemberIds)}]");
 
-            // 1. Assignment kontrol�
+            // 1. Assignment kontrol�
             var assignment = await _assignmentRepository.GetByIdAsync(request.AssignmentId);
             if (assignment == null)
             {
@@ -70,7 +70,7 @@ namespace AMS.Application.Services.Implementations
                 return Result<GroupResponseDto>.Failure("You are already in a group for this assignment");
             }
 
-            // 4. T�m �yeler s?n?fa kay?tl? m??
+            // 4. T�m �yeler s?n?fa kay?tl? m??
             var classEnrollments = await _enrollmentRepository.GetByClassIdAsync(assignment.ClassId);
             var enrolledStudentIds = classEnrollments.Select(e => e.StudentId).ToHashSet();
 
@@ -89,7 +89,7 @@ namespace AMS.Application.Services.Implementations
                 }
             }
 
-            // 5. �yeler ba?ka grupta m? kontrol et
+            // 5. �yeler ba?ka grupta m? kontrol et
             foreach (var memberId in allMemberIds)
             {
                 var memberExistingGroup = await _memberRepository.GetStudentGroupAsync(request.AssignmentId, memberId);
@@ -115,7 +115,7 @@ namespace AMS.Application.Services.Implementations
 
             Console.WriteLine($"? Group created with ID: {group.Id}");
 
-            // 7. �yeleri ekle
+            // 7. �yeleri ekle
             var members = new List<GroupMember>();
 
             // Leader'? ekle
@@ -128,7 +128,7 @@ namespace AMS.Application.Services.Implementations
             };
             members.Add(leaderMember);
 
-            // Di?er �yeleri ekle
+            // Di?er �yeleri ekle
             foreach (var memberId in request.MemberIds)
             {
                 if (memberId != leaderStudentId) // Leader zaten eklendi
@@ -151,6 +151,23 @@ namespace AMS.Application.Services.Implementations
             await _memberRepository.SaveChangesAsync();
 
             Console.WriteLine($"? Added {members.Count} members to group");
+            
+            // ✅ LOG: Grup oluşturuldu ve üyeler eklendi
+            var leaderUser = await _userRepository.GetByIdAsync(leaderStudentId);
+            var memberNames = new List<string>();
+            foreach (var member in members)
+            {
+                var memberUser = await _userRepository.GetByIdAsync(member.StudentId);
+                if (memberUser != null)
+                {
+                    memberNames.Add($"{memberUser.FirstName} {memberUser.LastName} (ID: {member.StudentId})");
+                }
+            }
+            Console.WriteLine($"[GROUP_LOG] Grup oluşturuldu - Grup: {request.GroupName} (ID: {group.Id}), " +
+                $"Assignment: {assignment.Title} (ID: {assignment.Id}), " +
+                $"Lider: {leaderUser?.FirstName} {leaderUser?.LastName} (ID: {leaderStudentId}), " +
+                $"Üyeler: {string.Join(", ", memberNames)}, " +
+                $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
 
             // 8. Response olu?tur
             var response = await BuildGroupResponseAsync(group, assignment);
@@ -181,7 +198,7 @@ namespace AMS.Application.Services.Implementations
                 return Result<List<AvailableStudentDto>>.Failure("Assignment not found");
             }
 
-            // S?n?fa kay?tl? �?rencileri al
+            // S?n?fa kay?tl? �?rencileri al
             var enrollments = await _enrollmentRepository.GetByClassIdAsync(assignment.ClassId);
             var students = new List<AvailableStudentDto>();
 
@@ -247,14 +264,14 @@ namespace AMS.Application.Services.Implementations
 
         public async Task<Result<bool>> CanCreateGroupAsync(int assignmentId, int studentId)
         {
-            // Assignment grup �devi mi?
+            // Assignment grup �devi mi?
             var assignment = await _assignmentRepository.GetByIdAsync(assignmentId);
             if (assignment?.Type != Domain.Enums.AssignmentType.Group)
             {
                 return Result<bool>.Success(false);
             }
 
-            // �?renci zaten bir grupta m??
+            // �?renci zaten bir grupta m??
             var existingGroup = await _memberRepository.IsStudentInGroupAsync(assignmentId, studentId);
             return Result<bool>.Success(!existingGroup);
         }
@@ -267,7 +284,7 @@ namespace AMS.Application.Services.Implementations
             return Result<bool>.Success(leader != null);
         }
 
-        // ? MOB?L ?�?N EKLEND? - Group leadership kontrol�
+        // ? MOB?L ?�?N EKLEND? - Group leadership kontrol�
         public async Task<bool> IsUserGroupLeaderAsync(int groupId, int userId)
         {
             var members = await _memberRepository.GetGroupMembersAsync(groupId);
@@ -314,6 +331,151 @@ namespace AMS.Application.Services.Implementations
                 HasSubmission = hasSubmission,
                 Members = memberDtos.OrderBy(m => m.IsLeader ? 0 : 1).ThenBy(m => m.StudentNumber).ToList()
             };
+        }
+
+        public async Task<Result<GroupResponseDto>> AddGroupMemberAsync(int groupId, int studentId, int leaderStudentId)
+        {
+            // 1. Grup var mı kontrol et
+            var group = await _groupRepository.GetGroupWithMembersAsync(groupId);
+            if (group == null)
+            {
+                return Result<GroupResponseDto>.Failure("Group not found");
+            }
+
+            // 2. Lider kontrolü
+            var isLeader = await IsUserGroupLeaderAsync(groupId, leaderStudentId);
+            if (!isLeader)
+            {
+                return Result<GroupResponseDto>.Failure("Sadece grup lideri üye ekleyebilir");
+            }
+
+            // 3. Öğrenci zaten grupta mı?
+            var existingMember = group.Members.FirstOrDefault(m => m.StudentId == studentId);
+            if (existingMember != null)
+            {
+                return Result<GroupResponseDto>.Failure("Öğrenci zaten bu grupta");
+            }
+
+            // 4. Öğrenci başka bir grupta mı?
+            var assignment = await _assignmentRepository.GetByIdAsync(group.AssignmentId);
+            var isInAnotherGroup = await _memberRepository.IsStudentInGroupAsync(assignment!.Id, studentId);
+            if (isInAnotherGroup)
+            {
+                return Result<GroupResponseDto>.Failure("Öğrenci bu ödev için başka bir grupta zaten bulunuyor");
+            }
+
+            // ✅ 5. Grup ödevi teslim edilmiş mi kontrol et
+            var groupSubmissions = await _submissionRepository.GetByGroupIdAsync(groupId);
+            var hasRealSubmission = groupSubmissions.Any(s => 
+                !string.IsNullOrWhiteSpace(s.FilePath) && 
+                s.FileSizeInBytes > 0 && 
+                (s.Status == Domain.Enums.SubmissionStatus.Submitted || 
+                 s.Status == Domain.Enums.SubmissionStatus.Late || 
+                 s.Status == Domain.Enums.SubmissionStatus.Resubmitted));
+            
+            if (hasRealSubmission)
+            {
+                Console.WriteLine($"[GROUP_LOG] Üye ekleme engellendi - Grup {groupId} için ödev teslim edilmiş");
+                return Result<GroupResponseDto>.Failure("Ödev teslim edildikten sonra üye eklenemez");
+            }
+
+            // 6. Öğrenci sınıfa kayıtlı mı?
+            var enrollments = await _enrollmentRepository.GetByClassIdAsync(assignment.ClassId);
+            var isEnrolled = enrollments.Any(e => e.StudentId == studentId && e.IsActive && !e.IsDeleted);
+            if (!isEnrolled)
+            {
+                return Result<GroupResponseDto>.Failure("Student is not enrolled in this class");
+            }
+
+            // 6. Üyeyi ekle
+            var newMember = new GroupMember
+            {
+                GroupId = groupId,
+                StudentId = studentId,
+                IsLeader = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _memberRepository.AddAsync(newMember);
+            await _memberRepository.SaveChangesAsync();
+
+            // ✅ LOG: Üye eklendi
+            var addedStudent = await _userRepository.GetByIdAsync(studentId);
+            var leaderUser = await _userRepository.GetByIdAsync(leaderStudentId);
+            Console.WriteLine($"[GROUP_LOG] Üye eklendi - Grup: {group.GroupName} (ID: {groupId}), Assignment: {assignment.Title} (ID: {assignment.Id}), " +
+                $"Eklenen Öğrenci: {addedStudent?.FirstName} {addedStudent?.LastName} (ID: {studentId}), " +
+                $"Lider: {leaderUser?.FirstName} {leaderUser?.LastName} (ID: {leaderStudentId}), " +
+                $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+
+            // 7. Güncellenmiş grup bilgisini döndür
+            var updatedGroup = await _groupRepository.GetGroupWithMembersAsync(groupId);
+            var response = await BuildGroupResponseAsync(updatedGroup!, assignment);
+            
+            return Result<GroupResponseDto>.Success(response, "Member added successfully");
+        }
+
+        public async Task<Result<GroupResponseDto>> RemoveGroupMemberAsync(int groupId, int studentId, int leaderStudentId)
+        {
+            // 1. Grup var mı kontrol et
+            var group = await _groupRepository.GetGroupWithMembersAsync(groupId);
+            if (group == null)
+            {
+                return Result<GroupResponseDto>.Failure("Grup bulunamadı");
+            }
+
+            // 2. Lider kontrolü
+            var isLeader = await IsUserGroupLeaderAsync(groupId, leaderStudentId);
+            if (!isLeader)
+            {
+                return Result<GroupResponseDto>.Failure("Sadece grup lideri üye çıkarabilir");
+            }
+
+            // 3. Üye grupta mı?
+            var member = group.Members.FirstOrDefault(m => m.StudentId == studentId);
+            if (member == null)
+            {
+                return Result<GroupResponseDto>.Failure("Öğrenci bu grubun üyesi değil");
+            }
+
+            // 4. Lideri çıkaramaz
+            if (member.IsLeader)
+            {
+                return Result<GroupResponseDto>.Failure("Grup lideri çıkarılamaz");
+            }
+
+            // ✅ 5. Grup ödevi teslim edilmiş mi kontrol et
+            var groupSubmissions = await _submissionRepository.GetByGroupIdAsync(groupId);
+            var hasRealSubmission = groupSubmissions.Any(s => 
+                !string.IsNullOrWhiteSpace(s.FilePath) && 
+                s.FileSizeInBytes > 0 && 
+                (s.Status == Domain.Enums.SubmissionStatus.Submitted || 
+                 s.Status == Domain.Enums.SubmissionStatus.Late || 
+                 s.Status == Domain.Enums.SubmissionStatus.Resubmitted));
+            
+            if (hasRealSubmission)
+            {
+                Console.WriteLine($"[GROUP_LOG] Üye çıkarma engellendi - Grup {groupId} için ödev teslim edilmiş");
+                return Result<GroupResponseDto>.Failure("Ödev teslim edildikten sonra üye çıkarılamaz");
+            }
+
+            // 6. Üyeyi çıkar
+            await _memberRepository.DeleteAsync(member);
+            await _memberRepository.SaveChangesAsync();
+
+            // ✅ LOG: Üye çıkarıldı
+            var assignment = await _assignmentRepository.GetByIdAsync(group.AssignmentId);
+            var removedStudent = await _userRepository.GetByIdAsync(studentId);
+            var leaderUser = await _userRepository.GetByIdAsync(leaderStudentId);
+            Console.WriteLine($"[GROUP_LOG] Üye çıkarıldı - Grup: {group.GroupName} (ID: {groupId}), Assignment: {assignment!.Title} (ID: {assignment.Id}), " +
+                $"Çıkarılan Öğrenci: {removedStudent?.FirstName} {removedStudent?.LastName} (ID: {studentId}), " +
+                $"Lider: {leaderUser?.FirstName} {leaderUser?.LastName} (ID: {leaderStudentId}), " +
+                $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+
+            // 7. Güncellenmiş grup bilgisini döndür
+            var updatedGroup = await _groupRepository.GetGroupWithMembersAsync(groupId);
+            var response = await BuildGroupResponseAsync(updatedGroup!, assignment!);
+            
+            return Result<GroupResponseDto>.Success(response, "Member removed successfully");
         }
     }
 }

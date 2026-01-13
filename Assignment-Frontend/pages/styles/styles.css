@@ -66,6 +66,12 @@ body {
   line-height: 1.6;
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 a {
@@ -77,17 +83,17 @@ a {
   display: none !important;
 }
 
-/* Assignments sayfası için section override */
-#teacherAssignmentsSection:not(.force-hidden) {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+/* Assignments sayfası için section override - !important kaldırıldı, JavaScript kontrolüne bırakıldı */
+#teacherAssignmentsSection:not(.force-hidden):not(.hidden) {
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
-#studentAssignmentsSection:not(.force-hidden) {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+#studentAssignmentsSection:not(.force-hidden):not(.hidden) {
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 .force-hidden {
@@ -124,9 +130,16 @@ header {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1100; /* Mobile header'ın üzerinde olmalı */
   min-height: 70px;
   border-bottom: 1px solid var(--border);
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 header .logo {
@@ -136,13 +149,20 @@ header .logo {
   padding: 1rem 2rem;
   background: transparent;
   color: var(--text-primary); /* Siyah metin */
+  flex-shrink: 0;
 }
 
 nav {
   flex: 1;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   padding-right: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  max-width: none;
+  flex-shrink: 1;
 }
 
 nav ul {
@@ -153,6 +173,9 @@ nav ul {
   margin: 0;
   padding: 0;
   height: 70px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  justify-content: flex-end !important;
 }
 
 nav ul li {
@@ -2167,7 +2190,8 @@ input[type="file"] {
 
 /* Mobile Uyumluluk */
 @media (max-width: 768px) {
-  header {
+  /* Mobilde header zaten gizleniyor, burada değişiklik yapma */
+  /* header {
     flex-direction: column;
     text-align: center;
   }
@@ -2179,7 +2203,7 @@ input[type="file"] {
   nav ul li {
     display: block;
     margin: 1rem 0;
-  }
+  } */
 
   .assign-new form, .submit-assignment form {
     width: 80%;
@@ -3445,12 +3469,37 @@ input[type="file"] {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 #assignmentsPage {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Assignments sayfası için header düzeltmesi - body içindeki header */
+body > header {
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  z-index: 1100 !important;
+  overflow: visible !important;
 }
 
 /* Section Başlıkları */
@@ -3510,10 +3559,21 @@ input[type="file"] {
 
 /* Desktop'ta header her zaman görünür */
 @media (min-width: 769px) {
+  /* Tüm header'lar için genel kurallar */
   header {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    z-index: 1100 !important;
   }
   
   /* Desktop'ta mobile-header'ı gizle */
@@ -3523,12 +3583,43 @@ input[type="file"] {
   
   /* Assignments sayfası için header kesinlikle görünür */
   .assignments-page header,
-  #assignmentsMainHeader {
+  #assignmentsMainHeader,
+  #assignmentsPage header,
+  body > header {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-    position: relative !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     z-index: 1100 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Assignments sayfası için nav düzeltmesi */
+  #assignmentsPage header nav,
+  header nav,
+  body > header nav {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    padding-right: 1rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  
+  /* Logo için düzeltme */
+  header .logo {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
   }
 }
 
@@ -3538,8 +3629,6 @@ input[type="file"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
-  height: 0 !important;
-  overflow: hidden !important;
 }
 
 /* Öğrenci section varsayılan olarak gizli - JavaScript ile kontrol edilecek */
@@ -3548,25 +3637,20 @@ input[type="file"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
-  height: 0 !important;
-  overflow: hidden !important;
 }
 
-/* Section'lar görünür olduğunda - force-hidden class'ı yoksa */
+/* Section'lar görünür olduğunda - force-hidden ve hidden class'ları yoksa */
+/* !important kaldırıldı - JavaScript inline style'ları öncelikli olacak */
 #teacherAssignmentsSection:not(.force-hidden):not(.hidden) {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  height: auto !important;
-  overflow: visible !important;
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 #studentAssignmentsSection:not(.force-hidden):not(.hidden) {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  height: auto !important;
-  overflow: visible !important;
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Assignments sayfası için özel header kontrolü - JavaScript ile yönetiliyor */

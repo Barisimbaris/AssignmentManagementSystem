@@ -11,6 +11,7 @@ namespace AMS.Domain.Interfaces
     {
         Task<Enrollment?> GetByIdAsync(int id);
         Task<Enrollment?> GetByStudentAndClassAsync(int studentId, int classId);
+        Task<Enrollment?> GetActiveEnrollmentByStudentAndClassAsync(int studentId, int classId);
         Task<List<Enrollment>> GetByStudentIdAsync(int studentId);
         Task<List<Enrollment>> GetByClassIdAsync(int classId);
         Task<int> GetEnrollmentCountByClassIdAsync(int classId);
