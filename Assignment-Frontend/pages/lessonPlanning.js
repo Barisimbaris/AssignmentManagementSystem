@@ -2,7 +2,8 @@
 
 const lessonPlanState = {
   classes: [],
-  lessonPlans: []
+  lessonPlans: [],
+  selectedClassId: null // Mobildeki gibi class filter için
 };
 
 const lessonPlanSelectors = {
@@ -13,7 +14,9 @@ const lessonPlanSelectors = {
   weeklySchedule: () => document.getElementById("weeklySchedule"),
   lessonPlansList: () => document.getElementById("lessonPlansList"),
   lessonPlanForm: () => document.getElementById("lessonPlanForm"),
-  planResult: () => document.getElementById("planResult")
+  planResult: () => document.getElementById("planResult"),
+  filterAll: () => document.getElementById("filterAll"),
+  classFilters: () => document.getElementById("classFilters")
 };
 
 const requireInstructorRoleLessonPlan = () => {
@@ -200,15 +203,95 @@ const renderWeeklySchedule = (plans = []) => {
   container.innerHTML = weeksHTML;
 };
 
+// Class filter render et (mobildeki gibi)
+const renderClassFilters = () => {
+  const filterAll = lessonPlanSelectors.filterAll();
+  const classFilters = lessonPlanSelectors.classFilters();
+  
+  if (!filterAll || !classFilters) return;
+  
+  // Filter all butonunu güncelle
+  filterAll.className = lessonPlanState.selectedClassId === null 
+    ? 'filter-chip filter-chip-active' 
+    : 'filter-chip';
+  filterAll.style.background = lessonPlanState.selectedClassId === null ? 'var(--primary)' : 'white';
+  filterAll.style.color = lessonPlanState.selectedClassId === null ? 'white' : 'var(--text-primary)';
+  filterAll.style.borderColor = lessonPlanState.selectedClassId === null ? 'var(--primary)' : 'var(--border)';
+  
+  // Class filter butonlarını oluştur
+  classFilters.innerHTML = lessonPlanState.classes.map(cls => {
+    const classId = Number(cls.id ?? cls.Id);
+    const courseCode = cls.courseCode || cls.CourseCode || '';
+    const isSelected = lessonPlanState.selectedClassId === classId;
+    
+    return `
+      <button 
+        class="filter-chip ${isSelected ? 'filter-chip-active' : ''}" 
+        data-class-id="${classId}"
+        style="padding: 0.5rem 1rem; border-radius: 20px; border: 2px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}; background: ${isSelected ? 'var(--primary)' : 'white'}; color: ${isSelected ? 'white' : 'var(--text-primary)'}; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 0.9rem;">
+        ${courseCode}
+      </button>
+    `;
+  }).join('');
+  
+  // Event listener'ları ekle
+  filterAll.onclick = () => {
+    lessonPlanState.selectedClassId = null;
+    renderClassFilters();
+    renderLessonPlansList(lessonPlanState.lessonPlans);
+  };
+  
+  classFilters.querySelectorAll('.filter-chip').forEach(btn => {
+    btn.onclick = () => {
+      const classId = parseInt(btn.getAttribute('data-class-id'), 10);
+      lessonPlanState.selectedClassId = classId;
+      renderClassFilters();
+      renderLessonPlansList(lessonPlanState.lessonPlans);
+    };
+  });
+};
+
+// Silme fonksiyonu (mobildeki gibi)
+const handleDeleteLessonPlan = async (planId) => {
+  if (!confirm('Bu ders planını silmek istediğinize emin misiniz?')) {
+    return;
+  }
+  
+  try {
+    await apiFetch(`/LessonPlan/${planId}`, {
+      method: "DELETE"
+    });
+    
+    showToast("✅ Ders planı başarıyla silindi");
+    
+    // Planları yeniden yükle
+    await loadLessonPlans();
+  } catch (error) {
+    if (lessonPlanHandleUnauthorized(error)) return;
+    
+    console.error("[handleDeleteLessonPlan] Hata:", error);
+    showToast(error.message || "Ders planı silinemedi", true);
+  }
+};
+
 const renderLessonPlansList = (plans = []) => {
   const container = lessonPlanSelectors.lessonPlansList();
   if (!container) return;
 
-  if (!plans.length) {
+  // Class filter'a göre filtrele
+  let filteredPlans = plans;
+  if (lessonPlanState.selectedClassId !== null) {
+    filteredPlans = plans.filter(plan => {
+      const planClassId = Number(plan.classId ?? plan.ClassId);
+      return planClassId === lessonPlanState.selectedClassId;
+    });
+  }
+
+  if (!filteredPlans.length) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">📚</div>
-        <h3>Henüz ders planı eklenmemiş</h3>
+        <h3>${lessonPlanState.selectedClassId ? 'Bu sınıf için ders planı yok' : 'Henüz ders planı eklenmemiş'}</h3>
         <p>Sol taraftaki formu kullanarak yeni ders planları ekleyebilirsiniz.</p>
       </div>
     `;
@@ -216,7 +299,7 @@ const renderLessonPlansList = (plans = []) => {
   }
 
   // Tarihe göre sırala (en yakın önce)
-  const sortedPlans = [...plans].sort((a, b) => {
+  const sortedPlans = [...filteredPlans].sort((a, b) => {
     const dateA = new Date(a.startDate || a.StartDate);
     const dateB = new Date(b.startDate || b.StartDate);
     return dateA - dateB;
@@ -236,39 +319,54 @@ const renderLessonPlansList = (plans = []) => {
         const isToday = planDate.toDateString() === today.toDateString();
         const isUpcoming = planDate > today;
 
+        const planId = plan.id || plan.Id;
         const weekNumber = plan.weekNumber || plan.WeekNumber || '?';
         const topic = plan.topic || plan.Topic || 'Başlıksız Ders Planı';
         const courseCode = plan.courseCode || plan.CourseCode || '';
         const className = plan.className || plan.ClassName || 'Sınıf bilgisi yok';
         const description = plan.description || plan.Description || 'Açıklama eklenmemiş';
+        
+        // Class bilgisini bul
+        const classInfo = lessonPlanState.classes.find(c => {
+          const cId = Number(c.id ?? c.Id);
+          const pClassId = Number(plan.classId ?? plan.ClassId);
+          return cId === pClassId;
+        });
+        const displayCourseCode = classInfo ? (classInfo.courseCode || classInfo.CourseCode || courseCode) : courseCode;
+        const displayClassName = classInfo ? (classInfo.className || classInfo.ClassName || className) : className;
 
         return `
-      <div class="lesson-plan-item ${isPast ? 'past-item' : ''} ${isToday ? 'today-item' : ''} ${isUpcoming ? 'upcoming-item' : ''}">
-        <div class="plan-item-header">
-          <div class="plan-week-badge">
-            <span class="week-number">Hafta ${weekNumber}</span>
+      <div class="lesson-plan-item ${isPast ? 'past-item' : ''} ${isToday ? 'today-item' : ''} ${isUpcoming ? 'upcoming-item' : ''}" style="background: white; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="plan-item-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+          <div style="flex: 1;">
+            <div class="plan-week-badge" style="display: inline-block; background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">
+              <span class="week-number">Hafta ${weekNumber}</span>
+            </div>
+            <h4 style="margin: 0.5rem 0; font-size: 1.1rem; color: var(--text-primary);">${topic}</h4>
           </div>
-          ${isToday ? '<span class="status-badge today-status">Bugün</span>' : ''}
-          ${isPast ? '<span class="status-badge past-status">Tamamlandı</span>' : ''}
-          ${isUpcoming ? '<span class="status-badge upcoming-status">Yaklaşan</span>' : ''}
+          <button 
+            onclick="handleDeleteLessonPlan(${planId})" 
+            style="background: #f44336; color: white; border: none; border-radius: 8px; padding: 0.5rem; cursor: pointer; font-size: 1.2rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+            title="Sil">
+            🗑️
+          </button>
         </div>
         <div class="plan-info">
-          <h4>${topic}</h4>
-          <p class="plan-meta">
+          <p class="plan-meta" style="margin: 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem;">
             <span class="meta-item">
               <span class="meta-icon">🏫</span>
-              ${courseCode} - ${className}
+              ${displayCourseCode} - ${displayClassName}
             </span>
           </p>
-          <p class="plan-description">${description}</p>
-          <div class="plan-date-info">
-            <div class="date-item">
-              <span class="date-label">🕐 Başlangıç:</span>
-              <span class="date-value">${formatDateTime(startDate)}</span>
+          ${description && description !== 'Açıklama eklenmemiş' ? `<p class="plan-description" style="margin: 0.75rem 0; color: var(--text-primary); line-height: 1.5;">${description}</p>` : ''}
+          <div class="plan-date-info" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+            <div class="date-item" style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="date-label" style="font-weight: 600; color: var(--text-secondary);">🕐 Başlangıç:</span>
+              <span class="date-value" style="color: var(--text-primary);">${formatDateTime(startDate)}</span>
             </div>
-            <div class="date-item">
-              <span class="date-label">🕐 Bitiş:</span>
-              <span class="date-value">${formatDateTime(endDate)}</span>
+            <div class="date-item" style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="date-label" style="font-weight: 600; color: var(--text-secondary);">🕐 Bitiş:</span>
+              <span class="date-value" style="color: var(--text-primary);">${formatDateTime(endDate)}</span>
             </div>
           </div>
         </div>
@@ -278,6 +376,9 @@ const renderLessonPlansList = (plans = []) => {
     )
     .join("");
 };
+
+// Global scope'a ekle
+window.handleDeleteLessonPlan = handleDeleteLessonPlan;
 
 const loadTeacherClassesForPlan = async () => {
   const select = lessonPlanSelectors.planClassSelect();
@@ -306,6 +407,9 @@ const loadTeacherClassesForPlan = async () => {
     
     console.log("[loadTeacherClassesForPlan] Normalize edilmiş sınıflar:", lessonPlanState.classes);
     populatePlanClassSelect(lessonPlanState.classes);
+    
+    // Class filter'ları render et
+    renderClassFilters();
   } catch (error) {
     if (lessonPlanHandleUnauthorized(error)) return;
     if (select) {
@@ -359,7 +463,7 @@ const loadLessonPlans = async () => {
     
     // Boş liste normal bir durum, hata değil - render fonksiyonları boş durumu handle ediyor
     renderLessonPlansList(lessonPlanState.lessonPlans);
-    renderWeeklySchedule(lessonPlanState.lessonPlans);
+    // renderWeeklySchedule(lessonPlanState.lessonPlans); // Haftalık program kaldırıldı (mobildeki gibi)
   } catch (error) {
     // 500 hatası durumunda boş liste olarak devam et (migration yapılmamış olabilir)
     if (error.status === 500) {

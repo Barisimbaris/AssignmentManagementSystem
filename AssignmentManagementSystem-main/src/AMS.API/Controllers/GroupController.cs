@@ -185,8 +185,9 @@ namespace AMS.API.Controllers
             }
 
             // GroupId kontrol� i�in submission'lar? filtrele (ge�ici ��z�m)
+            // ✅ DÜZELTME: GroupId field'ını direkt kullan (Comments'te arama yapma)
             var groupSubmission = submissionResult.Data!
-                .Where(s => s.Comments != null && s.Comments.Contains($"GroupId:{groupId}"))
+                .Where(s => s.GroupId == groupId)
                 .FirstOrDefault();
             
             return Ok(new { 

@@ -1,0 +1,12 @@
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\bin\Debug\net9.0\AMS.Domain.deps.json
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\bin\Debug\net9.0\AMS.Domain.dll
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\bin\Debug\net9.0\AMS.Domain.pdb
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\AMS.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\AMS.Domain.AssemblyInfoInputs.cache
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\AMS.Domain.AssemblyInfo.cs
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\AMS.Domain.csproj.CoreCompileInputs.cache
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\AMS.Domain.sourcelink.json
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\AMS.Domain.dll
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\refint\AMS.Domain.dll
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\AMS.Domain.pdb
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Domain\obj\Debug\net9.0\ref\AMS.Domain.dll

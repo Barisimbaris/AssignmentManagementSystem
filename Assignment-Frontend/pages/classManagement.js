@@ -264,6 +264,12 @@ const renderAllClasses = (classes = []) => {
         <p><small>Kod: ${cls.classCode || "-"}</small></p>
         <p><small>Dönem: ${cls.semester}</small></p>
         <p><small>Öğrenci: ${cls.currentEnrollment}/${cls.maxCapacity}</small></p>
+        <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
+          <button onclick="event.stopPropagation(); navigateToSchedules(${cls.id}, '${(cls.className || '').replace(/'/g, "\\'")}');" 
+                  style="flex: 1; padding: 0.5rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">
+            📅 Schedule
+          </button>
+        </div>
       </div>
     `)
     .join("");
@@ -699,6 +705,17 @@ const initClassManagement = async () => {
     console.error("[initClassManagement] Sayfa başlatma hatası:", error);
     throw error;
   }
+};
+
+// ✅ YENİ: Schedule sayfasına yönlendir
+window.navigateToSchedules = (classId, className) => {
+  if (!classId) {
+    showToast("Sınıf ID bulunamadı", true);
+    return;
+  }
+  
+  const encodedClassName = encodeURIComponent(className || 'Sınıf');
+  window.location.href = `class_schedules.html?classId=${classId}&className=${encodedClassName}`;
 };
 
 document.addEventListener("DOMContentLoaded", () => {

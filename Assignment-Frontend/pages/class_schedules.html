@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Programı - Ödev Sistemi</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Ödev Sistemi</div>
+    <nav>
+      <ul>
+        <!-- Navigation.js tarafından dinamik olarak doldurulacak -->
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Mobil Header -->
+  <div class="mobile-header" style="display: flex;">
+    <div class="mobile-header-left">
+      <a href="javascript:history.back()" class="mobile-header-icon" style="margin-right: 12px;">←</a>
+      <div class="mobile-header-greeting" id="scheduleClassName">📅 Ders Programı</div>
+    </div>
+    <div class="mobile-header-right">
+      <button id="createScheduleBtn" style="background: var(--primary); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+    </div>
+  </div>
+
+  <section class="dashboard content-with-bottom-nav" id="classSchedulesPage">
+    <!-- Class Seçimi (Her zaman görünür) -->
+    <div id="classSelectorSection" style="padding: 1rem; background: var(--background-secondary); border-bottom: 1px solid var(--border);">
+      <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1rem;">Sınıf Seçiniz</h3>
+      <select id="classSelector" style="width: 100%; padding: 0.75rem; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; background: white;">
+        <option value="">Sınıf seçiniz</option>
+      </select>
+    </div>
+
+    <!-- ✅ YENİ: Liste üstü toolbar (assignments.html gibi) -->
+    <div class="schedules-toolbar" id="schedulesToolbar" style="display: none; flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: white; border-radius: 12px; margin: 0.5rem; border: 1px solid var(--border);">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <h2 style="margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">📅 Ders Programı</h2>
+        <span id="schedulesCountToolbar" style="color: var(--text-secondary); font-size: 0.85rem;">0 schedule</span>
+      </div>
+      <button id="createScheduleToolbarBtn" class="toolbar-create-btn" style="display: none; background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
+        + Schedule Oluştur
+      </button>
+    </div>
+
+    <!-- İstatistik Bar -->
+    <div id="scheduleStatsBar" style="background: var(--background-secondary); padding: 12px; text-align: center; border-bottom: 1px solid var(--border);">
+      <span id="scheduleCount" style="font-weight: 600; color: var(--text-primary);">📅 0 schedule</span>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-placeholder" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p>Schedule'lar yükleniyor...</p>
+    </div>
+
+    <!-- Schedule List -->
+    <div id="schedulesList" class="assignment-list" style="padding: 1rem;">
+      <p>Yükleniyor...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <div class="empty-icon">📅</div>
+      <h3>Henüz schedule yok</h3>
+      <p>Bu sınıf için henüz ders programı eklenmemiş.</p>
+      <button id="createScheduleEmptyBtn" class="btn-primary" style="margin-top: 1rem;">+ Schedule Oluştur</button>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="error-state" style="display: none;">
+      <div class="error-icon">⚠️</div>
+      <h3>Bir hata oluştu</h3>
+      <p id="errorMessage"></p>
+      <button onclick="location.reload()" class="btn-primary">Yeniden Dene</button>
+    </div>
+  </section>
+
+  <!-- Alt Tab Bar -->
+  <div class="bottom-nav">
+    <a href="teacher_dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">🏠</div>
+      <div class="bottom-nav-label">Ana Sayfa</div>
+    </a>
+    <a href="assignments.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">📝</div>
+      <div class="bottom-nav-label">Ödevler</div>
+    </a>
+    <a href="class_management.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👥</div>
+      <div class="bottom-nav-label">Öğrenciler</div>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon">👤</div>
+      <div class="bottom-nav-label">Profil</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Ödev Sistemi</p>
+  </footer>
+
+  <script src="authUtils.js"></script>
+  <script src="navigation.js"></script>
+  <script src="classSchedules.js"></script>
+</body>
+</html>

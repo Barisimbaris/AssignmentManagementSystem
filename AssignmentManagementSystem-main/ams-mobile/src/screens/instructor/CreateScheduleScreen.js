@@ -39,28 +39,53 @@ const CreateScheduleScreen = ({ route, navigation }) => {
   ];
 
   const handleCreate = async () => {
+    // Validasyon
     if (!formData.startTime || !formData.endTime) {
       Alert.alert('Hata', 'Başlangıç ve bitiş saati gereklidir');
+      return;
+    }
+
+    // TimeSpan formatını doğrula ve düzelt
+    const validateAndFormatTime = (time) => {
+      // "HH:mm" formatını kontrol et
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(time)) {
+        return null;
+      }
+      
+      // "HH:mm:ss" formatına çevir (saniyeleri ekle)
+      const parts = time.split(':');
+      const hours = parts[0].padStart(2, '0'); // Tek haneli saatleri 0 ile doldur
+      const minutes = parts[1];
+      return `${hours}:${minutes}:00`;
+    };
+
+    const startTimeSpan = validateAndFormatTime(formData.startTime);
+    const endTimeSpan = validateAndFormatTime(formData.endTime);
+
+    if (!startTimeSpan || !endTimeSpan) {
+      Alert.alert('Hata', 'Saat formatı hatalı. Lütfen HH:mm formatında girin (örn: 09:00, 14:30)');
       return;
     }
 
     try {
       setIsLoading(true);
       
-      // TimeSpan formatı: "HH:mm:ss"
-      const startTimeSpan = `${formData.startTime}:00`;
-      const endTimeSpan = `${formData.endTime}:00`;
-
-      const response = await scheduleAPI.createSchedule({
+      // Payload'u hazırla
+      const payload = {
         classId: formData.classId,
         dayOfWeek: formData.dayOfWeek,
-        startTime: startTimeSpan,
-        endTime: endTimeSpan,
-        roomNumber: formData.roomNumber || null,
-        building: formData.building || null,
-        notes: formData.notes || null,
+        startTime: startTimeSpan,  // "09:00:00" formatında
+        endTime: endTimeSpan,      // "10:30:00" formatında
+        roomNumber: formData.roomNumber && formData.roomNumber.trim() !== '' ? formData.roomNumber.trim() : null,
+        building: formData.building && formData.building.trim() !== '' ? formData.building.trim() : null,
+        notes: formData.notes && formData.notes.trim() !== '' ? formData.notes.trim() : null,
         isActive: formData.isActive,
-      });
+      };
+
+      console.log('📤 Schedule payload:', JSON.stringify(payload, null, 2));
+
+      const response = await scheduleAPI.createSchedule(payload);
 
       if (response.isSuccess) {
         Alert.alert(
@@ -78,7 +103,21 @@ const CreateScheduleScreen = ({ route, navigation }) => {
       }
     } catch (error) {
       console.error('❌ Schedule oluşturma hatası:', error);
-      Alert.alert('Hata', error.message || 'Schedule oluşturulamadı');
+      
+      // Daha detaylı hata mesajı
+      let errorMessage = 'Schedule oluşturulamadı';
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        errorMessage = Object.keys(errors)
+          .map(key => `${key}: ${errors[key].join(', ')}`)
+          .join('\n');
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Hata', errorMessage);
     } finally {
       setIsLoading(false);
     }

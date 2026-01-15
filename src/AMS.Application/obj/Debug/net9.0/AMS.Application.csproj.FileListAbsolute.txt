@@ -1,0 +1,16 @@
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\bin\Debug\net9.0\AMS.Application.deps.json
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\bin\Debug\net9.0\AMS.Application.dll
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\bin\Debug\net9.0\AMS.Application.pdb
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\bin\Debug\net9.0\AMS.Domain.dll
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\bin\Debug\net9.0\AMS.Domain.pdb
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.csproj.AssemblyReference.cache
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.AssemblyInfoInputs.cache
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.AssemblyInfo.cs
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.csproj.CoreCompileInputs.cache
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.sourcelink.json
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Appl.31512A3E.Up2Date
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.dll
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\refint\AMS.Application.dll
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\AMS.Application.pdb
+C:\Users\baris\source\repos\AMS_SON\AssignmentManagementSystem\src\AMS.Application\obj\Debug\net9.0\ref\AMS.Application.dll

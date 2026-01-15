@@ -33,35 +33,41 @@ const GradesScreen = () => {
       setIsLoading(true);
       console.log('📥 Notlar getiriliyor...');
       
-      // Teslimlerimi çek
-      const response = await apiClient.get('/Submission/my-submissions');
+      // Grade endpoint'ini kullan (daha detaylı bilgi için)
+      const response = await apiClient.get('/Grade/my-grades');
       
       console.log('✅ Notlar geldi:', response.data);
       
       if (response.data.isSuccess && response.data.data) {
-        const allSubmissions = response.data.data;
+        const allGrades = response.data.data;
         
-        // Sadece notlandırılmış olanları al
-        const gradedSubmissions = allSubmissions.filter(
-          sub => sub.score !== null && sub.score !== undefined
+        // Sadece yayınlanmış notları al
+        const publishedGrades = allGrades.filter(
+          grade => grade.isPublished !== false && grade.score !== null && grade.score !== undefined
         );
         
-        // İstatistikleri hesapla
-        if (gradedSubmissions.length > 0) {
-          const scores = gradedSubmissions.map(g => g.score);
-          const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+        // İstatistikleri hesapla (maxScore'a göre yüzde hesapla)
+        if (publishedGrades.length > 0) {
+          const percentages = publishedGrades.map(g => {
+            const maxScore = g.maxScore || 100;
+            return (g.score / maxScore) * 100;
+          });
+          
+          const average = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
+          const highest = Math.max(...percentages);
+          const lowest = Math.min(...percentages);
           
           setStats({
-            totalGraded: gradedSubmissions.length,
+            totalGraded: publishedGrades.length,
             averageGrade: Math.round(average),
-            highestGrade: Math.max(...scores),
-            lowestGrade: Math.min(...scores),
+            highestGrade: Math.round(highest),
+            lowestGrade: Math.round(lowest),
           });
         }
         
         // Tarihe göre sırala (en yeni önce)
-        const sortedGrades = gradedSubmissions.sort(
-          (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+        const sortedGrades = publishedGrades.sort(
+          (a, b) => new Date(b.gradedAt || b.createdAt) - new Date(a.gradedAt || a.createdAt)
         );
         
         setGrades(sortedGrades);
@@ -86,10 +92,10 @@ const GradesScreen = () => {
   const getGradeColor = (score, maxScore = 100) => {
     const percentage = (score / maxScore) * 100;
     
-    if (percentage >= 90) return colors.success;
-    if (percentage >= 75) return colors.info;
-    if (percentage >= 60) return colors.warning;
-    return colors.error;
+    if (percentage >= 90) return colors.success || '#4CAF50';
+    if (percentage >= 75) return colors.info || '#2196F3';
+    if (percentage >= 60) return colors.warning || '#FF9800';
+    return colors.error || '#F44336';
   };
 
   const getGradeEmoji = (score, maxScore = 100) => {
@@ -102,7 +108,9 @@ const GradesScreen = () => {
   };
 
   const renderGradeCard = ({ item }) => {
-    const percentage = Math.round((item.score / 100) * 100);
+    const maxScore = item.maxScore || 100;
+    const percentage = Math.round((item.score / maxScore) * 100);
+    const courseInfo = item.courseCode || item.courseName ? `${item.courseCode || ''} ${item.courseName || ''}`.trim() : null;
     
     return (
       <View style={styles.gradeCard}>
@@ -110,22 +118,26 @@ const GradesScreen = () => {
         <View style={styles.gradeHeader}>
           <View style={styles.gradeHeaderLeft}>
             <Text style={styles.assignmentTitle}>{item.assignmentTitle}</Text>
+            {courseInfo && (
+              <Text style={styles.courseInfo}>{courseInfo}</Text>
+            )}
             <Text style={styles.submittedDate}>
-              Teslim: {new Date(item.submittedAt).toLocaleDateString('tr-TR', {
+              Notlandırıldı: {new Date(item.gradedAt || item.createdAt).toLocaleDateString('tr-TR', {
                 day: 'numeric',
                 month: 'long',
+                year: 'numeric',
               })}
             </Text>
           </View>
           <View style={styles.emojiContainer}>
-            <Text style={styles.gradeEmoji}>{getGradeEmoji(item.score)}</Text>
+            <Text style={styles.gradeEmoji}>{getGradeEmoji(item.score, maxScore)}</Text>
           </View>
         </View>
 
         {/* Score */}
-        <View style={[styles.scoreBox, { backgroundColor: getGradeColor(item.score) }]}>
+        <View style={[styles.scoreBox, { backgroundColor: getGradeColor(item.score, maxScore) }]}>
           <Text style={styles.scoreText}>{item.score}</Text>
-          <Text style={styles.scoreMaxText}>/ 100</Text>
+          <Text style={styles.scoreMaxText}>/ {maxScore}</Text>
         </View>
 
         {/* Percentage Bar */}
@@ -135,12 +147,20 @@ const GradesScreen = () => {
               styles.progressBar, 
               { 
                 width: `${percentage}%`,
-                backgroundColor: getGradeColor(item.score)
+                backgroundColor: getGradeColor(item.score, maxScore)
               }
             ]} 
           />
         </View>
         <Text style={styles.percentageText}>{percentage}%</Text>
+        
+        {/* Instructor Info */}
+        {item.instructorName && (
+          <View style={styles.instructorInfo}>
+            <Text style={styles.instructorLabel}>👤 Öğretmen:</Text>
+            <Text style={styles.instructorName}>{item.instructorName}</Text>
+          </View>
+        )}
 
         {/* Feedback */}
         {item.feedback && (
@@ -325,6 +345,14 @@ const styles = StyleSheet.create({
   submittedDate: {
     fontSize: 13,
     color: colors.textSecondary,
+    marginTop: 4,
+  },
+  courseInfo: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '500',
+    marginTop: 2,
+    marginBottom: 4,
   },
   emojiContainer: {
     width: 50,
@@ -390,6 +418,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textPrimary,
     lineHeight: 20,
+  },
+  instructorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  instructorLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginRight: 6,
+  },
+  instructorName: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    fontWeight: '500',
   },
   emptyContainer: {
     flex: 1,

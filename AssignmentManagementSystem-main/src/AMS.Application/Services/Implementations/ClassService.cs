@@ -158,6 +158,55 @@ namespace AMS.Application.Services.Implementations
             return Result<List<ClassResponseDto>>.Success(response);
         }
 
+        public async Task<Result<List<ClassResponseDto>>> GetByStudentIdAsync(int studentId)
+        {
+            // Öğrencinin enrollment'larını al
+            var enrollments = await _enrollmentRepository.GetByStudentIdAsync(studentId);
+            
+            // Sadece aktif ve silinmemiş enrollment'ları filtrele
+            var activeEnrollments = enrollments
+                .Where(e => e.IsActive && !e.IsDeleted)
+                .ToList();
+            
+            if (!activeEnrollments.Any())
+            {
+                return Result<List<ClassResponseDto>>.Success(new List<ClassResponseDto>());
+            }
+            
+            var response = new List<ClassResponseDto>();
+            
+            foreach (var enrollment in activeEnrollments)
+            {
+                // Class'ı getir
+                var classEntity = await _classRepository.GetByIdAsync(enrollment.ClassId);
+                
+                if (classEntity == null || classEntity.IsDeleted)
+                {
+                    continue; // Silinmiş class'ları atla
+                }
+                
+                var enrollmentCount = await _enrollmentRepository.GetEnrollmentCountByClassIdAsync(classEntity.Id);
+                
+                response.Add(new ClassResponseDto
+                {
+                    Id = classEntity.Id,
+                    CourseId = classEntity.CourseId,
+                    CourseName = classEntity.Course?.CourseName ?? string.Empty,
+                    CourseCode = classEntity.Course?.CourseCode ?? string.Empty,
+                    ClassName = classEntity.ClassName,
+                    ClassCode = classEntity.ClassCode,
+                    InstructorId = classEntity.InstructorId,
+                    InstructorName = $"{classEntity.Instructor?.FirstName ?? ""} {classEntity.Instructor?.LastName ?? ""}".Trim(),
+                    MaxCapacity = classEntity.MaxCapacity,
+                    CurrentEnrollment = enrollmentCount,
+                    Semester = classEntity.Semester,
+                    CreatedAt = classEntity.CreatedAt
+                });
+            }
+            
+            return Result<List<ClassResponseDto>>.Success(response);
+        }
+
         public async Task<Result<ClassResponseDto>> CreateAsync(CreateClassRequestDto request,
     int instructorId)
         {

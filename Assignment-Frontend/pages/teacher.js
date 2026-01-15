@@ -1,6 +1,7 @@
 const teacherState = {
   courses: [],
-  classes: []
+  classes: [],
+  weeklySchedule: [] // ✅ YENİ: Haftalık program için
 };
 
 const teacherSelectors = {
@@ -16,8 +17,8 @@ const teacherSelectors = {
   classCodeInput: () => document.getElementById("classCode"),
   maxCapacityInput: () => document.getElementById("maxCapacity"),
   semesterInput: () => document.getElementById("semester"),
-  createCourseForm: () => document.getElementById("createCourseForm"),
-  createCourseResult: () => document.getElementById("createCourseResult")
+  teacherClassesList: () => document.getElementById("teacherClassesList"), // ✅ YENİ
+  teacherWeeklySchedule: () => document.getElementById("teacherWeeklySchedule") // ✅ YENİ
 };
 
 const requireInstructorRole = () => {
@@ -211,45 +212,6 @@ const loadTeacherCourses = async () => {
   }
 };
 
-const handleEditCourse = (courseId) => {
-  const course = teacherState.courses.find(c => c.id === courseId);
-  if (!course) {
-    showToast("Ders bulunamadı", true);
-    return;
-  }
-  // Basit düzenleme - şimdilik prompt ile
-  const newName = prompt("Yeni ders adı:", course.courseName);
-  if (!newName || newName === course.courseName) return;
-  
-  // API çağrısı yap
-  (async () => {
-    try {
-      await apiFetch(`/Course/${courseId}`, {
-        method: "PUT",
-        body: { courseName: newName }
-      });
-      showToast("Ders başarıyla güncellendi!");
-      await loadTeacherCourses();
-    } catch (error) {
-      showToast(error.message || "Güncelleme başarısız", true);
-    }
-  })();
-};
-
-const handleDeleteCourse = async (courseId) => {
-  if (!confirm("Bu dersi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) {
-    return;
-  }
-  try {
-    await apiFetch(`/Course/${courseId}`, {
-      method: "DELETE"
-    });
-    showToast("Ders başarıyla silindi!");
-    await loadTeacherCourses();
-  } catch (error) {
-    showToast(error.message || "Silme başarısız", true);
-  }
-};
 
 const handleEditClass = (classId) => {
   const cls = teacherState.classes.find(c => c.id === classId);
@@ -290,8 +252,6 @@ const handleDeleteClass = async (classId) => {
 };
 
 // Global scope'a ekle
-window.handleEditCourse = handleEditCourse;
-window.handleDeleteCourse = handleDeleteCourse;
 window.handleEditClass = handleEditClass;
 window.handleDeleteClass = handleDeleteClass;
 
@@ -312,10 +272,6 @@ const renderTeacherCourses = (courses = []) => {
         <p>${course.department || ""} - AKTS: ${course.creditHours ?? "-"}</p>
         <p><small>${course.description || ""}</small></p>
         <p><small>Akademik Yıl: ${course.academicYear || "-"}</small></p>
-        <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-          <button onclick="handleEditCourse(${course.id})" style="padding: 0.5rem; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">Düzenle</button>
-          <button onclick="handleDeleteCourse(${course.id})" style="padding: 0.5rem; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Sil</button>
-        </div>
       </div>
     `
     )
@@ -353,8 +309,13 @@ const renderTeacherClasses = (classes = []) => {
 
 const loadTeacherClasses = async () => {
   const container = teacherSelectors.classList();
+  const mobileContainer = teacherSelectors.teacherClassesList();
+  
   if (container) {
     container.textContent = "Yükleniyor...";
+  }
+  if (mobileContainer) {
+    mobileContainer.innerHTML = '<div style="text-align: center; padding: 1rem; color: var(--text-secondary);">Yükleniyor...</div>';
   }
 
   try {
@@ -362,11 +323,69 @@ const loadTeacherClasses = async () => {
     // apiFetch zaten normalize ediyor, direkt array veya Result wrapper'dan data dönebilir
     teacherState.classes = Array.isArray(response) ? response : (response?.data || response?.Data || []);
     renderTeacherClasses(teacherState.classes);
+    renderTeacherClassesMobile(teacherState.classes); // ✅ YENİ: Mobil görünümü render et
   } catch (error) {
     if (teacherHandleUnauthorized(error)) return;
     if (container) {
       container.innerHTML = `<p style="color:red">${error.message}</p>`;
     }
+    if (mobileContainer) {
+      mobileContainer.innerHTML = `<p style="color:red; text-align: center; padding: 1rem;">${error.message}</p>`;
+    }
+  }
+};
+
+// ✅ YENİ: Mobil görünüm için class'ları render et
+const renderTeacherClassesMobile = (classes = []) => {
+  const container = teacherSelectors.teacherClassesList();
+  if (!container) return;
+
+  if (!classes.length) {
+    container.innerHTML = `
+      <div style="background: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center;">
+        <p style="color: var(--text-secondary); margin: 0;">Henüz sınıf oluşturmadınız.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // İlk 3 class'ı göster (mobildeki gibi)
+  const displayClasses = classes.slice(0, 3);
+  
+  container.innerHTML = displayClasses
+    .map((cls) => {
+      const className = cls.className || cls.ClassName || "Sınıf";
+      const courseCode = cls.courseCode || cls.CourseCode || "";
+      const courseName = cls.courseName || cls.CourseName || "";
+      const currentEnrollment = cls.currentEnrollment || cls.CurrentEnrollment || 0;
+      const classId = cls.id || cls.Id;
+      
+      return `
+        <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div style="flex: 1;">
+              <h4 style="margin: 0 0 4px 0; font-size: 1.1rem; color: var(--text-primary); font-weight: bold;">${className}</h4>
+              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">${courseName} (${courseCode})</p>
+              <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: var(--primary); font-weight: 600;">👥 ${currentEnrollment} öğrenci</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <a href="class_management.html" style="flex: 1; background: var(--background-secondary); padding: 8px; border-radius: 8px; text-align: center; text-decoration: none; color: var(--primary); font-weight: 600; font-size: 0.85rem;">👥 Öğrenciler</a>
+            <a href="class_schedules.html?classId=${classId}&className=${encodeURIComponent(className)}" style="flex: 1; background: var(--background-secondary); padding: 8px; border-radius: 8px; text-align: center; text-decoration: none; color: var(--primary); font-weight: 600; font-size: 0.85rem;">📅 Schedule</a>
+            <a href="assignments.html?classId=${classId}" style="flex: 1; background: var(--background-secondary); padding: 8px; border-radius: 8px; text-align: center; text-decoration: none; color: var(--primary); font-weight: 600; font-size: 0.85rem;">📚 Ödevler</a>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+  
+  // Eğer 3'ten fazla class varsa "Tümünü Gör" linki ekle
+  if (classes.length > 3) {
+    container.innerHTML += `
+      <a href="class_management.html" style="display: block; background: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; text-decoration: none; color: var(--primary); font-weight: 600; margin-top: 8px;">
+        + ${classes.length - 3} daha fazla sınıf gör
+      </a>
+    `;
   }
 };
 
@@ -455,228 +474,12 @@ const handleCreateClass = async (event) => {
   }
 };
 
-const handleCreateCourse = async (event) => {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  console.log("[handleCreateCourse] ========== BAŞLADI ==========");
-
-  const form = teacherSelectors.createCourseForm();
-  if (!form) {
-    console.error("[handleCreateCourse] ❌ Form bulunamadı!");
-    showToast("Form bulunamadı! Sayfayı yenileyin.", true);
-    return;
-  }
-  console.log("[handleCreateCourse] ✅ Form bulundu");
-
-  const courseCode = document.getElementById("courseCode")?.value.trim();
-  const courseName = document.getElementById("courseName")?.value.trim();
-  const description = document.getElementById("courseDescription")?.value.trim();
-  const department = document.getElementById("courseDepartment")?.value.trim();
-  const creditHoursInput = document.getElementById("creditHours")?.value;
-  const creditHours = parseInt(creditHoursInput || "0", 10);
-  const academicYear = document.getElementById("academicYear")?.value.trim();
-  const resultContainer = teacherSelectors.createCourseResult();
-
-  console.log("[handleCreateCourse] Form değerleri:", {
-    courseCode,
-    courseName,
-    department,
-    creditHours,
-    academicYear
-  });
-
-  if (!courseCode || !courseName || !department || !creditHours || !academicYear) {
-    const missing = [];
-    if (!courseCode) missing.push("Ders Kodu");
-    if (!courseName) missing.push("Ders Adı");
-    if (!department) missing.push("Bölüm");
-    if (!creditHours) missing.push("AKTS");
-    if (!academicYear) missing.push("Akademik Yıl");
-    const message = `Lütfen şu alanları doldurun: ${missing.join(", ")}`;
-    console.error("[handleCreateCourse] ❌", message);
-    showToast(message, true);
-    if (resultContainer) {
-      resultContainer.innerHTML = `<p style='color:red'>${message}</p>`;
-    }
-    return;
-  }
-
-  // AcademicYear formatını kontrol et (YYYY-YYYY)
-  if (!/^\d{4}-\d{4}$/.test(academicYear)) {
-    const message = "Akademik Yıl formatı hatalı! Örnek: 2024-2025";
-    console.error("[handleCreateCourse] ❌", message);
-    showToast(message, true);
-    if (resultContainer) {
-      resultContainer.innerHTML = `<p style='color:red'>${message}</p>`;
-    }
-    return;
-  }
-
-  // .NET API camelCase kabul ediyor (default JSON serializer)
-  const body = {
-    courseCode: courseCode,
-    courseName: courseName,
-    description: description || null,
-    department: department,
-    creditHours: creditHours,
-    academicYear: academicYear
-  };
-
-  console.log("[handleCreateCourse] Gönderilecek body:", body);
-
-  const submitButton = form.querySelector('button[type="submit"]') || document.getElementById("createCourseButton");
-  if (submitButton) {
-    submitButton.disabled = true;
-    submitButton.textContent = "Oluşturuluyor...";
-  }
-
-  // Token kontrolü
-  const token = getAuthToken();
-  if (!token) {
-    const message = "Oturum bulunamadı! Lütfen tekrar giriş yapın.";
-    console.error("[handleCreateCourse] ❌", message);
-    showToast(message, true);
-    if (submitButton) {
-      submitButton.disabled = false;
-      submitButton.textContent = "Ders Oluştur";
-    }
-    return;
-  }
-  console.log("[handleCreateCourse] ✅ Token var:", token.substring(0, 20) + "...");
-
-  try {
-    console.log("[handleCreateCourse] API çağrısı yapılıyor...");
-    
-    const response = await apiFetch("/Course", {
-      method: "POST",
-      body
-    });
-
-    console.log("[handleCreateCourse] ✅ API yanıtı:", response);
-
-    showToast("Ders başarıyla oluşturuldu! 🎉");
-    if (resultContainer) {
-      resultContainer.innerHTML = "<p style='color:green; font-weight:bold;'>✅ Yeni ders eklendi!</p>";
-    }
-    form.reset();
-    
-    // Response'dan gelen Course'u state'e ekle
-    const newCourse = response?.data || response?.Data || response;
-    if (newCourse && newCourse.id) {
-      // Eğer aynı Course zaten listede yoksa ekle
-      const existingIndex = teacherState.courses.findIndex(c => c.id === newCourse.id);
-      if (existingIndex >= 0) {
-        // Zaten varsa güncelle
-        teacherState.courses[existingIndex] = newCourse;
-      } else {
-        // Yoksa ekle
-        teacherState.courses.push(newCourse);
-      }
-      // Select'e ekle
-      populateCourseSelect(teacherState.courses);
-      // Listeyi render et
-      renderTeacherCourses(teacherState.courses);
-    } else {
-      // Response'dan Course alınamazsa listeyi yenile
-      console.log("[handleCreateCourse] Response'dan Course alınamadı, liste yenileniyor...");
-      await loadTeacherCourses();
-    }
-    
-    // Modal'ı kapat
-    const courseModal = document.getElementById("createCourseModal");
-    if (courseModal) {
-      setTimeout(() => {
-        courseModal.style.display = "none";
-        if (resultContainer) resultContainer.innerHTML = "";
-      }, 1500);
-    }
-    
-    console.log("[handleCreateCourse] ========== TAMAMLANDI ==========");
-  } catch (error) {
-    console.error("[handleCreateCourse] ❌ HATA:", error);
-    console.error("[handleCreateCourse] Hata detayı:", {
-      message: error.message,
-      status: error.status,
-      response: error.response
-    });
-    
-    if (teacherHandleUnauthorized(error)) return;
-    
-    let errorMessage = error.message || "Bilinmeyen hata";
-    
-    // Backend'den gelen hata mesajlarını Türkçe'ye çevir
-    if (errorMessage.includes("Course code already exists") || 
-        errorMessage.includes("already exists") ||
-        errorMessage.includes("duplicate key") ||
-        errorMessage.includes("IX_Courses_CourseCode") ||
-        errorMessage.includes("UNIQUE KEY constraint")) {
-      errorMessage = "Bu ders kodu zaten kullanılıyor. Lütfen farklı bir ders kodu girin.";
-    } else if (errorMessage.includes("Course code")) {
-      errorMessage = "Ders kodu hatası: " + errorMessage;
-    }
-    
-    if (error.response?.errors && Array.isArray(error.response.errors)) {
-      const translatedErrors = error.response.errors.map(err => {
-        if (typeof err === 'string') {
-          if (err.includes("Course code already exists") || 
-              err.includes("already exists") ||
-              err.includes("duplicate key") ||
-              err.includes("IX_Courses_CourseCode")) {
-            return "Bu ders kodu zaten kullanılıyor. Lütfen farklı bir ders kodu girin.";
-          }
-          return err;
-        }
-        return err;
-      });
-      errorMessage = translatedErrors.join(", ");
-    }
-    
-    // Eğer hata mesajı çok uzunsa (stack trace içeriyorsa), sadece ana mesajı al
-    if (errorMessage.length > 200) {
-      const lines = errorMessage.split('\n');
-      const firstLine = lines[0];
-      if (firstLine.includes("duplicate key") || firstLine.includes("IX_Courses_CourseCode")) {
-        errorMessage = "Bu ders kodu zaten kullanılıyor. Lütfen farklı bir ders kodu girin.";
-      } else {
-        errorMessage = firstLine.substring(0, 200) + "...";
-      }
-    }
-    
-    if (resultContainer) {
-      resultContainer.innerHTML = `<p style='color:red; font-weight:bold;'>❌ ${errorMessage}</p>`;
-    }
-    showToast(`Ders oluşturulamadı: ${errorMessage}`, true);
-  } finally {
-    if (submitButton) {
-      submitButton.disabled = false;
-      submitButton.textContent = "Ders Oluştur";
-    }
-  }
-};
 
 const bindTeacherEvents = () => {
   // Modal açma/kapatma
-  const openCourseModal = document.getElementById("openCreateCourseModal");
-  const closeCourseModal = document.getElementById("closeCourseModal");
-  const courseModal = document.getElementById("createCourseModal");
   const openClassModal = document.getElementById("openCreateClassModal");
   const closeClassModal = document.getElementById("closeClassModal");
   const classModal = document.getElementById("createClassModal");
-  
-  if (openCourseModal && courseModal) {
-    openCourseModal.addEventListener("click", () => {
-      courseModal.style.display = "flex";
-    });
-  }
-  
-  if (closeCourseModal && courseModal) {
-    closeCourseModal.addEventListener("click", () => {
-      courseModal.style.display = "none";
-    });
-  }
   
   if (openClassModal && classModal) {
     openClassModal.addEventListener("click", async () => {
@@ -729,14 +532,6 @@ const bindTeacherEvents = () => {
   }
   
   // Modal dışına tıklanınca kapat
-  if (courseModal) {
-    courseModal.addEventListener("click", (e) => {
-      if (e.target === courseModal) {
-        courseModal.style.display = "none";
-      }
-    });
-  }
-  
   if (classModal) {
     classModal.addEventListener("click", (e) => {
       if (e.target === classModal) {
@@ -751,44 +546,6 @@ const bindTeacherEvents = () => {
       clearAuthSession();
       window.location.href = "index.html";
     });
-  }
-
-  const courseForm = teacherSelectors.createCourseForm();
-  if (courseForm) {
-    console.log("[bindTeacherEvents] Form bulundu, event listener ekleniyor...");
-    
-    // Form submit eventi
-    courseForm.addEventListener("submit", (e) => {
-      console.log("[bindTeacherEvents] Form submit eventi yakalandı");
-      e.preventDefault();
-      e.stopPropagation();
-      handleCreateCourse(e).catch((err) => {
-        console.error("[bindTeacherEvents] handleCreateCourse hatası:", err);
-        showToast("Ders oluşturulurken hata oluştu: " + err.message, true);
-      });
-      return false;
-    });
-
-    // Butona direkt click eventi ekle (fallback)
-    const submitButton = courseForm.querySelector('button[type="submit"]');
-    if (submitButton) {
-      submitButton.addEventListener("click", (e) => {
-        console.log("[bindTeacherEvents] Buton click eventi yakalandı");
-        e.preventDefault();
-        e.stopPropagation();
-        const fakeEvent = { preventDefault: () => {}, stopPropagation: () => {} };
-        handleCreateCourse(fakeEvent).catch((err) => {
-          console.error("[bindTeacherEvents] handleCreateCourse hatası:", err);
-          showToast("Ders oluşturulurken hata oluştu: " + err.message, true);
-        });
-        return false;
-      });
-      console.log("[bindTeacherEvents] Buton click event listener eklendi");
-    } else {
-      console.error("[bindTeacherEvents] Submit butonu bulunamadı!");
-    }
-  } else {
-    console.error("[bindTeacherEvents] createCourseForm bulunamadı!");
   }
 
   const classForm = teacherSelectors.createClassForm();
@@ -977,6 +734,9 @@ const initTeacherDashboard = async () => {
   
   // Mobil tasarım için ödevleri ve istatistikleri yükle
   await Promise.all([loadTeacherAssignments(), updateTeacherStats()]);
+  
+  // ✅ YENİ: Haftalık programı yükle (ClassSchedule'lar)
+  await loadTeacherWeeklySchedule();
   
   // Son olarak hoş geldin mesajını güncelle
   await updateTeacherWelcome();

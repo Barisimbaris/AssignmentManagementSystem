@@ -28,9 +28,10 @@ const updateNavigationByRole = () => {
     { href: "assignments.html", label: "Ödevler", icon: getDocumentIcon() },
     { href: "grading.html", label: "Not Ver", icon: getPencilIcon() },
     { href: "class_management.html", label: "Sınıf Yönetimi", icon: getPeopleIcon() },
-    { href: "lesson_planning.html", label: "Ders Planlama", icon: getCalendarIcon() },
+    { href: "class_schedules.html", label: "Ders Programı", icon: getCalendarIcon() }, // ✅ ClassSchedule için (mobildeki akışa uygun)
     { href: "reports.html", label: "Analizler", icon: getChartIcon() },
     { href: "profile.html", label: "Profil", icon: getPersonIcon() }
+    // ✅ KALDIRILDI: "Ders Planlama" linki - Mobildeki akışa uygun olarak kaldırıldı
   ];
 
   // Öğrenci menü öğeleri - SVG ikonlar ile

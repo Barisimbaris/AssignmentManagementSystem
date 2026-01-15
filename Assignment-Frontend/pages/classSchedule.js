@@ -1,10 +1,9 @@
-// Öğrenci Ders Programı Modülü
+// Öğrenci Ders Programı Modülü (ClassSchedule + Assignments) - Alt alta liste
 
 const scheduleState = {
-  currentWeekStart: null,
-  lessonPlans: [],
-  classes: [],
-  currentWeekNumber: 1
+  schedules: [], // ClassSchedule'lar
+  assignments: [], // Assignment'lar
+  classes: []
 };
 
 const scheduleSelectors = {
@@ -13,13 +12,9 @@ const scheduleSelectors = {
   emptyState: () => document.getElementById("emptyState"),
   errorState: () => document.getElementById("errorState"),
   errorMessage: () => document.getElementById("errorMessage"),
-  currentWeekText: () => document.getElementById("currentWeekText"),
-  prevWeekBtn: () => document.getElementById("prevWeekBtn"),
-  nextWeekBtn: () => document.getElementById("nextWeekBtn"),
-  currentWeekBtn: () => document.getElementById("currentWeekBtn"),
-  classesList: () => document.getElementById("classesList"),
-  timeSlots: () => document.querySelector(".time-slots"),
-  daySlots: () => document.querySelectorAll(".day-slots")
+  schedulesList: () => document.getElementById("schedulesList"),
+  assignmentsList: () => document.getElementById("assignmentsList"),
+  classesList: () => document.getElementById("classesList")
 };
 
 // Rol kontrolü
@@ -48,113 +43,46 @@ const handleUnauthorized = (error) => {
   return false;
 };
 
-// Hafta başlangıç tarihini hesapla (Pazartesi)
-const getWeekStart = (date = new Date()) => {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Pazartesi'ye git
-  return new Date(d.setDate(diff));
+// TimeSpan formatını parse et
+const parseTimeSpan = (timeSpan) => {
+  if (!timeSpan) return null;
+  const parts = timeSpan.split(':');
+  return {
+    hours: parseInt(parts[0]) || 0,
+    minutes: parseInt(parts[1]) || 0,
+    seconds: parseInt(parts[2]) || 0
+  };
 };
 
-// Hafta numarasını hesapla
-const getWeekNumber = (date = new Date()) => {
-  const d = new Date(date);
-  const start = new Date(d.getFullYear(), 0, 1);
-  const days = Math.floor((d - start) / (24 * 60 * 60 * 1000));
-  return Math.ceil((days + start.getDay() + 1) / 7);
+// Saat formatla (HH:mm)
+const formatTime = (timeSpan) => {
+  if (!timeSpan) return "-";
+  const time = parseTimeSpan(timeSpan);
+  if (!time) return "-";
+  return `${String(time.hours).padStart(2, '0')}:${String(time.minutes).padStart(2, '0')}`;
 };
 
-// Tarih formatla (saat)
-const formatTime = (dateString) => {
-  if (!dateString) return "";
-  try {
-    // UTC string'ini Türkiye saatine çevir
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
-    
-    // UTC'yi Türkiye saatine çevir (UTC+3)
-    const utcTime = date.getTime();
-    const turkishOffset = 3 * 60 * 60 * 1000; // UTC+3
-    const turkishTime = new Date(utcTime + turkishOffset);
-    
-    return turkishTime.toLocaleTimeString("tr-TR", { 
-      hour: "2-digit", 
-      minute: "2-digit",
-      timeZone: "Europe/Istanbul"
-    });
-  } catch {
-    return "";
-  }
+// Gün adını döndür
+const getDayName = (dayOfWeek) => {
+  const days = {
+    0: "Pazar",
+    1: "Pazartesi",
+    2: "Salı",
+    3: "Çarşamba",
+    4: "Perşembe",
+    5: "Cuma",
+    6: "Cumartesi"
+  };
+  return days[dayOfWeek] || "Bilinmeyen";
 };
 
-// Tarih formatla (gün/ay)
-const formatDateShort = (dateString) => {
-  if (!dateString) return "";
-  try {
-    if (typeof window.formatDateTurkish === 'function') {
-      const formatted = window.formatDateTurkish(dateString);
-      return formatted.split(' ')[0]; // Sadece tarih kısmı
-    }
-    const date = new Date(dateString);
-    return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" });
-  } catch {
-    return "";
-  }
-};
-
-// Saat slotları oluştur (08:00 - 18:00)
-const generateTimeSlots = () => {
-  const slots = [];
-  for (let hour = 8; hour <= 18; hour++) {
-    slots.push(`${hour.toString().padStart(2, '0')}:00`);
-  }
-  return slots;
-};
-
-// Gün adını döndür (0=Pazar, 1=Pazartesi, ...)
-const getDayName = (date) => {
-  const days = ["pazar", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  return days[date.getDay()];
-};
-
-// Haftanın günlerini döndür (Pazartesi-Cuma)
-const getWeekDays = (weekStart) => {
-  const days = [];
-  for (let i = 0; i < 5; i++) {
-    const date = new Date(weekStart);
-    date.setDate(weekStart.getDate() + i);
-    days.push({
-      date: new Date(date),
-      name: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"][i],
-      key: ["monday", "tuesday", "wednesday", "thursday", "friday"][i]
-    });
-  }
-  return days;
-};
-
-// Ders planını zaman slotuna yerleştir
-const getTimeSlotIndex = (timeString) => {
-  if (!timeString) return -1;
-  try {
-    const [hours] = timeString.split(':');
-    const hour = parseInt(hours, 10);
-    if (hour >= 8 && hour <= 18) {
-      return hour - 8;
-    }
-  } catch {
-    return -1;
-  }
-  return -1;
-};
-
-// Ders programını yükle
+// Ders programını yükle (ClassSchedule + Assignments)
 const loadSchedule = async () => {
   const loadingIndicator = scheduleSelectors.loadingIndicator();
   const scheduleContent = scheduleSelectors.scheduleContent();
   const emptyState = scheduleSelectors.emptyState();
   const errorState = scheduleSelectors.errorState();
   
-  // Loading göster
   if (loadingIndicator) loadingIndicator.style.display = "block";
   if (scheduleContent) scheduleContent.style.display = "none";
   if (emptyState) emptyState.style.display = "none";
@@ -163,180 +91,100 @@ const loadSchedule = async () => {
   try {
     requireStudentRole();
     
-    console.log("[loadSchedule] 📅 Ders programı yükleniyor...");
+    console.log("[loadSchedule] 📅 Ders programı ve ödevler yükleniyor...");
     
-    // Student için: Enrollment'lardan class'ları al, sonra her class için schedule'ları çek
-    // Instructor için: /ClassSchedule/my-schedules kullanılabilir ama şimdilik student için de deniyoruz
-    let response;
-    try {
-      // Önce student'ın enrollment'larını al (Assignment/my-assignments'ten class bilgilerini çıkar)
-      const assignmentsResponse = await apiFetch("/Assignment/my-assignments");
-      const assignments = Array.isArray(assignmentsResponse) ? assignmentsResponse : [];
-      
-      // Unique class ID'leri çıkar
-      const classIds = [...new Set(assignments.map(a => a.classId || a.ClassId).filter(id => id))];
-      console.log("[loadSchedule] 📅 Bulunan class ID'leri:", classIds);
-      
-      // Her class için lesson plan'ları çek (ClassSchedule değil, LessonPlan endpoint'i kullan)
-      const lessonPlanPromises = classIds.map(classId => 
-        apiFetch(`/LessonPlan/class/${classId}`).catch(err => {
-          console.warn(`[loadSchedule] Class ${classId} lesson plan yüklenemedi:`, err);
-          return [];
-        })
-      );
-      
-      const lessonPlanResults = await Promise.all(lessonPlanPromises);
-      console.log("[loadSchedule] 📅 Lesson plan results:", lessonPlanResults);
-      
-      // apiFetch zaten normalizePayload ile Result wrapper'ı kaldırıyor
-      // Yani result direkt array olmalı (List<LessonPlanResponseDto>)
-      const allSchedules = lessonPlanResults
-        .filter(result => result !== null && result !== undefined)
-        .flatMap(result => {
-          // Eğer result bir array ise direkt kullan
-          if (Array.isArray(result)) {
-            console.log(`[loadSchedule] ✅ Array bulundu, ${result.length} lesson plan`);
-            return result;
-          }
-          // Eğer result bir object ise ve data field'ı array ise
-          if (result && typeof result === 'object' && Array.isArray(result.data)) {
-            console.log(`[loadSchedule] ✅ result.data array bulundu, ${result.data.length} lesson plan`);
-            return result.data;
-          }
-          // Eğer result bir object ise ve data.lessonPlans array ise
-          if (result && result.data && Array.isArray(result.data.lessonPlans)) {
-            console.log(`[loadSchedule] ✅ result.data.lessonPlans array bulundu, ${result.data.lessonPlans.length} lesson plan`);
-            return result.data.lessonPlans;
-          }
-          console.warn("[loadSchedule] ⚠️ Beklenmeyen result formatı:", result);
-          return [];
-        })
-        .filter(s => s); // Null/undefined değerleri filtrele
-      
-      console.log("[loadSchedule] 📅 Toplam lesson plan sayısı:", allSchedules.length);
-      
-      // Class bilgilerini de al
-      const classPromises = classIds.map(classId => 
-        apiFetch(`/Class/${classId}`).catch(err => {
-          console.warn(`[loadSchedule] Class ${classId} bilgisi yüklenemedi:`, err);
-          return null;
-        })
-      );
-      
-      const classResults = await Promise.all(classPromises);
-      const allClasses = classResults.filter(c => c);
-      
-      // Response formatını oluştur
-      response = {
-        lessonPlans: allSchedules,
-        classes: allClasses
-      };
-      
-      console.log("[loadSchedule] 📅 Toplam schedule sayısı:", allSchedules.length);
-      console.log("[loadSchedule] 📅 Toplam class sayısı:", allClasses.length);
-    } catch (error) {
-      console.error("[loadSchedule] ❌ Hata:", error);
-      throw error;
-    }
-    
-    // Debug: Response'un tamamını logla
-    console.log("═══════════════════════════════════════════");
-    console.log("[loadSchedule] 🔍 API Response Type:", typeof response);
-    console.log("[loadSchedule] 🔍 API Response:", response);
-    console.log("[loadSchedule] 🔍 API Response (JSON):", JSON.stringify(response, null, 2));
-    console.log("═══════════════════════════════════════════");
-    
-    // Backend'den direkt object geliyor: { lessonPlans: [...], classes: [...] }
-    // apiFetch normalize ediyor, ama bu endpoint Result wrapper döndürmüyor, direkt object döndürüyor
-    let lessonPlans = [];
+    // 1. Class'ları al
+    const classesResponse = await apiFetch("/Class/my-classes");
     let classes = [];
-    
-    if (response) {
-      // Direkt object formatı (normalize edilmiş)
-      if (typeof response === 'object' && !Array.isArray(response)) {
-        // lessonPlans için - hem camelCase hem PascalCase
-        if (Array.isArray(response.lessonPlans)) {
-          lessonPlans = response.lessonPlans;
-        } else if (Array.isArray(response.LessonPlans)) {
-          lessonPlans = response.LessonPlans;
-        } else if (response.data && Array.isArray(response.data.lessonPlans)) {
-          lessonPlans = response.data.lessonPlans;
-        }
-        
-        // classes için - hem camelCase hem PascalCase
-        if (Array.isArray(response.classes)) {
-          classes = response.classes;
-        } else if (Array.isArray(response.Classes)) {
-          classes = response.Classes;
-        } else if (response.data && Array.isArray(response.data.classes)) {
-          classes = response.data.classes;
-        }
-      }
-      // Eğer array ise (yanlış format)
-      else if (Array.isArray(response)) {
-        console.warn("[loadSchedule] ⚠️ Response direkt array - beklenmeyen format");
-        lessonPlans = [];
-        classes = [];
-      }
+    if (Array.isArray(classesResponse)) {
+      classes = classesResponse;
+    } else if (classesResponse?.data && Array.isArray(classesResponse.data)) {
+      classes = classesResponse.data;
+    } else if (classesResponse?.isSuccess && Array.isArray(classesResponse.data)) {
+      classes = classesResponse.data;
     }
     
-    scheduleState.lessonPlans = lessonPlans;
     scheduleState.classes = classes;
+    console.log("[loadSchedule] 📅 Bulunan class sayısı:", classes.length);
     
-    console.log("[loadSchedule] ✅ Lesson Plans Count:", scheduleState.lessonPlans.length);
-    console.log("[loadSchedule] ✅ Classes Count:", scheduleState.classes.length);
+    // 2. Her class için ClassSchedule'ları çek
+    const schedulePromises = classes.map(async (cls) => {
+      const classId = cls.id || cls.Id;
+      if (!classId) return [];
+      
+      try {
+        const response = await apiFetch(`/ClassSchedule/class/${classId}/weekly`);
+        let schedules = [];
+        if (Array.isArray(response)) {
+          schedules = response;
+        } else if (response?.data && Array.isArray(response.data)) {
+          schedules = response.data;
+        } else if (response?.isSuccess && Array.isArray(response.data)) {
+          schedules = response.data;
+        } else if (response?.Data && Array.isArray(response.Data)) {
+          schedules = response.Data;
+        }
+        return schedules;
+      } catch (err) {
+        console.warn(`[loadSchedule] Class ${classId} schedule yüklenemedi:`, err);
+        return [];
+      }
+    });
     
-    if (scheduleState.lessonPlans.length > 0) {
-      console.log("[loadSchedule] 📚 İlk ders planı:", scheduleState.lessonPlans[0]);
+    const scheduleResults = await Promise.all(schedulePromises);
+    const allSchedules = scheduleResults
+      .filter(r => Array.isArray(r))
+      .flatMap(r => r)
+      .filter(s => {
+        const isActive = s.isActive !== undefined ? s.isActive : s.IsActive;
+        return s && isActive !== false;
+      });
+    
+    scheduleState.schedules = allSchedules;
+    console.log("[loadSchedule] 📅 Toplam schedule sayısı:", allSchedules.length);
+    
+    // 3. Ödevleri al
+    try {
+      const assignmentsResponse = await apiFetch("/Assignment/my-assignments");
+      let assignments = [];
+      if (Array.isArray(assignmentsResponse)) {
+        assignments = assignmentsResponse;
+      } else if (assignmentsResponse?.data && Array.isArray(assignmentsResponse.data)) {
+        assignments = assignmentsResponse.data;
+      } else if (assignmentsResponse?.isSuccess && Array.isArray(assignmentsResponse.data)) {
+        assignments = assignmentsResponse.data;
+      }
+      
+      scheduleState.assignments = assignments;
+      console.log("[loadSchedule] 📚 Toplam ödev sayısı:", assignments.length);
+    } catch (err) {
+      console.warn("[loadSchedule] Ödevler yüklenemedi:", err);
+      scheduleState.assignments = [];
     }
     
-    if (scheduleState.classes.length > 0) {
-      console.log("[loadSchedule] 🏫 İlk sınıf:", scheduleState.classes[0]);
-    }
-    
-    // Her zaman programı render et - sınıflar varsa bile ders planı olmasa da göster
-    renderSchedule();
+    // Render
+    renderSchedules();
+    renderAssignments();
     renderClassesSummary();
     
     if (loadingIndicator) loadingIndicator.style.display = "none";
     
-    // Eğer hem sınıf hem de ders planı yoksa boş durum göster
-    if (scheduleState.classes.length === 0 && scheduleState.lessonPlans.length === 0) {
+    if (scheduleState.classes.length === 0 && scheduleState.schedules.length === 0 && scheduleState.assignments.length === 0) {
       if (emptyState) {
         emptyState.style.display = "block";
-        // Boş durum mesajını güncelle
         const emptyTitle = emptyState.querySelector("h3");
         const emptyText = emptyState.querySelector("p");
-        if (emptyTitle) {
-          emptyTitle.textContent = "Henüz sınıfa kayıtlı değilsiniz";
-        }
-        if (emptyText) {
-          emptyText.textContent = "Ders programınızı görmek için önce bir sınıfa kayıt olmanız gerekiyor. Öğretmeniniz sizi bir sınıfa eklediğinde burada görünecektir.";
-        }
+        if (emptyTitle) emptyTitle.textContent = "Henüz sınıfa kayıtlı değilsiniz";
+        if (emptyText) emptyText.textContent = "Ders programınızı görmek için önce bir sınıfa kayıt olmanız gerekiyor.";
       }
       if (scheduleContent) scheduleContent.style.display = "none";
     } else {
-      // Sınıflar varsa programı göster (ders planı olsa da olmasa da)
       if (scheduleContent) scheduleContent.style.display = "block";
       if (emptyState) emptyState.style.display = "none";
-      
-      // Eğer ders planı yoksa ama sınıf varsa, bilgilendirme mesajı ekle
-      if (scheduleState.lessonPlans.length === 0 && scheduleState.classes.length > 0) {
-        console.log("[loadSchedule] ⚠️ Sınıflar var ama ders planı yok");
-        const scheduleContentEl = scheduleSelectors.scheduleContent();
-        if (scheduleContentEl) {
-          const infoMsg = document.createElement("div");
-          infoMsg.className = "info-message";
-          infoMsg.style.cssText = "padding: 1rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; margin-bottom: 1rem; color: #856404;";
-          infoMsg.innerHTML = "ℹ️ Kayıtlı olduğunuz sınıflar için henüz ders planı eklenmemiş. Öğretmenleriniz ders planı eklediğinde burada görünecektir.";
-          scheduleContentEl.insertBefore(infoMsg, scheduleContentEl.firstChild);
-        }
-      }
     }
     
   } catch (error) {
     console.error("[loadSchedule] Hata:", error);
-    
     if (handleUnauthorized(error)) return;
     
     if (loadingIndicator) loadingIndicator.style.display = "none";
@@ -348,223 +196,115 @@ const loadSchedule = async () => {
   }
 };
 
-// Haftalık programı render et
-const renderSchedule = () => {
-  const weekStart = scheduleState.currentWeekStart || getWeekStart();
-  const weekDays = getWeekDays(weekStart);
-  const timeSlots = generateTimeSlots();
-  
-  // Zaman slotlarını render et
-  const timeSlotsEl = scheduleSelectors.timeSlots();
-  if (timeSlotsEl) {
-    timeSlotsEl.innerHTML = timeSlots.map(time => 
-      `<div class="time-slot">${time}</div>`
-    ).join("");
+// Schedule'ları render et (alt alta liste)
+const renderSchedules = () => {
+  const container = scheduleSelectors.schedulesList();
+  if (!container) return;
+
+  if (scheduleState.schedules.length === 0) {
+    container.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary); text-align: center;">Henüz ders programı bulunmuyor.</p>';
+    return;
   }
-  
-  // Her gün için slotları temizle ve yeniden oluştur
-  weekDays.forEach((day, dayIndex) => {
-    const dayColumn = document.querySelector(`[data-day="${day.key}"]`);
-    if (!dayColumn) return;
-    
-    const daySlots = dayColumn.querySelector(".day-slots");
-    if (!daySlots) return;
-    
-    daySlots.innerHTML = timeSlots.map(() => `<div class="lesson-slot" style="position: relative; min-height: 60px;"></div>`).join("");
-    
-    // Bu güne ait ders planlarını bul ve yerleştir
-    const dayPlans = scheduleState.lessonPlans.filter(plan => {
-      if (!plan.startDate && !plan.StartDate) return false;
-      
-      const startDateStr = plan.startDate || plan.StartDate;
-      try {
-        // UTC string'ini parse et
-        const planDate = new Date(startDateStr);
-        if (isNaN(planDate.getTime())) {
-          console.warn("[renderSchedule] Geçersiz tarih:", startDateStr);
-          return false;
-        }
-        
-        // UTC'yi Türkiye saatine çevir (UTC+3)
-        const utcTime = planDate.getTime();
-        const turkishOffset = 3 * 60 * 60 * 1000;
-        const turkishPlanDate = new Date(utcTime + turkishOffset);
-        
-        // Tarihleri sadece gün/ay/yıl olarak karşılaştır (Türkiye saatine göre)
-        const planDay = turkishPlanDate.getDate();
-        const planMonth = turkishPlanDate.getMonth();
-        const planYear = turkishPlanDate.getFullYear();
-        
-        const dayDate = day.date;
-        const dayDay = dayDate.getDate();
-        const dayMonth = dayDate.getMonth();
-        const dayYear = dayDate.getFullYear();
-        
-        const matches = planDay === dayDay && planMonth === dayMonth && planYear === dayYear;
-        
-        if (matches) {
-          console.log(`[renderSchedule] ✅ Plan eşleşti: ${plan.topic || plan.Topic} - ${planDay}/${planMonth + 1}/${planYear} = ${dayDay}/${dayMonth + 1}/${dayYear}`);
-        }
-        
-        return matches;
-      } catch (e) {
-        console.warn("[renderSchedule] Tarih parse hatası:", e, startDateStr);
-        return false;
-      }
-    });
-    
-    console.log(`[renderSchedule] ${day.name} için ${dayPlans.length} ders planı bulundu:`, dayPlans);
-    
-    // Dersleri slot index'lerine göre grupla ve çakışma kontrolü yap
-    const plansWithSlots = dayPlans.map(plan => {
-      const startDateStr = plan.startDate || plan.StartDate;
-      const endDateStr = plan.endDate || plan.EndDate;
-      
-      if (!startDateStr || !endDateStr) {
-        return null;
-      }
-      
-      const startTime = formatTime(startDateStr);
-      const endTime = formatTime(endDateStr);
-      const slotIndex = getTimeSlotIndex(startTime);
-      const endSlotIndex = getTimeSlotIndex(endTime);
-      
-      // Saat bilgilerini parse et (çakışma kontrolü için)
-      const [startHour, startMin] = startTime.split(':').map(Number);
-      const [endHour, endMin] = endTime.split(':').map(Number);
-      const startMinutes = startHour * 60 + (startMin || 0);
-      const endMinutes = endHour * 60 + (endMin || 0);
-      
-      return {
-        plan,
-        startTime,
-        endTime,
-        slotIndex,
-        endSlotIndex,
-        startMinutes,
-        endMinutes,
-        duration: Math.max(1, (endSlotIndex >= 0 ? endSlotIndex - slotIndex + 1 : 1))
-      };
-    }).filter(item => item !== null && item.slotIndex >= 0 && item.slotIndex < timeSlots.length);
-    
-    // Slot'lara göre grupla
-    const plansBySlot = {};
-    plansWithSlots.forEach(planData => {
-      const slotIndex = planData.slotIndex;
-      if (!plansBySlot[slotIndex]) {
-        plansBySlot[slotIndex] = [];
-      }
-      plansBySlot[slotIndex].push(planData);
-    });
-    
-    // Her slot için dersleri render et
-    Object.keys(plansBySlot).forEach(slotIndexStr => {
-      const slotIndex = parseInt(slotIndexStr, 10);
-      const plans = plansBySlot[slotIndex].sort((a, b) => a.startMinutes - b.startMinutes);
-      const slots = daySlots.querySelectorAll(".lesson-slot");
-      
-      if (!slots[slotIndex]) return;
-      
-      const slotContainer = slots[slotIndex];
-      slotContainer.style.position = "relative";
-      
-      // Çakışma kontrolü yap - aynı slot içindeki dersler çakışıyor mu?
-      const overlappingGroups = [];
-      let currentGroup = [plans[0]];
-      
-      for (let i = 1; i < plans.length; i++) {
-        const prev = currentGroup[currentGroup.length - 1];
-        const curr = plans[i];
-        
-        // Çakışıyor mu kontrol et (önceki ders bitmeden yeni ders başlıyor mu?)
-        if (curr.startMinutes < prev.endMinutes) {
-          // Çakışıyor, aynı gruba ekle
-          currentGroup.push(curr);
-        } else {
-          // Çakışmıyor, yeni grup başlat
-          overlappingGroups.push(currentGroup);
-          currentGroup = [curr];
-        }
-      }
-      overlappingGroups.push(currentGroup); // Son grubu ekle
-      
-      // En uzun süreli dersin yüksekliğini hesapla
-      const maxDuration = Math.max(...plans.map(p => p.duration));
-      const slotHeight = maxDuration * 60;
-      slotContainer.style.minHeight = `${slotHeight}px`;
-      
-      // Her grup için dersleri render et
-      overlappingGroups.forEach((group, groupIndex) => {
-        group.forEach((planData, planIndex) => {
-          const { plan, startTime, endTime, duration } = planData;
-          
-          const planCard = document.createElement("div");
-          planCard.className = "lesson-card";
-          
-          // Eğer grupta birden fazla ders varsa yan yana yerleştir
-          if (group.length > 1) {
-            planCard.style.position = "absolute";
-            planCard.style.top = "0.15rem";
-            const cardWidth = `calc(${100 / group.length}% - ${(group.length - 1) * 0.15}rem)`;
-            planCard.style.width = cardWidth;
-            planCard.style.left = `calc(${planIndex * (100 / group.length)}% + ${planIndex * 0.15}rem)`;
-            planCard.style.height = `${duration * 60 - 0.3}px`;
-          } else {
-            // Tek ders varsa tam genişlik
-            planCard.style.position = "absolute";
-            planCard.style.top = "0.15rem";
-            planCard.style.left = "0.15rem";
-            planCard.style.right = "0.15rem";
-            planCard.style.height = `${duration * 60 - 0.3}px`;
-          }
-          
-          planCard.style.overflow = "hidden";
-          planCard.style.zIndex = groupIndex + 1;
-          
-          // Renk çeşitliliği için farklı renkler
-          const colors = [
-            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-            "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-            "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-            "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-          ];
-          planCard.style.background = colors[planIndex % colors.length];
-          
-          const className = plan.className || plan.ClassName || "Sınıf";
-          const topic = plan.topic || plan.Topic || "Konu";
-          const description = plan.description || plan.Description || "";
-          const courseCode = plan.courseCode || plan.CourseCode || "";
-          const weekNumber = plan.weekNumber || plan.WeekNumber || "";
-          
-          // Ders açıklamasını öğrencinin net görebilmesi için daha fazla karakter göster
-          const shortDescription = description
-            ? `${description.substring(0, 120)}${description.length > 120 ? "..." : ""}`
-            : "";
-          
-          // Daha kompakt görünüm için minimal içerik
-          const displayTopic = topic.length > 30 ? topic.substring(0, 27) + "..." : topic;
-          
-          planCard.innerHTML = `
-            <div class="lesson-card-header-compact">
-              <span class="lesson-time-compact">${startTime}-${endTime}</span>
-              <span class="lesson-code-compact">${courseCode}</span>
-            </div>
-            <div class="lesson-card-title-compact" title="${topic.replace(/"/g, '&quot;')}">${displayTopic}</div>
-            <div class="lesson-card-footer-compact">
-              <span class="lesson-class-compact">${className}</span>
-              <span class="lesson-week-compact">H.${weekNumber}</span>
-            </div>
-          `;
-          
-          slotContainer.appendChild(planCard);
-        });
-      });
-    });
+
+  // Günlere göre sırala (Pazartesi'den başlayarak)
+  const sortedSchedules = [...scheduleState.schedules].sort((a, b) => {
+    const dayA = a.dayOfWeek !== undefined ? a.dayOfWeek : (a.DayOfWeek !== undefined ? a.DayOfWeek : 0);
+    const dayB = b.dayOfWeek !== undefined ? b.dayOfWeek : (b.DayOfWeek !== undefined ? b.DayOfWeek : 0);
+    return dayA - dayB;
   });
-  
-  // Hafta bilgisini güncelle
-  updateWeekIndicator();
+
+  container.innerHTML = sortedSchedules
+    .map((schedule) => {
+      const dayOfWeek = schedule.dayOfWeek !== undefined ? schedule.dayOfWeek : (schedule.DayOfWeek !== undefined ? schedule.DayOfWeek : 0);
+      const dayName = getDayName(dayOfWeek);
+      const startTime = formatTime(schedule.startTime || schedule.StartTime);
+      const endTime = formatTime(schedule.endTime || schedule.EndTime);
+      const className = schedule.className || schedule.ClassName || "Sınıf";
+      const courseCode = schedule.courseCode || schedule.CourseCode || "";
+      const courseName = schedule.courseName || schedule.CourseName || "";
+      const roomNumber = schedule.roomNumber || schedule.RoomNumber || "";
+      const building = schedule.building || schedule.Building || "";
+      const notes = schedule.notes || schedule.Notes || "";
+
+      return `
+        <div class="assignment-card" style="margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <strong style="font-size: 1.1rem; color: var(--text-primary);">${dayName}</strong>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">${courseCode}</span>
+          </div>
+          <div style="margin-bottom: 0.5rem;">
+            <span style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">🕐 ${startTime} - ${endTime}</span>
+          </div>
+          <div style="margin-bottom: 0.5rem;">
+            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">📚 ${courseName}</span>
+          </div>
+          <div style="margin-bottom: 0.5rem;">
+            <span style="font-size: 0.9rem; color: var(--text-secondary);">👥 ${className}</span>
+          </div>
+          ${roomNumber ? `<p style="margin: 0.25rem 0; color: var(--text-secondary); font-size: 0.9rem;">🏢 ${roomNumber}${building ? ` (${building})` : ''}</p>` : ''}
+          ${notes ? `<p style="margin: 0.5rem 0 0 0; color: var(--text-secondary); font-size: 0.85rem; font-style: italic;">${notes}</p>` : ''}
+        </div>
+      `;
+    })
+    .join("");
+};
+
+// Assignment'ları render et (alt alta liste)
+const renderAssignments = () => {
+  const container = scheduleSelectors.assignmentsList();
+  if (!container) return;
+
+  if (scheduleState.assignments.length === 0) {
+    container.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary); text-align: center;">Henüz ödev bulunmuyor.</p>';
+    return;
+  }
+
+  // DueDate'e göre sırala (yakın tarihli önce)
+  const sortedAssignments = [...scheduleState.assignments].sort((a, b) => {
+    const dateA = new Date(a.dueDate || a.DueDate || 0);
+    const dateB = new Date(b.dueDate || b.DueDate || 0);
+    return dateA - dateB;
+  });
+
+  container.innerHTML = sortedAssignments
+    .map((assignment) => {
+      const title = assignment.title || assignment.Title || "Ödev";
+      const dueDate = assignment.dueDate || assignment.DueDate;
+      const className = assignment.className || assignment.ClassName || "";
+      const description = assignment.description || assignment.Description || "";
+      const assignmentId = assignment.id || assignment.Id;
+      
+      let dueDateStr = "-";
+      if (dueDate) {
+        try {
+          const date = new Date(dueDate);
+          dueDateStr = date.toLocaleDateString("tr-TR", { 
+            day: "2-digit", 
+            month: "2-digit", 
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+        } catch (e) {
+          console.warn("Tarih parse hatası:", e);
+        }
+      }
+
+      return `
+        <div class="assignment-card" style="margin-bottom: 1rem; cursor: pointer;" onclick="window.location.href='assignments.html?assignmentId=${assignmentId}'">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <strong style="font-size: 1.1rem; color: var(--text-primary);">📝 ${title}</strong>
+            <span style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">Teslim Tarihi</span>
+          </div>
+          ${className ? `<div style="margin-bottom: 0.5rem;"><span style="font-size: 0.9rem; color: var(--text-secondary);">👥 ${className}</span></div>` : ''}
+          <div style="margin-bottom: 0.5rem;">
+            <span style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500;">⏰ ${dueDateStr}</span>
+          </div>
+          ${description ? `<p style="margin: 0.5rem 0 0 0; color: var(--text-secondary); font-size: 0.85rem;">${description.substring(0, 100)}${description.length > 100 ? '...' : ''}</p>` : ''}
+        </div>
+      `;
+    })
+    .join("");
 };
 
 // Sınıf özetini render et
@@ -579,9 +319,13 @@ const renderClassesSummary = () => {
   
   classesList.innerHTML = scheduleState.classes.map(classItem => {
     const classId = classItem.id || classItem.Id;
-    const classPlans = scheduleState.lessonPlans.filter(p => {
-      const planClassId = p.classId || p.ClassId;
-      return planClassId === classId;
+    const classSchedules = scheduleState.schedules.filter(s => {
+      const scheduleClassId = s.classId || s.ClassId;
+      return scheduleClassId === classId;
+    });
+    const classAssignments = scheduleState.assignments.filter(a => {
+      const assignmentClassId = a.classId || a.ClassId;
+      return assignmentClassId === classId;
     });
     
     const className = classItem.className || classItem.ClassName || "Sınıf";
@@ -591,72 +335,25 @@ const renderClassesSummary = () => {
     const currentEnrollment = classItem.currentEnrollment || classItem.CurrentEnrollment || 0;
     
     return `
-      <div class="class-card">
-        <div class="class-card-header">
-          <h3>${className}</h3>
-          <span class="class-code">${classCode}</span>
+      <div class="class-card" style="padding: 0.75rem; margin-bottom: 0.75rem;">
+        <div class="class-card-header" style="margin-bottom: 0.5rem;">
+          <h3 style="font-size: 1rem; margin: 0;">${className}</h3>
+          <span class="class-code" style="font-size: 0.85rem;">${classCode}</span>
         </div>
         <div class="class-card-body">
-          <div class="class-info">
-            <span class="class-course">📚 ${courseName}</span>
-            <span class="class-code-label">${courseCode}</span>
+          <div class="class-info" style="margin-bottom: 0.5rem;">
+            <span class="class-course" style="font-size: 0.9rem;">📚 ${courseName}</span>
+            <span class="class-code-label" style="font-size: 0.85rem;">${courseCode}</span>
           </div>
-          <div class="class-stats">
-            <span class="stat-item">📅 ${classPlans.length} Ders Planı</span>
+          <div class="class-stats" style="font-size: 0.85rem;">
+            <span class="stat-item">📅 ${classSchedules.length} Schedule</span>
+            <span class="stat-item">📝 ${classAssignments.length} Ödev</span>
             <span class="stat-item">👥 ${currentEnrollment} Öğrenci</span>
           </div>
         </div>
       </div>
     `;
   }).join("");
-};
-
-// Hafta göstergesini güncelle
-const updateWeekIndicator = () => {
-  const weekStart = scheduleState.currentWeekStart || getWeekStart();
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 4);
-  
-  const weekText = scheduleSelectors.currentWeekText();
-  if (weekText) {
-    const startStr = formatDateShort(weekStart.toISOString());
-    const endStr = formatDateShort(weekEnd.toISOString());
-    weekText.textContent = `${startStr} - ${endStr}`;
-  }
-};
-
-// Hafta değiştir
-const changeWeek = (direction) => {
-  const weekStart = scheduleState.currentWeekStart || getWeekStart();
-  const newWeekStart = new Date(weekStart);
-  newWeekStart.setDate(weekStart.getDate() + (direction * 7));
-  scheduleState.currentWeekStart = newWeekStart;
-  renderSchedule();
-};
-
-// Bu haftaya git
-const goToCurrentWeek = () => {
-  scheduleState.currentWeekStart = getWeekStart();
-  renderSchedule();
-};
-
-// Event listeners
-const bindScheduleEvents = () => {
-  const prevWeekBtn = scheduleSelectors.prevWeekBtn();
-  const nextWeekBtn = scheduleSelectors.nextWeekBtn();
-  const currentWeekBtn = scheduleSelectors.currentWeekBtn();
-  
-  if (prevWeekBtn) {
-    prevWeekBtn.addEventListener("click", () => changeWeek(-1));
-  }
-  
-  if (nextWeekBtn) {
-    nextWeekBtn.addEventListener("click", () => changeWeek(1));
-  }
-  
-  if (currentWeekBtn) {
-    currentWeekBtn.addEventListener("click", goToCurrentWeek);
-  }
 };
 
 // Sayfa başlatma
@@ -668,12 +365,6 @@ const initSchedulePage = async () => {
     if (typeof updateNavigationByRole === "function") {
       updateNavigationByRole();
     }
-    
-    // İlk hafta başlangıcını ayarla
-    scheduleState.currentWeekStart = getWeekStart();
-    
-    // Event'leri bağla
-    bindScheduleEvents();
     
     // Programı yükle
     await loadSchedule();
@@ -697,4 +388,3 @@ document.addEventListener("DOMContentLoaded", () => {
     initSchedulePage();
   }
 });
-

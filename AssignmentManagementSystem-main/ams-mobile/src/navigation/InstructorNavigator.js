@@ -49,6 +49,11 @@ const ClassesStack = () => {
       <Stack.Screen name="ClassAssignments" component={ClassAssignmentsScreen} />
       <Stack.Screen name="CreateSchedule" component={CreateScheduleScreen} />
       <Stack.Screen name="AssignmentDetail" component={AssignmentDetailScreen} />
+      {/* ✅ YENİ: GroupsList ve GroupDetail ekle - Derslerim tab'ından ödev detayına gidince çalışması için */}
+      <Stack.Screen name="GroupsList" component={GroupsListScreen} />
+      <Stack.Screen name="GroupDetail" component={GroupDetailScreen} />
+      {/* ✅ YENİ: GradeSubmission ekle - Derslerim tab'ından grup detayına gidip not verirken çalışması için */}
+      <Stack.Screen name="GradeSubmission" component={GradeSubmissionScreen} />
     </Stack.Navigator>
   );
 };

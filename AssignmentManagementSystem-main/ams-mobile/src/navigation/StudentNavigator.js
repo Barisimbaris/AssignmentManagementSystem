@@ -11,12 +11,24 @@ import AssignmentDetailScreen from '../screens/student/AssignmentDetailScreen';
 import SubmissionsScreen from '../screens/student/SubmissionsScreen';
 import GradesScreen from '../screens/student/GradesScreen';
 import ProfileScreen from '../screens/common/ProfileScreen';
+import ClassScheduleScreen from '../screens/student/ClassScheduleScreen';
+import NotificationsScreen from '../screens/student/NotificationsScreen'; // ✅ YENİ
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 // Screens
 import CreateGroupScreen from '../screens/student/CreateGroupScreen';
+
+// Dashboard Stack Navigator (Notifications için)
+const DashboardStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="DashboardMain" component={StudentDashboard} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} /> 
+    </Stack.Navigator>
+  );
+};
 
 // Assignments Stack Navigator
 const AssignmentsStack = () => {
@@ -46,6 +58,8 @@ const StudentNavigator = () => {
             iconName = focused ? 'bar-chart' : 'bar-chart-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'ClassSchedule') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -69,7 +83,7 @@ const StudentNavigator = () => {
     >
       <Tab.Screen 
         name="Dashboard" 
-        component={StudentDashboard}
+        component={DashboardStack} 
         options={{ tabBarLabel: 'Ana Sayfa' }}
       />
       <Tab.Screen 
@@ -86,6 +100,11 @@ const StudentNavigator = () => {
         name="Grades" 
         component={GradesScreen}
         options={{ tabBarLabel: 'Notlar' }}
+      />
+      <Tab.Screen 
+        name="ClassSchedule" 
+        component={ClassScheduleScreen}
+        options={{ tabBarLabel: 'Program' }}
       />
       <Tab.Screen 
         name="Profile" 

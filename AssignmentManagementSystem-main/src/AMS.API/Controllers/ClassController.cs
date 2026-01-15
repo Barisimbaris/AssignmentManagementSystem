@@ -60,15 +60,27 @@ namespace AMS.API.Controllers
         }
 
         /// <summary>
-        /// Get my classes (as instructor)
+        /// Get my classes (as instructor or student)
         /// </summary>
-        [Authorize(Roles = "Instructor")]
+        [Authorize(Roles = "Instructor,Student")]
         [HttpGet("my-classes")]
         public async Task<IActionResult> GetMyClasses()
         {
-            var instructorId = GetCurrentUserId();
-            var result = await _classService.GetByInstructorIdAsync(instructorId);
-            return Ok(result);
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            
+            if (userRole == "Instructor")
+            {
+                var result = await _classService.GetByInstructorIdAsync(userId);
+                return Ok(result);
+            }
+            else if (userRole == "Student")
+            {
+                var result = await _classService.GetByStudentIdAsync(userId);
+                return Ok(result);
+            }
+            
+            return Forbid("Invalid role");
         }
 
         /// <summary>

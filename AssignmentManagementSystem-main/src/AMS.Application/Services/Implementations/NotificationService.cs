@@ -19,6 +19,7 @@ namespace AMS.Application.Services.Implementations
         private readonly IClassRepository _classRepository;
         private readonly IUserRepository _userRepository;
         private readonly IEnrollmentRepository _enrollmentRepository;
+        private readonly IClassScheduleRepository _scheduleRepository; // ✅ YENİ
         private readonly IEmailService _emailService;
 
         public NotificationService(
@@ -28,6 +29,7 @@ namespace AMS.Application.Services.Implementations
             IClassRepository classRepository,
             IUserRepository userRepository,
             IEnrollmentRepository enrollmentRepository,
+            IClassScheduleRepository scheduleRepository, // ✅ YENİ
             IEmailService emailService)
         {
             _notificationRepository = notificationRepository;
@@ -36,6 +38,7 @@ namespace AMS.Application.Services.Implementations
             _classRepository = classRepository;
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
+            _scheduleRepository = scheduleRepository; // ✅ YENİ
             _emailService = emailService;
         }
 
@@ -158,6 +161,63 @@ namespace AMS.Application.Services.Implementations
                 // Log email error but don't break the notification creation
                 Console.WriteLine($"Failed to send email to {student.Email}: {ex.Message}");
             }
+        }
+
+        // ✅ YENİ: Schedule oluşturulduğunda öğrencilere notification gönder
+        public async Task CreateAndSendScheduleNotificationAsync(int scheduleId, int classId, List<int> studentIds)
+        {
+            var schedule = await _scheduleRepository.GetByIdAsync(scheduleId);
+            if (schedule == null) return;
+
+            var classEntity = await _classRepository.GetByIdAsync(classId);
+            if (classEntity == null) return;
+
+            // Gün adını Türkçe'ye çevir
+            var dayNames = new Dictionary<DayOfWeek, string>
+            {
+                { DayOfWeek.Monday, "Pazartesi" },
+                { DayOfWeek.Tuesday, "Salı" },
+                { DayOfWeek.Wednesday, "Çarşamba" },
+                { DayOfWeek.Thursday, "Perşembe" },
+                { DayOfWeek.Friday, "Cuma" },
+                { DayOfWeek.Saturday, "Cumartesi" },
+                { DayOfWeek.Sunday, "Pazar" }
+            };
+
+            var dayName = dayNames.ContainsKey(schedule.DayOfWeek) 
+                ? dayNames[schedule.DayOfWeek] 
+                : schedule.DayOfWeek.ToString();
+
+            var startTime = schedule.StartTime.ToString(@"hh\:mm");
+            var endTime = schedule.EndTime.ToString(@"hh\:mm");
+            var location = !string.IsNullOrEmpty(schedule.RoomNumber) 
+                ? schedule.RoomNumber 
+                : "Belirtilmemiş";
+
+            if (!string.IsNullOrEmpty(schedule.Building))
+            {
+                location = $"{schedule.Building} - {location}";
+            }
+
+            foreach (var studentId in studentIds)
+            {
+                var student = await _userRepository.GetByIdAsync(studentId);
+                if (student == null) continue;
+
+                var notification = new Notification
+                {
+                    UserId = studentId,
+                    Title = "Yeni Ders Programı",
+                    Message = $"{classEntity.ClassName} için yeni ders programı eklendi. {dayName} günü {startTime}-{endTime} saatleri arası. Yer: {location}",
+                    RelatedEntityType = "ClassSchedule",
+                    RelatedEntityId = scheduleId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _notificationRepository.AddAsync(notification);
+            }
+
+            await _notificationRepository.SaveChangesAsync();
         }
 
         public async Task MarkAsReadAsync(int notificationId, int userId)

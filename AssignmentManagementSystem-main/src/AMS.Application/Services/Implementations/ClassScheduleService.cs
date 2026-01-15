@@ -15,13 +15,19 @@ namespace AMS.Application.Services.Implementations
     {
         private readonly IClassScheduleRepository _scheduleRepository;
         private readonly IClassRepository _classRepository;
+        private readonly INotificationService _notificationService; // ✅ YENİ
+        private readonly IEnrollmentRepository _enrollmentRepository; // ✅ YENİ
 
         public ClassScheduleService(
             IClassScheduleRepository scheduleRepository,
-            IClassRepository classRepository)
+            IClassRepository classRepository,
+            INotificationService notificationService, // ✅ YENİ
+            IEnrollmentRepository enrollmentRepository) // ✅ YENİ
         {
             _scheduleRepository = scheduleRepository;
             _classRepository = classRepository;
+            _notificationService = notificationService; // ✅ YENİ
+            _enrollmentRepository = enrollmentRepository; // ✅ YENİ
         }
 
         public async Task<Result<ClassScheduleResponseDto>> GetByIdAsync(int id)
@@ -99,6 +105,30 @@ namespace AMS.Application.Services.Implementations
 
             await _scheduleRepository.AddAsync(schedule);
             await _scheduleRepository.SaveChangesAsync();
+
+            // ✅ YENİ: Schedule oluşturulduğunda öğrencilere notification gönder
+            var enrollments = await _enrollmentRepository.GetByClassIdAsync(request.ClassId);
+            var studentIds = enrollments
+                .Where(e => e.IsActive && !e.IsDeleted)
+                .Select(e => e.StudentId)
+                .ToList();
+
+            if (studentIds.Any())
+            {
+                try
+                {
+                    await _notificationService.CreateAndSendScheduleNotificationAsync(
+                        schedule.Id,
+                        request.ClassId,
+                        studentIds
+                    );
+                }
+                catch (Exception ex)
+                {
+                    // Log notification error but don't break the schedule creation
+                    Console.WriteLine($"Failed to send schedule notification: {ex.Message}");
+                }
+            }
 
             var response = MapToDto(schedule);
             return Result<ClassScheduleResponseDto>.Success(response, "Schedule created successfully");

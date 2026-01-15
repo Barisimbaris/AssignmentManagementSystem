@@ -19,12 +19,6 @@
   <main class="schedule-container">
     <div class="schedule-header">
       <h1>📅 Ders Programım</h1>
-      <div class="schedule-controls">
-        <button id="prevWeekBtn" class="btn-secondary">← Önceki Hafta</button>
-        <span id="currentWeekText" class="week-indicator">Hafta Yükleniyor...</span>
-        <button id="nextWeekBtn" class="btn-secondary">Sonraki Hafta →</button>
-        <button id="currentWeekBtn" class="btn-primary">Bu Hafta</button>
-      </div>
     </div>
 
     <div id="loadingIndicator" class="loading-placeholder">
@@ -33,33 +27,19 @@
     </div>
 
     <div id="scheduleContent" class="schedule-content" style="display: none;">
-      <!-- Haftalık program buraya eklenecek -->
-      <div class="schedule-grid">
-        <div class="time-column">
-          <div class="time-header">Saat</div>
-          <div class="time-slots"></div>
+      <!-- Ders Programları -->
+      <div class="section" style="margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 1rem;">📅 Haftalık Ders Programı</h2>
+        <div id="schedulesList" class="schedules-list">
+          <!-- Schedule'lar buraya eklenecek -->
         </div>
-        <div class="days-container">
-          <div class="day-column" data-day="monday">
-            <div class="day-header">Pazartesi</div>
-            <div class="day-slots"></div>
-          </div>
-          <div class="day-column" data-day="tuesday">
-            <div class="day-header">Salı</div>
-            <div class="day-slots"></div>
-          </div>
-          <div class="day-column" data-day="wednesday">
-            <div class="day-header">Çarşamba</div>
-            <div class="day-slots"></div>
-          </div>
-          <div class="day-column" data-day="thursday">
-            <div class="day-header">Perşembe</div>
-            <div class="day-slots"></div>
-          </div>
-          <div class="day-column" data-day="friday">
-            <div class="day-header">Cuma</div>
-            <div class="day-slots"></div>
-          </div>
+      </div>
+
+      <!-- Ödevler -->
+      <div class="section" style="margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 1rem;">📝 Ödevlerim</h2>
+        <div id="assignmentsList" class="assignments-list">
+          <!-- Assignment'lar buraya eklenecek -->
         </div>
       </div>
 
@@ -89,4 +69,3 @@
   <script src="classSchedule.js"></script>
 </body>
 </html>
-

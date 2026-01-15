@@ -473,6 +473,35 @@ namespace AMS.Application.Services.Implementations
                     $"Not: {grade.Score}/{submission.Assignment?.MaxScore ?? 0}, " +
                     $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
                     $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC - Tüm grup üyelerine uygulandı");
+                
+                // ✅ YENİ: Grup ödevleri için tüm grup üyelerine notification gönder
+                try
+                {
+                    // Mevcut groupMembers değişkenini kullan (zaten yukarıda tanımlı)
+                    foreach (var member in groupMembers)
+                    {
+                        // Her üye için submission ID'sini bul
+                        var memberSubmission = await _submissionRepository.GetByAssignmentAndStudentAsync(
+                            submission.AssignmentId, 
+                            member.StudentId
+                        );
+                        
+                        if (memberSubmission != null && submission.Assignment != null)
+                        {
+                            await _notificationService.CreateAndSendGradeNotificationAsync(
+                                memberSubmission.Id,
+                                member.StudentId,
+                                (int)grade.Score,
+                                submission.Assignment.MaxScore
+                            );
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log notification error but don't break the update
+                    Console.WriteLine($"Failed to send notification for group grade update: {ex.Message}");
+                }
             }
             else
             {
@@ -484,6 +513,25 @@ namespace AMS.Application.Services.Implementations
                     $"Not: {grade.Score}/{submission?.Assignment?.MaxScore ?? 0}, " +
                     $"Öğretmen: {instructorUser?.FirstName} {instructorUser?.LastName} (ID: {instructorId}), " +
                     $"Zaman: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+                
+                // ✅ YENİ: Normal ödev için öğrenciye notification gönder
+                if (submission != null)
+                {
+                    try
+                    {
+                        await _notificationService.CreateAndSendGradeNotificationAsync(
+                            submission.Id,
+                            submission.StudentId,
+                            (int)grade.Score,
+                            submission.Assignment?.MaxScore ?? 0
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log notification error but don't break the update
+                        Console.WriteLine($"Failed to send notification for grade update: {ex.Message}");
+                    }
+                }
             }
 
             var updated = await _gradeRepository.GetByIdAsync(id);

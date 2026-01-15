@@ -84,12 +84,22 @@
         <a href="class_management.html" style="font-size: 14px; color: var(--primary); font-weight: 600; text-decoration: none;">Tümünü Gör →</a>
       </div>
       <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-        <button id="openCreateCourseModal" style="flex: 1; padding: 12px; background-color: var(--primary); color: var(--text-white); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px;">+ Yeni Ders</button>
         <button id="openCreateClassModal" style="flex: 1; padding: 12px; background-color: var(--primary); color: var(--text-white); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px;">+ Yeni Sınıf</button>
       </div>
-      <a href="class_management.html" style="display: block; background-color: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; text-decoration: none; color: var(--text-primary); font-weight: 600;">
-        📚 Derslerimi ve Classlarımı Gör
-      </a>
+      <div id="teacherClassesList" style="margin-bottom: 16px;">
+        <!-- Class'lar buraya eklenecek -->
+      </div>
+      
+      <!-- ✅ YENİ: Haftalık Program (ClassSchedule) -->
+      <div style="margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 18px; font-weight: bold; color: var(--text-primary); margin: 0;">📅 Haftalık Program</h3>
+          <a href="class_schedules.html" style="font-size: 14px; color: var(--primary); font-weight: 600; text-decoration: none;">Tümünü Gör →</a>
+        </div>
+        <div id="teacherWeeklySchedule">
+          <!-- ClassSchedule'lar buraya eklenecek -->
+        </div>
+      </div>
     </div>
 
     <!-- Ödevlerim - Mobil uygulamaya göre -->
@@ -105,7 +115,6 @@
     <div class="section" style="display: none;" id="desktopSections">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
         <h3>📚 Derslerim</h3>
-        <button id="openCreateCourseModal" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">+ Yeni Ders Oluştur</button>
       </div>
       <div id="teacherCourses" class="assignment-list">Yükleniyor...</div>
     </div>
@@ -116,30 +125,6 @@
         <button id="openCreateClassModal" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">+ Yeni Sınıf Oluştur</button>
       </div>
       <div id="teacherClasses" class="assignment-list">Yükleniyor...</div>
-    </div>
-    
-    <!-- Modal: Yeni Ders Oluştur -->
-    <div id="createCourseModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-      <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-          <h2 style="margin: 0;">📚 Yeni Ders Oluştur</h2>
-          <button id="closeCourseModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
-        </div>
-        <form id="createCourseForm">
-          <div class="form-row">
-            <input type="text" id="courseCode" placeholder="Ders Kodu (örn. MAT101)" required>
-            <input type="text" id="courseName" placeholder="Ders Adı" required>
-          </div>
-          <textarea id="courseDescription" placeholder="Ders Açıklaması (opsiyonel)" rows="2"></textarea>
-          <div class="form-row">
-            <input type="text" id="courseDepartment" placeholder="Bölüm" required>
-            <input type="number" id="creditHours" placeholder="AKTS" min="1" max="10" required>
-          </div>
-          <input type="text" id="academicYear" placeholder="Akademik Yıl (örn. 2024-2025)" required>
-          <button type="submit" id="createCourseButton" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Ders Oluştur</button>
-        </form>
-        <div id="createCourseResult"></div>
-      </div>
     </div>
     
     <!-- Modal: Yeni Sınıf Oluştur -->
@@ -170,29 +155,6 @@
 
     <!-- Desktop için eski modal'lar -->
     <div id="desktopModals" style="display: none;">
-      <!-- Modal: Yeni Ders Oluştur -->
-      <div id="createCourseModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">📚 Yeni Ders Oluştur</h2>
-            <button id="closeCourseModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
-          </div>
-          <form id="createCourseForm">
-            <div class="form-row">
-              <input type="text" id="courseCode" placeholder="Ders Kodu (örn. MAT101)" required>
-              <input type="text" id="courseName" placeholder="Ders Adı" required>
-            </div>
-            <textarea id="courseDescription" placeholder="Ders Açıklaması (opsiyonel)" rows="2"></textarea>
-            <div class="form-row">
-              <input type="text" id="courseDepartment" placeholder="Bölüm" required>
-              <input type="number" id="creditHours" placeholder="AKTS" min="1" max="10" required>
-            </div>
-            <input type="text" id="academicYear" placeholder="Akademik Yıl (örn. 2024-2025)" required>
-            <button type="submit" id="createCourseButton" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem;">Ders Oluştur</button>
-          </form>
-          <div id="createCourseResult"></div>
-        </div>
-      </div>
       
       <!-- Modal: Yeni Sınıf Oluştur -->
       <div id="createClassModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">

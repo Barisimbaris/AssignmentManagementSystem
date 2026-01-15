@@ -251,6 +251,12 @@ const renderTeacherAssignments = (assignments = []) => {
   const container = assignmentsSelectors.teacherList();
   if (!container) return;
 
+  // ✅ YENİ: Ödev sayısını güncelle
+  const assignmentsCount = document.getElementById("assignmentsCount");
+  if (assignmentsCount) {
+    assignmentsCount.textContent = `${assignments.length} ödev`;
+  }
+
   if (!assignments.length) {
     container.innerHTML = "<p>Bu sınıf için henüz ödev oluşturmadınız.</p>";
     return;
@@ -467,6 +473,31 @@ const loadAllTeacherAssignmentsForAutoGrade = async () => {
   }
 };
 
+// ✅ YENİ: Tüm ödevleri yükle (class seçimi olmadan - mobildeki gibi)
+const loadAllTeacherAssignments = async () => {
+  const container = assignmentsSelectors.teacherList();
+  if (!container) return;
+  
+  container.textContent = "Yükleniyor...";
+  
+  try {
+    console.log("[loadAllTeacherAssignments] Tüm ödevler yükleniyor...");
+    const response = await apiFetch("/Assignment");
+    const assignments = Array.isArray(response) ? response : (response?.data || response?.Data || []);
+    
+    assignmentsState.assignments = assignments;
+    console.log("[loadAllTeacherAssignments] ✅ Yüklenen ödev sayısı:", assignments.length);
+    
+    renderTeacherAssignments(assignments);
+  } catch (error) {
+    console.error("[loadAllTeacherAssignments] ❌ Hata:", error);
+    if (handleAssignmentsUnauthorized(error)) return;
+    if (container) {
+      container.innerHTML = `<p style="color:red; padding: 1rem; text-align: center;">${error.message || "Ödevler yüklenirken hata oluştu"}</p>`;
+    }
+  }
+};
+
 const loadTeacherAssignments = async (classId) => {
   const container = assignmentsSelectors.teacherList();
   if (!classId) {
@@ -499,6 +530,33 @@ const loadTeacherAssignments = async (classId) => {
     if (container) {
       container.innerHTML = `<p style="color:red">${error.message || "Ödevler yüklenirken hata oluştu"}</p>`;
     }
+  }
+};
+
+// ✅ YENİ: Ödev oluşturma modal'ını aç
+const openCreateAssignmentModal = () => {
+  const modal = document.getElementById("createAssignmentModal");
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.style.display = "flex";
+  }
+};
+
+// ✅ YENİ: Ödev oluşturma modal'ını kapat
+const closeCreateAssignmentModal = () => {
+  const modal = document.getElementById("createAssignmentModal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.style.display = "none";
+  }
+  // Form'u temizle
+  const form = assignmentsSelectors.form();
+  if (form) {
+    form.reset();
+  }
+  const resultContainer = assignmentsSelectors.formResult();
+  if (resultContainer) {
+    resultContainer.innerHTML = "";
   }
 };
 
@@ -623,10 +681,12 @@ const handleAssignmentFormSubmit = async (event) => {
     updateFilePreview(null); // Dosya önizlemesini temizle
     
     assignmentsState.selectedClassId = classId;
-    await loadTeacherAssignments(classId);
+    // ✅ DEĞİŞTİRİLDİ: Tüm ödevleri yeniden yükle (mobildeki gibi)
+    await loadAllTeacherAssignments();
     populateClassSelect(assignmentsSelectors.classSelect(), assignmentsState.classes);
     assignmentsSelectors.classSelect().value = String(classId);
-    assignmentsSelectors.classFilter().value = String(classId);
+    // Modal'ı kapat
+    closeCreateAssignmentModal();
   } catch (error) {
     console.error("[handleAssignmentFormSubmit] ❌ Hata:", error);
     if (handleAssignmentsUnauthorized(error)) return;
@@ -983,19 +1043,21 @@ const bindAssignmentEvents = () => {
     fileInput.addEventListener("change", handleFileSelect);
   }
 
-  const classFilter = assignmentsSelectors.classFilter();
-  if (classFilter) {
-    classFilter.addEventListener("change", (event) => {
-      const selected = parseInt(event.target.value || "", 10);
-      assignmentsState.selectedClassId = Number.isNaN(selected) ? null : selected;
-      loadTeacherAssignments(assignmentsState.selectedClassId);
-    });
-  }
+  // ✅ KALDIRILDI: classFilter artık HTML'de yok, mobildeki gibi direkt liste gösteriliyor
+  // const classFilter = assignmentsSelectors.classFilter();
+  // if (classFilter) {
+  //   classFilter.addEventListener("change", (event) => {
+  //     const selected = parseInt(event.target.value || "", 10);
+  //     assignmentsState.selectedClassId = Number.isNaN(selected) ? null : selected;
+  //     loadTeacherAssignments(assignmentsState.selectedClassId);
+  //   });
+  // }
 
   const refreshButton = assignmentsSelectors.refreshButton();
   if (refreshButton) {
     refreshButton.addEventListener("click", () => {
-      loadTeacherAssignments(assignmentsState.selectedClassId);
+      // ✅ DEĞİŞTİRİLDİ: Tüm ödevleri yeniden yükle
+      loadAllTeacherAssignments();
     });
   }
   
@@ -1220,6 +1282,44 @@ const initAssignmentsPage = async () => {
     console.log("[initAssignmentsPage] Teacher section computed visibility:", computedStyle.visibility);
     
     await loadTeacherClasses();
+    
+    // ✅ DEĞİŞTİRİLDİ: Tüm ödevleri direkt yükle (mobildeki gibi)
+    await loadAllTeacherAssignments();
+    
+    // ✅ YENİ: Mobil header'ı göster (mobilde)
+    const instructorMobileHeader = document.getElementById("instructorMobileHeader");
+    if (instructorMobileHeader) {
+      instructorMobileHeader.style.display = "flex";
+    }
+    
+    // ✅ DEĞİŞTİRİLDİ: Toolbar butonunu göster (web için)
+    const toolbarCreateBtn = document.getElementById("createAssignmentToolbarBtn");
+    if (toolbarCreateBtn) {
+      toolbarCreateBtn.style.display = "block";
+      toolbarCreateBtn.addEventListener("click", openCreateAssignmentModal);
+    }
+    
+    // ✅ YENİ: Mobil "+" butonuna event ekle (mobilde çalışmaya devam ediyor)
+    const createBtn = document.getElementById("createAssignmentBtn");
+    if (createBtn) {
+      createBtn.addEventListener("click", openCreateAssignmentModal);
+    }
+    
+    // ✅ YENİ: Modal kapatma event'leri
+    const closeBtn = document.getElementById("closeCreateAssignmentModal");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeCreateAssignmentModal);
+    }
+    
+    // Modal dışına tıklayınca kapat
+    const modal = document.getElementById("createAssignmentModal");
+    if (modal) {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeCreateAssignmentModal();
+        }
+      });
+    }
     
     // Süresi dolmuş ödevler için otomatik 0 notu ver (arka planda, sessizce)
     loadAllTeacherAssignmentsForAutoGrade().catch(err => {

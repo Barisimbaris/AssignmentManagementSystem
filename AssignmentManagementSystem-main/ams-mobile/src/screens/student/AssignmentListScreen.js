@@ -12,8 +12,9 @@ import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../api/client';
 import { colors } from '../../theme/colors';
 
-const AssignmentListScreen = ({ navigation }) => {
+const AssignmentListScreen = ({ navigation, route }) => {
   const { user } = useAuth();
+  const classId = route?.params?.classId; // Route params'dan classId al
   const [assignments, setAssignments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -21,15 +22,20 @@ const AssignmentListScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchAssignments();
-  }, []);
+  }, [classId]);
 
   const fetchAssignments = async () => {
     try {
       setIsLoading(true);
-      console.log('📥 Ödevler getiriliyor...');
+      console.log('📥 Ödevler getiriliyor...', classId ? `(Class ID: ${classId})` : '');
       
-      // 1. Tüm ödevleri çek
-      const assignmentsResponse = await apiClient.get('/Assignment');
+      // 1. Tüm ödevleri çek (veya belirli bir class için)
+      let assignmentsResponse;
+      if (classId) {
+        assignmentsResponse = await apiClient.get(`/Assignment/class/${classId}`);
+      } else {
+        assignmentsResponse = await apiClient.get('/Assignment');
+      }
       
       if (!assignmentsResponse.data.isSuccess || !assignmentsResponse.data.data) {
         setAssignments([]);
@@ -160,6 +166,12 @@ const AssignmentListScreen = ({ navigation }) => {
   );
 
   const filteredAssignments = assignments.filter(assignment => {
+    // Önce classId filtresi (eğer varsa)
+    if (classId && assignment.classId !== classId) {
+      return false;
+    }
+    
+    // Sonra status filtresi
     if (filter === 'all') return true;
     
     if (filter === 'pending') {

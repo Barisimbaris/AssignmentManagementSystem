@@ -10,6 +10,16 @@ export const getGradeById = async (gradeId) => {
   }
 };
 
+// Get grade by submission ID
+export const getGradeBySubmissionId = async (submissionId) => {
+  try {
+    const response = await apiClient.get(`/Grade/submission/${submissionId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Get student's grades
 export const getMyGrades = async () => {
   try {
@@ -64,6 +74,16 @@ export const updateGrade = async (gradeId, gradeData) => {
 export const deleteGrade = async (gradeId) => {
   try {
     const response = await apiClient.delete(`/Grade/${gradeId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Auto-grade late assignments (Instructor/Admin)
+export const autoGradeLateAssignments = async (assignmentId) => {
+  try {
+    const response = await apiClient.post(`/Grade/auto-grade-late/${assignmentId}`);
     return response.data;
   } catch (error) {
     throw error;

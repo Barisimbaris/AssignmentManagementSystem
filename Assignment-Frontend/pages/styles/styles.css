@@ -107,16 +107,38 @@ h1, h2, h3 {
 
 .section {
   background-color: var(--background);
-  padding: 2rem;
+  padding: 1rem; /* ✅ DEĞİŞTİRİLDİ: 2rem -> 1rem */
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border);
-  margin: 2rem 0;
+  margin: 0.75rem 0; /* ✅ DEĞİŞTİRİLDİ: 2rem 0 -> 0.75rem 0 */
 }
 
 .section h2,
 .section h3 {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem; /* ✅ DEĞİŞTİRİLDİ: 1rem -> 0.75rem */
+  font-size: 1.1rem; /* ✅ YENİ: Font boyutunu küçült */
+}
+
+/* Mobil için daha kompakt */
+@media (max-width: 768px) {
+  .section {
+    padding: 0.75rem; /* ✅ YENİ: Mobilde daha az padding */
+    margin: 0.5rem 0; /* ✅ YENİ: Mobilde daha az margin */
+  }
+}
+
+/* Mobil için daha kompakt */
+@media (max-width: 768px) {
+  section {
+    padding: 0.5rem; /* ✅ YENİ: Mobilde daha az padding */
+    margin: 0.25rem 0; /* ✅ YENİ: Mobilde daha az margin */
+  }
+  
+  .section {
+    padding: 0.75rem; /* ✅ YENİ: Mobilde daha az padding */
+    margin: 0.5rem 0; /* ✅ YENİ: Mobilde daha az margin */
+  }
 }
 
 /* Header ve Navigation */
@@ -264,10 +286,19 @@ footer {
 
 /* Ana içerik */
 section {
-  padding: 3rem 2rem;
-  margin: 2rem auto;
-  width: 90%;
+  padding: 1rem; /* ✅ DEĞİŞTİRİLDİ: 3rem 2rem -> 1rem */
+  margin: 0.5rem auto; /* ✅ DEĞİŞTİRİLDİ: 2rem auto -> 0.5rem auto */
+  width: 100%; /* ✅ DEĞİŞTİRİLDİ: 90% -> 100% */
   max-width: 1200px;
+  box-sizing: border-box;
+}
+
+/* Mobil için daha kompakt */
+@media (max-width: 768px) {
+  section {
+    padding: 0.5rem; /* ✅ YENİ: Mobilde daha az padding */
+    margin: 0.25rem 0; /* ✅ YENİ: Mobilde daha az margin */
+  }
 }
 
 button {
@@ -1775,7 +1806,7 @@ input[type="file"] {
 
 .modal-content {
   background-color: var(--background);
-  padding: 2rem;
+  padding: 0.75rem; /* ✅ DEĞİŞTİRİLDİ: 2rem -> 0.75rem */
   border-radius: 12px;
   border: 1px solid var(--border);
   max-width: 600px;
@@ -1789,14 +1820,20 @@ input[type="file"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  margin-bottom: 0.75rem; /* ✅ DEĞİŞTİRİLDİ: 1.5rem -> 0.75rem */
+  padding-bottom: 0.75rem; /* ✅ DEĞİŞTİRİLDİ: 1rem -> 0.75rem */
   border-bottom: 2px solid #e0e0e0;
 }
 
 .modal-header h3 {
   margin: 0;
   color: #333;
+  font-size: 1.1rem; /* ✅ YENİ: Font boyutunu küçült */
+}
+
+/* Modal içindeki form'lar kompakt */
+.modal-content form {
+  padding: 0.5rem; /* ✅ YENİ: Form padding'i azalt */
 }
 
 .close-btn {
@@ -1873,30 +1910,34 @@ input[type="file"] {
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem; /* ✅ DEĞİŞTİRİLDİ: 1.5rem -> 0.75rem */
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem; /* ✅ DEĞİŞTİRİLDİ: 0.5rem -> 0.4rem */
   font-weight: 500;
   color: #333;
+  font-size: 0.9rem; /* ✅ YENİ: Font boyutunu küçült */
 }
 
 .form-group input[type="file"],
 .form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="datetime-local"],
+.form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem; /* ✅ DEĞİŞTİRİLDİ: 0.75rem -> 0.5rem */
   border: 1px solid #ddd;
   border-radius: 5px;
-  font-size: 1rem;
+  font-size: 0.9rem; /* ✅ DEĞİŞTİRİLDİ: 1rem -> 0.9rem */
   box-sizing: border-box;
 }
 
 .form-group textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 60px; /* ✅ DEĞİŞTİRİLDİ: 80px -> 60px */
 }
 
 .form-group small {
@@ -3587,6 +3628,8 @@ body > header {
   #assignmentsPage header,
   body > header {
     display: flex !important;
+    align-items: center;
+    justify-content: space-between;
     visibility: visible !important;
     opacity: 1 !important;
     position: sticky !important;
@@ -3654,3 +3697,164 @@ body > header {
 }
 
 /* Assignments sayfası için özel header kontrolü - JavaScript ile yönetiliyor */
+
+/* Assignments toolbar - Kompakt */
+.assignments-toolbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1rem !important; /* ✅ DEĞİŞTİRİLDİ: Varsayılan padding override */
+  margin-bottom: 0.75rem !important; /* ✅ YENİ: margin-bottom ekle */
+}
+
+.assignments-toolbar h2 {
+  font-size: 1.1rem !important; /* ✅ DEĞİŞTİRİLDİ: 1.25rem -> 1.1rem */
+}
+
+.toolbar-create-btn:hover {
+  background-color: var(--primary-dark, #0056b3) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.toolbar-create-btn:active {
+  transform: translateY(0);
+}
+
+/* Mobilde toolbar butonu gizli */
+@media (max-width: 768px) {
+  .toolbar-create-btn {
+    display: none !important;
+  }
+}
+
+/* Schedules toolbar - Kompakt */
+.schedules-toolbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1rem !important; /* ✅ DEĞİŞTİRİLDİ: Varsayılan padding override */
+  margin: 0.5rem !important; /* ✅ DEĞİŞTİRİLDİ: 1rem -> 0.5rem */
+}
+
+.schedules-toolbar h2 {
+  font-size: 1.1rem !important; /* ✅ DEĞİŞTİRİLDİ: 1.25rem -> 1.1rem */
+}
+
+/* Mobilde schedules toolbar gizli */
+@media (max-width: 768px) {
+  .schedules-toolbar {
+    display: none !important;
+  }
+}
+
+.toolbar-create-btn:hover {
+  background-color: var(--primary-dark, #0056b3) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.toolbar-create-btn:active {
+  transform: translateY(0);
+}
+
+/* Mobilde toolbar butonu gizli, mobil header butonu görünür */
+@media (max-width: 768px) {
+  .toolbar-create-btn {
+    display: none !important;
+  }
+}
+
+/* Header'daki ödev oluştur butonu */
+.header-create-btn {
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.header-create-btn:hover {
+  background-color: var(--primary-dark, #0056b3) !important;
+  transform: translateY(-1px);
+}
+
+.header-create-btn:active {
+  transform: translateY(0);
+}
+
+/* Mobilde header butonu gizli */
+@media (max-width: 768px) {
+  .header-create-btn {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   KOMPAKT TAKVİM STİLLERİ (ClassSchedule + Assignments)
+   ============================================ */
+
+/* Zaman slotları - Kompakt */
+.time-slot {
+  font-size: 0.75rem !important;
+  padding: 0.25rem !important;
+  min-height: 30px !important;
+  line-height: 1.2;
+}
+
+/* Ders slotları - Kompakt */
+.lesson-slot {
+  min-height: 40px !important;
+  padding: 0.15rem !important;
+  position: relative;
+}
+
+/* Schedule ve Assignment kartları - Küçük satır */
+.schedule-item-compact,
+.assignment-item-compact {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 4px;
+  margin-bottom: 0.2rem;
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.schedule-item-compact:hover,
+.assignment-item-compact:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.schedule-item-compact:active,
+.assignment-item-compact:active {
+  transform: translateY(0);
+}
+
+/* Schedule kartı - Mor gradient */
+.schedule-item-compact {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.3rem 0.5rem;
+}
+
+/* Assignment kartı - Pembe gradient */
+.assignment-item-compact {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 0.3rem 0.5rem;
+}
+
+/* Class card kompakt */
+.class-card {
+  padding: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.class-card-header h3 {
+  font-size: 1rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.class-stats {
+  font-size: 0.85rem !important;
+  gap: 0.5rem !important;
+}
+
+.class-stats .stat-item {
+  font-size: 0.85rem !important;
+  padding: 0.25rem 0.5rem !important;
+}

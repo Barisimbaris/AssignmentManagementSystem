@@ -1,6 +1,6 @@
 (() => {
   const API_BASE_URL =
-    window.__API_BASE_URL__ || "https://jangly-unsimplified-bria.ngrok-free.dev/api";
+    window.__API_BASE_URL__ || "https://kristin-squishier-beseechingly.ngrok-free.dev/api";
 
   const STORAGE_KEYS = {
     token: "ams.auth.token",

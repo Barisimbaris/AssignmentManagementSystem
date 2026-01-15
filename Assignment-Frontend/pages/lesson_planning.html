@@ -94,25 +94,25 @@
 
       <!-- Sağ Taraf: Haftalık Program ve Listeler -->
       <div class="planning-content-section">
-        <!-- Haftalık Program -->
-        <div class="section weekly-schedule-section">
-          <div class="section-header">
-            <h2>📊 Haftalık Ders Programı</h2>
-            <p class="section-description">Bu hafta planlanan derslerinizi görüntüleyin</p>
-          </div>
-          <div id="weeklySchedule" class="weekly-schedule">
-            <div class="loading-placeholder">
-              <div class="loading-spinner"></div>
-              <p>Yükleniyor...</p>
+        <!-- Class Filter Bar (Mobildeki gibi) -->
+        <div class="section filter-section" style="padding: 1rem; background: white; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border);">
+          <div style="display: flex; align-items: center; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem;">
+            <button id="filterAll" class="filter-chip filter-chip-active" style="padding: 0.5rem 1rem; border-radius: 20px; border: 2px solid var(--primary); background: var(--primary); color: white; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 0.9rem;">
+              Tümü
+            </button>
+            <div id="classFilters" style="display: flex; gap: 0.5rem; flex: 1;">
+              <!-- Class filter butonları JavaScript ile eklenecek -->
             </div>
           </div>
         </div>
 
         <!-- Ders Planları Listesi -->
         <div class="section lesson-plans-section">
-          <div class="section-header">
-            <h2>📚 Tüm Ders Planlarım</h2>
-            <p class="section-description">Oluşturduğunuz tüm ders planlarını görüntüleyin</p>
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h2>📚 Ders Planlarım</h2>
+              <p class="section-description">Oluşturduğunuz tüm ders planlarını görüntüleyin</p>
+            </div>
           </div>
           <div id="lessonPlansList" class="lesson-plans-list">
             <div class="loading-placeholder">

@@ -12,6 +12,9 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../api/client';
 import { colors } from '../../theme/colors';
+import * as classAPI from '../../api/endpoints/classes';
+import { getWeeklySchedule } from '../../api/endpoints/schedules';
+import * as notificationAPI from '../../api/endpoints/notifications';
 
 const StudentDashboard = ({ navigation }) => {
   const { user } = useAuth();
@@ -26,10 +29,27 @@ const StudentDashboard = ({ navigation }) => {
     upcomingAssignments: [],
     courses: [],
   });
+  const [weeklySchedule, setWeeklySchedule] = useState([]);
+  const [selectedClassId, setSelectedClassId] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0); // ✅ YENİ: Okunmamış bildirim sayısı
 
   useEffect(() => {
     fetchDashboardData();
+    fetchUnreadCount(); // ✅ YENİ: Okunmamış bildirim sayısını çek
   }, []);
+
+  // Class seçildiğinde programı çek
+  useEffect(() => {
+    if (dashboardData.courses.length > 0 && !selectedClassId) {
+      setSelectedClassId(dashboardData.courses[0].id);
+    }
+  }, [dashboardData.courses]);
+
+  useEffect(() => {
+    if (selectedClassId) {
+      fetchWeeklySchedule(selectedClassId);
+    }
+  }, [selectedClassId]);
 
   const fetchDashboardData = async () => {
     try {
@@ -48,6 +68,18 @@ const StudentDashboard = ({ navigation }) => {
         }
       } catch (error) {
         console.warn('⚠️ Teslimler alınamadı:', error.message);
+      }
+
+      // ✅ YENİ: 3. Kayıtlı olduğum class'ları çek
+      let myClasses = [];
+      try {
+        const classesResponse = await classAPI.getMyClasses();
+        if (classesResponse.isSuccess) {
+          myClasses = classesResponse.data || [];
+          console.log('📚 Kayıtlı class\'lar:', myClasses.length);
+        }
+      } catch (error) {
+        console.warn('⚠️ Class\'lar alınamadı:', error.message);
       }
 
       if (assignmentsResponse.data.isSuccess) {
@@ -95,16 +127,18 @@ const StudentDashboard = ({ navigation }) => {
         // Seri hesaplama (son 7 gün içinde her gün teslim yapılmış mı?)
         const streak = calculateStreak(mySubmissions);
 
-        // Dersler (unique className'ler)
-        const uniqueClasses = [...new Set(allAssignments.map(a => a.className))];
-        const courses = uniqueClasses.map((className, index) => {
-          const classAssignments = allAssignments.filter(a => a.className === className);
+        // ✅ YENİ: Dersler - Class'lardan al (ödev olmasa bile)
+        const courses = myClasses.map((classItem, index) => {
+          // Bu class'a ait ödev sayısını bul
+          const classAssignments = allAssignments.filter(a => a.classId === classItem.id);
           return {
-            id: index + 1,
-            name: className || 'Ders',
+            id: classItem.id,
+            name: classItem.className || classItem.courseName || 'Ders',
             icon: getRandomIcon(index),
             assignmentCount: classAssignments.length,
             color: getRandomColor(index),
+            courseCode: classItem.courseCode,
+            courseName: classItem.courseName,
           };
         });
 
@@ -130,8 +164,132 @@ const StudentDashboard = ({ navigation }) => {
   const onRefresh = async () => {
     setIsRefreshing(true);
     await fetchDashboardData();
+    await fetchUnreadCount(); // ✅ YENİ: Refresh'te de notification sayısını güncelle
     setIsRefreshing(false);
   };
+
+  // ✅ YENİ: Okunmamış bildirim sayısını çek
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await notificationAPI.getUnreadCount();
+      if (response.isSuccess) {
+        setUnreadCount(response.data || 0);
+      }
+    } catch (error) {
+      console.warn('⚠️ Okunmamış bildirim sayısı alınamadı:', error.message);
+      setUnreadCount(0);
+    }
+  };
+
+  // ✅ YENİ: Haftalık programı çek
+  const fetchWeeklySchedule = async (classId) => {
+    try {
+      const response = await getWeeklySchedule(classId);
+      if (response.isSuccess) {
+        setWeeklySchedule(response.data || []);
+      }
+    } catch (error) {
+      console.error('❌ Program yüklenemedi:', error);
+      setWeeklySchedule([]);
+    }
+  };
+
+  // ✅ YENİ: Haftanın başlangıcını bul (Pazartesi)
+  const getWeekStart = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Pazartesi
+    return new Date(d.setDate(diff));
+  };
+
+  // ✅ YENİ: TimeSpan formatını parse eden fonksiyon
+  const parseTimeSpan = (timeSpan) => {
+    if (!timeSpan) return null;
+    const parts = timeSpan.split(':');
+    return {
+      hours: parseInt(parts[0]) || 0,
+      minutes: parseInt(parts[1]) || 0,
+      seconds: parseInt(parts[2]) || 0
+    };
+  };
+
+  // ✅ YENİ: Program formatla
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    const time = timeString.split(':');
+    return `${time[0]}:${time[1]}`;
+  };
+
+  const getDayName = (dayOfWeek) => {
+    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    return days[dayOfWeek] || '';
+  };
+
+  // ✅ YENİ: Schedule'ın geçmiş olup olmadığını kontrol et
+  const isSchedulePast = (schedule, referenceDate) => {
+    if (!schedule || schedule.dayOfWeek === undefined) {
+      return { isPast: false, shouldShow: true, isGray: false };
+    }
+    
+    // Seçilen haftanın başlangıcını bul (Pazartesi)
+    const weekStart = getWeekStart(referenceDate);
+    
+    // Schedule'ın gününü bul (0=Pazar, 1=Pazartesi, ..., 6=Cumartesi)
+    const scheduleDay = schedule.dayOfWeek;
+    
+    // Haftanın o gününü hesapla
+    const scheduleDate = new Date(weekStart);
+    // Pazartesi = 1, Salı = 2, ..., Pazar = 0
+    let dayOffset = scheduleDay - 1; // Pazartesi'den başlayarak offset
+    if (scheduleDay === 0) dayOffset = 6; // Pazar için 6 gün sonra
+    scheduleDate.setDate(weekStart.getDate() + dayOffset);
+    
+    // Schedule'ın bitiş saatini parse et ve o güne ekle
+    const endTime = parseTimeSpan(schedule.endTime);
+    if (!endTime) {
+      return { isPast: false, shouldShow: true, isGray: false };
+    }
+    
+    const scheduleEndDateTime = new Date(scheduleDate);
+    scheduleEndDateTime.setHours(endTime.hours, endTime.minutes, 0, 0);
+    
+    // Şu anki zaman
+    const now = new Date();
+    
+    // Bitiş saatinden geçmiş mi?
+    const isPast = scheduleEndDateTime < now;
+    
+    if (!isPast) {
+      return { isPast: false, shouldShow: true, isGray: false };
+    }
+    
+    // Geçmişse, kaç saat geçti?
+    const hoursPassed = (now - scheduleEndDateTime) / (1000 * 60 * 60);
+    
+    // 1 saatten az geçmişse: gri göster
+    if (hoursPassed <= 1) {
+      return { isPast: true, shouldShow: true, isGray: true };
+    }
+    
+    // 1 saatten fazla geçmişse: gösterme
+    return { isPast: true, shouldShow: false, isGray: false };
+  };
+
+  // ✅ YENİ: Haftalık programı günlere göre grupla ve filtrele
+  const groupedSchedule = weeklySchedule
+    .map(schedule => ({
+      ...schedule,
+      ...isSchedulePast(schedule, new Date())
+    }))
+    .filter(schedule => schedule.shouldShow)
+    .reduce((acc, schedule) => {
+      const day = schedule.dayOfWeek || 0;
+      if (!acc[day]) {
+        acc[day] = [];
+      }
+      acc[day].push(schedule);
+      return acc;
+    }, {});
 
   const getDaysLeft = (dueDate) => {
     const due = new Date(dueDate);
@@ -214,7 +372,16 @@ const StudentDashboard = ({ navigation }) => {
   );
 
   const renderCourseCard = ({ item }) => (
-    <TouchableOpacity style={[styles.courseCard, { backgroundColor: item.color }]}>
+    <TouchableOpacity 
+      style={[styles.courseCard, { backgroundColor: item.color }]}
+      onPress={() => {
+        // O class'ın ödevlerini gösteren ekrana git
+        navigation.navigate('Assignments', {
+          screen: 'AssignmentList',
+          params: { classId: item.id }
+        });
+      }}
+    >
       <Text style={styles.courseIcon}>{item.icon}</Text>
       <Text style={styles.courseName}>{item.name}</Text>
       <Text style={styles.courseAssignments}>{item.assignmentCount} ödev</Text>
@@ -248,11 +415,16 @@ const StudentDashboard = ({ navigation }) => {
           <Text style={styles.userName}>{user?.firstName}!</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.notificationButton}>
+          <TouchableOpacity 
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate('Notifications')} // ✅ YENİ: Notification ekranına git
+          >
             <Text style={styles.notificationIcon}>🔔</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>3</Text>
-            </View>
+            {unreadCount > 0 && ( // ✅ YENİ: Sadece okunmamış bildirim varsa badge göster
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         <TouchableOpacity 
   style={styles.profileButton}
@@ -327,6 +499,106 @@ const StudentDashboard = ({ navigation }) => {
             <Text style={styles.statValue}>{dashboardData.streak} gün</Text>
           </View>
         </View>
+      </View>
+
+      {/* ✅ YENİ: Haftalık Program */}
+      <View style={styles.section}>
+        <View style={styles.scheduleHeader}>
+          <Text style={styles.sectionTitle}>📅 Haftalık Program</Text>
+          {dashboardData.courses.length > 0 && (
+            <TouchableOpacity
+              style={styles.viewFullScheduleButton}
+              onPress={() => {
+                // ClassScheduleScreen'e git (navigator'a eklenmeli)
+                navigation.navigate('ClassSchedule');
+              }}
+            >
+              <Text style={styles.viewFullScheduleText}>Tümünü Gör →</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {dashboardData.courses.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>Henüz ders yok</Text>
+          </View>
+        ) : (
+          <>
+            {/* Class Selector */}
+            {dashboardData.courses.length > 1 && (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.classSelector}
+                contentContainerStyle={styles.classSelectorContent}
+              >
+                {dashboardData.courses.map((course) => (
+                  <TouchableOpacity
+                    key={course.id}
+                    style={[
+                      styles.classChip,
+                      selectedClassId === course.id && styles.classChipActive
+                    ]}
+                    onPress={() => setSelectedClassId(course.id)}
+                  >
+                    <Text style={[
+                      styles.classChipText,
+                      selectedClassId === course.id && styles.classChipTextActive
+                    ]}>
+                      {course.courseCode || course.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Schedule */}
+            {weeklySchedule.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>Bu ders için program yok</Text>
+              </View>
+            ) : (
+              <View style={styles.scheduleContainer}>
+                {(() => {
+                  const daysWithSchedules = [1, 2, 3, 4, 5].filter(d => groupedSchedule[d]?.length > 0);
+                  return daysWithSchedules.map((dayOfWeek, dayIndex) => {
+                    const daySchedules = groupedSchedule[dayOfWeek] || [];
+                    const isLastDay = dayIndex === daysWithSchedules.length - 1;
+
+                    return (
+                      <View key={dayOfWeek} style={[styles.scheduleDay, isLastDay && styles.scheduleDayLast]}>
+                        <Text style={styles.scheduleDayName}>
+                          {getDayName(dayOfWeek)}
+                        </Text>
+                        {daySchedules.map((schedule, index) => (
+                          <View 
+                            key={index} 
+                            style={[
+                              styles.scheduleItem,
+                              schedule.isGray && styles.scheduleItemPast // ✅ YENİ: Gri stil
+                            ]}
+                          >
+                            <Text style={styles.scheduleTime}>
+                              {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                            </Text>
+                            <Text style={styles.scheduleClassName}>
+                              {schedule.className || schedule.courseName || 'Ders'}
+                            </Text>
+                            {schedule.roomNumber && (
+                              <Text style={styles.scheduleLocation}>
+                                📍 {schedule.roomNumber}
+                              </Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    );
+                  });
+                })()}
+              </View>
+            )}
+          </>
+        )}
       </View>
 
       {/* Bottom Spacing */}
@@ -553,6 +825,94 @@ const styles = StyleSheet.create({
   statDivider: {
     height: 1,
     backgroundColor: colors.border,
+  },
+  scheduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  viewFullScheduleButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  viewFullScheduleText: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  classSelector: {
+    marginBottom: 16,
+  },
+  classSelectorContent: {
+    gap: 8,
+    paddingRight: 20,
+  },
+  classChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  classChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  classChipText: {
+    fontSize: 14,
+    color: colors.textPrimary,
+    fontWeight: '600',
+  },
+  classChipTextActive: {
+    color: colors.white,
+  },
+  scheduleContainer: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  scheduleDay: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  scheduleDayLast: {
+    marginBottom: 0,
+    paddingBottom: 0,
+    borderBottomWidth: 0,
+  },
+  scheduleItem: {
+    marginBottom: 12,
+  },
+  scheduleItemPast: {
+    opacity: 0.5,
+    backgroundColor: '#F5F5F5',
+  },
+  scheduleTime: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  scheduleClassName: {
+    fontSize: 14,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  scheduleLocation: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  scheduleDayName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    marginBottom: 8,
   },
 });
 

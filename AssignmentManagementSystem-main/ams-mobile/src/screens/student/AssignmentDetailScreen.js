@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native'; // ✅ YENİ: useFocusEffect ekle
 import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../api/client';
 import { colors } from '../../theme/colors';
@@ -26,6 +27,41 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
   useEffect(() => {
     fetchAssignmentDetail();
   }, []);
+
+  // ✅ YENİ: Grup bilgisini çeken ayrı fonksiyon
+  const fetchGroupInfo = async () => {
+    try {
+      const groupResponse = await groupAPI.getMyGroup(assignmentId);
+      if (groupResponse.isSuccess && groupResponse.data) {
+        setMyGroup(groupResponse.data);
+        
+        // Grup lideri kontrolü
+        if (groupResponse.data.leaderStudentId === user?.id) {
+          setIsGroupLeader(true);
+        } else {
+          setIsGroupLeader(false);
+        }
+      } else {
+        // Grup yoksa state'i temizle
+        setMyGroup(null);
+        setIsGroupLeader(false);
+      }
+    } catch (groupError) {
+      console.warn('⚠️ Grup bilgisi alınamadı:', groupError.message);
+      setMyGroup(null);
+      setIsGroupLeader(false);
+    }
+  };
+
+  // ✅ YENİ: Ekran focus olduğunda grup bilgisini yeniden çek
+  useFocusEffect(
+    React.useCallback(() => {
+      // Grup ödevi ise grup bilgisini çek
+      if (assignment && (assignment.type === 'Group' || assignment.assignmentType === 'Group')) {
+        fetchGroupInfo();
+      }
+    }, [assignment, assignmentId, user?.id])
+  );
 
   const fetchAssignmentDetail = async () => {
     try {
@@ -63,19 +99,7 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
 
         // Grup ödevi ise grup bilgisini çek
         if (response.data.data.type === 'Group' || response.data.data.assignmentType === 'Group') {
-          try {
-            const groupResponse = await groupAPI.getMyGroup(assignmentId);
-            if (groupResponse.isSuccess && groupResponse.data) {
-              setMyGroup(groupResponse.data);
-              
-              // Grup lideri kontrolü
-              if (groupResponse.data.leaderStudentId === user?.id) {
-                setIsGroupLeader(true);
-              }
-            }
-          } catch (groupError) {
-            console.warn('⚠️ Grup bilgisi alınamadı:', groupError.message);
-          }
+          await fetchGroupInfo(); // ✅ YENİ: Ayrı fonksiyon kullan
         }
       }
     } catch (error) {
@@ -135,6 +159,13 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
       const formData = new FormData();
       formData.append('assignmentId', assignmentId);
       
+      // ✅ YENİ: Grup ödevi ise groupId ekle
+      const isGroupAssignment = assignment.type === 'Group' || assignment.assignmentType === 'Group';
+      if (isGroupAssignment && myGroup) {
+        formData.append('groupId', myGroup.id);
+        console.log('👥 Grup ödevi - GroupId:', myGroup.id);
+      }
+      
       formData.append('file', {
         uri: file.uri,
         name: file.name,
@@ -143,6 +174,7 @@ const AssignmentDetailScreen = ({ route, navigation }) => {
 
       console.log('📤 Dosya yükleniyor...', {
         assignmentId,
+        groupId: isGroupAssignment && myGroup ? myGroup.id : null,
         fileName: file.name,
         fileSize: file.size,
       });

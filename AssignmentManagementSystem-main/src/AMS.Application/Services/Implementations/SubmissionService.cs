@@ -87,7 +87,8 @@ namespace AMS.Application.Services.Implementations
                 IsLate = s.IsLate,
                 Comments = s.Comments,
                 Score = s.Grade?.Score,
-                Feedback = s.Grade?.Feedback
+                Feedback = s.Grade?.Feedback,
+                GroupId = s.GroupId // ✅ YENİ: GroupId field'ını ekle
             }).ToList();
 
             return Result<List<SubmissionResponseDto>>.Success(response);

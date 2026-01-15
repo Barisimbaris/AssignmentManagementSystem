@@ -16,7 +16,17 @@
     </nav>
   </header>
 
-  <section class="dashboard" id="assignmentsPage">
+  <!-- Mobil Header (Instructor için) -->
+  <div class="mobile-header" id="instructorMobileHeader" style="display: none; flex;">
+    <div class="mobile-header-left">
+      <div class="mobile-header-greeting">📚 Ödevlerim</div>
+    </div>
+    <div class="mobile-header-right">
+      <button id="createAssignmentBtn" style="background: var(--primary); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+    </div>
+  </div>
+
+  <section class="dashboard content-with-bottom-nav" id="assignmentsPage">
    <!-- <h1>Ödev Modülü</h1>-->
 
     <div class="section hidden" id="studentAssignmentsSection">
@@ -71,42 +81,62 @@
     </div>
 
     <div class="section hidden" id="teacherAssignmentsSection">
-      <h2>📝 Ödev Oluştur ve Yönet</h2>
+      <!-- ✅ YENİ: Liste üstü toolbar (e-ticaret sitesi gibi) -->
+      <div class="assignments-toolbar" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: white; border-radius: 12px; margin-bottom: 0.75rem; border: 1px solid var(--border);">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h2 style="margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">📚 Ödevlerim</h2>
+          <span id="assignmentsCount" style="color: var(--text-secondary); font-size: 0.85rem;">0 ödev</span>
+        </div>
+        <button id="createAssignmentToolbarBtn" class="toolbar-create-btn" style="display: none; background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
+          + Ödev Oluştur
+        </button>
+      </div>
       
-      <div class="create-assignment-card">
-        <h3>Yeni Ödev Oluştur</h3>
-        <form id="assignmentForm" enctype="multipart/form-data">
+      <!-- Ödev Listesi (Direkt göster - mobildeki gibi) -->
+      <div id="teacherAssignmentsList" class="assignment-list" style="padding: 0.75rem;">
+        Yükleniyor...
+      </div>
+    </div>
+
+    <!-- Ödev Oluşturma Modal -->
+    <div id="createAssignmentModal" class="modal hidden">
+      <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 0.75rem;">
+        <div class="modal-header" style="padding: 0.75rem;">
+          <h3 style="font-size: 1.1rem; margin: 0;">Yeni Ödev Oluştur</h3>
+          <button id="closeCreateAssignmentModal" class="close-btn">&times;</button>
+        </div>
+        <form id="assignmentForm" enctype="multipart/form-data" style="padding: 0.75rem;">
           <div class="form-row">
-            <div class="form-group">
-              <label for="assignmentClassSelect">Ders *</label>
-              <select id="assignmentClassSelect" required>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label for="assignmentClassSelect" style="font-size: 0.9rem; margin-bottom: 0.4rem;">Ders *</label>
+              <select id="assignmentClassSelect" required style="padding: 0.5rem; font-size: 0.9rem;">
                 <option value="">Ders seçiniz</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="assignmentTypeSelect">Ödev Türü *</label>
-              <select id="assignmentTypeSelect" required>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label for="assignmentTypeSelect" style="font-size: 0.9rem; margin-bottom: 0.4rem;">Ödev Türü *</label>
+              <select id="assignmentTypeSelect" required style="padding: 0.5rem; font-size: 0.9rem;">
                 <option value="1">Bireysel Ödev</option>
                 <option value="2">Grup Ödevi</option>
               </select>
             </div>
           </div>
           
-          <div class="form-group">
-            <label for="assignmentTitle">Ödev Başlığı *</label>
-            <input type="text" id="assignmentTitle" placeholder="Örn: Matematik Final Ödevi" required>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label for="assignmentTitle" style="font-size: 0.9rem; margin-bottom: 0.4rem;">Ödev Başlığı *</label>
+            <input type="text" id="assignmentTitle" placeholder="Örn: Matematik Final Ödevi" required style="padding: 0.5rem; font-size: 0.9rem;">
           </div>
           
-          <div class="form-group">
-            <label for="assignmentDescription">Ödev Açıklaması *</label>
-            <textarea id="assignmentDescription" placeholder="Ödev detaylarını buraya yazın..." rows="5" required></textarea>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label for="assignmentDescription" style="font-size: 0.9rem; margin-bottom: 0.4rem;">Ödev Açıklaması *</label>
+            <textarea id="assignmentDescription" placeholder="Ödev detaylarını buraya yazın..." rows="3" required style="padding: 0.5rem; font-size: 0.9rem; min-height: 60px;"></textarea>
           </div>
           
-          <div class="form-group">
-            <label for="assignmentAttachmentFile">Ek Dosya (Opsiyonel)</label>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label for="assignmentAttachmentFile" style="font-size: 0.9rem; margin-bottom: 0.4rem;">Ek Dosya (Opsiyonel)</label>
             <div class="file-upload-wrapper">
               <input type="file" id="assignmentAttachmentFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip,.rar">
-              <label for="assignmentAttachmentFile" class="file-upload-label">
+              <label for="assignmentAttachmentFile" class="file-upload-label" style="padding: 0.5rem; font-size: 0.85rem;">
                 <span class="file-upload-icon">📎</span>
                 <span class="file-upload-text">Dosya seçin (PDF, Word, Resim, ZIP - Max 20MB)</span>
               </label>
@@ -115,42 +145,32 @@
           </div>
           
           <div class="form-row">
-            <div class="form-group">
-              <label for="assignmentDueDate">Son Teslim Tarihi *</label>
-              <input type="datetime-local" id="assignmentDueDate" required>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label for="assignmentDueDate" style="font-size: 0.9rem; margin-bottom: 0.4rem;">Son Teslim Tarihi *</label>
+              <input type="datetime-local" id="assignmentDueDate" required style="padding: 0.5rem; font-size: 0.9rem;">
             </div>
-            <div class="form-group">
-              <label for="assignmentMaxScore">Maksimum Puan *</label>
-              <input type="number" id="assignmentMaxScore" placeholder="100" min="1" max="1000" value="100" required>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label for="assignmentMaxScore" style="font-size: 0.9rem; margin-bottom: 0.4rem;">Maksimum Puan *</label>
+              <input type="number" id="assignmentMaxScore" placeholder="100" min="1" max="1000" value="100" required style="padding: 0.5rem; font-size: 0.9rem;">
             </div>
           </div>
           
-          <div class="form-row checkbox-group">
-            <label class="checkbox-label">
+          <div class="form-row checkbox-group" style="margin-bottom: 0.75rem;">
+            <label class="checkbox-label" style="font-size: 0.9rem;">
               <input type="checkbox" id="allowLate">
               <span>Geç teslim izin ver</span>
             </label>
-            <label class="checkbox-label">
+            <label class="checkbox-label" style="font-size: 0.9rem;">
               <input type="checkbox" id="allowResubmission">
               <span>Yeniden teslim izin ver</span>
             </label>
           </div>
           
-          <button type="submit" class="btn-primary submit-btn-large">
+          <button type="submit" class="btn-primary submit-btn-large" style="padding: 0.6rem; font-size: 0.9rem; margin-top: 0.5rem;">
             <span>✨ Ödev Oluştur</span>
           </button>
         </form>
         <div id="assignmentFormResult"></div>
-      </div>
-
-      <div class="section">
-        <div class="form-row">
-          <select id="teacherClassFilter">
-            <option value="">Sınıf seçerek ödevleri görüntüleyin</option>
-          </select>
-          <button id="refreshAssignmentsButton" type="button">Listeyi Yenile</button>
-        </div>
-        <div id="teacherAssignmentsList" class="assignment-list">Sınıf seçiniz...</div>
       </div>
     </div>
   </section>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     RefreshControl,
     StyleSheet,
@@ -10,13 +11,16 @@ import {
 } from 'react-native';
 import apiClient from '../../api/client';
 import { colors } from '../../theme/colors';
+import { autoGradeLateAssignments } from '../../api/endpoints/grades';
 
 const SubmissionsListScreen = ({ route, navigation }) => {
   const { assignmentId, assignmentTitle } = route.params;
   const [submissions, setSubmissions] = useState([]);
+  const [assignment, setAssignment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isGroupAssignment, setIsGroupAssignment] = useState(false);
+  const [isAutoGrading, setIsAutoGrading] = useState(false);
 
   useEffect(() => {
     fetchSubmissions();
@@ -27,15 +31,63 @@ const SubmissionsListScreen = ({ route, navigation }) => {
     try {
       const response = await apiClient.get(`/Assignment/${assignmentId}`);
       if (response.data.isSuccess && response.data.data) {
-        const assignment = response.data.data;
+        const assignmentData = response.data.data;
+        setAssignment(assignmentData);
         setIsGroupAssignment(
-          assignment.type === 'Group' || 
-          assignment.assignmentType === 'Group'
+          assignmentData.type === 'Group' || 
+          assignmentData.assignmentType === 'Group'
         );
       }
     } catch (error) {
       console.warn('⚠️ Assignment type kontrolü başarısız:', error);
     }
+  };
+
+  const isDueDatePassed = () => {
+    if (!assignment?.dueDate) return false;
+    const dueDate = new Date(assignment.dueDate);
+    const now = new Date();
+    return dueDate < now;
+  };
+
+  const handleAutoGradeLate = () => {
+    if (!isDueDatePassed()) {
+      Alert.alert('Bilgi', 'Bu ödevin son teslim tarihi henüz geçmemiş.');
+      return;
+    }
+
+    Alert.alert(
+      'Otomatik 0 Notu Ver',
+      'Süresi dolmuş ve teslim edilmeyen ödevler için otomatik olarak 0 notu verilecektir. Devam etmek istiyor musunuz?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Devam Et',
+          onPress: async () => {
+            try {
+              setIsAutoGrading(true);
+              const response = await autoGradeLateAssignments(assignmentId);
+              
+              if (response.isSuccess) {
+                const count = response.data || 0;
+                Alert.alert(
+                  'Başarılı! ✅',
+                  `${count} öğrenci için otomatik 0 notu verildi.`,
+                  [{ text: 'Tamam', onPress: () => fetchSubmissions() }]
+                );
+              } else {
+                Alert.alert('Hata', response.message || 'Otomatik not verme başarısız oldu');
+              }
+            } catch (error) {
+              console.error('❌ Auto-grade hatası:', error);
+              Alert.alert('Hata', error.message || 'Otomatik not verme başarısız oldu');
+            } finally {
+              setIsAutoGrading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const fetchSubmissions = async () => {
@@ -133,17 +185,32 @@ const SubmissionsListScreen = ({ route, navigation }) => {
         <Text style={styles.statsText}>
           📊 {submissions.length} teslim
         </Text>
-        {isGroupAssignment && (
-          <TouchableOpacity
-            style={styles.groupsButton}
-            onPress={() => navigation.navigate('GroupsList', {
-              assignmentId,
-              assignmentTitle,
-            })}
-          >
-            <Text style={styles.groupsButtonText}>👥 Grupları Gör</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.statsBarActions}>
+          {isDueDatePassed() && (
+            <TouchableOpacity
+              style={[styles.autoGradeButton, isAutoGrading && styles.autoGradeButtonDisabled]}
+              onPress={handleAutoGradeLate}
+              disabled={isAutoGrading}
+            >
+              {isAutoGrading ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Text style={styles.autoGradeButtonText}>⚡ Otomatik 0 Ver</Text>
+              )}
+            </TouchableOpacity>
+          )}
+          {isGroupAssignment && (
+            <TouchableOpacity
+              style={styles.groupsButton}
+              onPress={() => navigation.navigate('GroupsList', {
+                assignmentId,
+                assignmentTitle,
+              })}
+            >
+              <Text style={styles.groupsButtonText}>👥 Grupları Gör</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* List */}
@@ -210,6 +277,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
+  },
+  statsBarActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  autoGradeButton: {
+    backgroundColor: colors.error || '#F44336',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  autoGradeButtonDisabled: {
+    opacity: 0.6,
+  },
+  autoGradeButtonText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '600',
   },
   groupsButton: {
     backgroundColor: colors.primary,
